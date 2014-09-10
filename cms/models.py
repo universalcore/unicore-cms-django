@@ -11,6 +11,10 @@ RE_NUMERICAL_SUFFIX = re.compile(r'^[\w-]*-(\d+)+$')
 
 
 class Post(models.Model):
+
+    class Meta:
+        ordering = ('-created',)
+
     title = models.CharField(
         _("Title"),
         max_length=200, help_text=_('A short descriptive title.'),
