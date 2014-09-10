@@ -13,7 +13,5 @@ pep8
 pyflakes
 fabric
 django-category
-
-# latest version of ckeditor compatible with Django 1.6 not pushed to pypi yet
-https://github.com/shaunsephton/django-ckeditor/tarball/master#egg=django-ckeditor
+django-ckeditor
 django-grappelli
