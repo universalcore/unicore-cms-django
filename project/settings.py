@@ -142,6 +142,8 @@ INSTALLED_APPS = (
 
     # sample apps to explain usage
     'cms',
+    'category',
+    'ckeditor',
 )
 
 # A sample logging configuration. The only tangible logging
@@ -209,6 +211,20 @@ SOUTH_TESTS_MIGRATE = False  # Do not run the migrations for our tests.
 RAVEN_CONFIG = {
     # DevOps will supply you with this.
     # 'dsn': 'http://public:secret@example.com/1',
+}
+
+CKEDITOR_UPLOAD_PATH = abspath('media', 'uploads')
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': [
+        ['Styles', 'Format', 'Bold', 'Italic', 'Underline',
+            'Strike', 'SpellChecker', 'Undo', 'Redo'],
+        ['TextColor', 'BGColor'],
+        ['NumberedList', 'BulletedList'],
+        ['Smiley', 'SpecialChar'], ['Source'],
+        ],
+        'forcePasteAsPlainText': True,
+    }
 }
 
 try:
