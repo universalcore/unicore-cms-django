@@ -1,4 +1,6 @@
 import re
+from datetime import datetime
+
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
@@ -40,7 +42,6 @@ class Post(models.Model):
         _('Created Date & Time'),
         blank=True,
         db_index=True,
-        auto_now_add=True,
         help_text=_(
             'Date and time on which this item was created. This is'
             'automatically set on creation, but can be changed subsequently.')
@@ -84,6 +85,11 @@ class Post(models.Model):
     def save(self, *args, **kwargs):
         # set title as slug uniquely
         self.slug = self.generate_slug()
+
+        # set created time to now if not already set.
+        if not self.created:
+            self.created = datetime.now()
+
         super(Post, self).save(*args, **kwargs)
 
     def __unicode__(self):
