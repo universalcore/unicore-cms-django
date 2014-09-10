@@ -7,5 +7,6 @@ admin.autodiscover()
 urlpatterns = patterns(
     '',
     url(r'^', include(admin.site.urls)),
+    url(r'^grappelli/', include('grappelli.urls')),
     url(r'^ckeditor/', include('ckeditor.urls')),
 )
