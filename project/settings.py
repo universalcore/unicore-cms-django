@@ -1,10 +1,6 @@
 # Django settings for skeleton project.
 
 import os
-import djcelery
-
-
-djcelery.setup_loader()
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -24,8 +20,8 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'skeleton',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'cms_django.db',
         'USER': '',
         'PASSWORD': '',
         'HOST': '',
@@ -115,10 +111,10 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'skeleton.urls'
+ROOT_URLCONF = 'project.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'skeleton.wsgi.application'
+WSGI_APPLICATION = 'project.wsgi.application'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -142,13 +138,10 @@ INSTALLED_APPS = (
     'gunicorn',
     'django_nose',
     'raven.contrib.django.raven_compat',
-    'djcelery',
-    'djcelery_email',
     'debug_toolbar',
 
     # sample apps to explain usage
-    'app1',
-    'celery_app',
+    'cms',
 )
 
 # A sample logging configuration. The only tangible logging
