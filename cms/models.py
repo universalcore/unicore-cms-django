@@ -3,11 +3,92 @@ from datetime import datetime
 
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
-from django.db import models
-from ckeditor.fields import RichTextField
 from django.template.defaultfilters import slugify
+from django.db import models
+
+from ckeditor.fields import RichTextField
+from gitmodel.workspace import Workspace
+from gitmodel import fields, models as gitmodels
 
 RE_NUMERICAL_SUFFIX = re.compile(r'^[\w-]*-(\d+)+$')
+
+
+class FilterMixin(object):
+
+    @classmethod
+    def filter(cls, **fields):
+        items = list(cls.all())
+        for field, value in fields.items():
+            if hasattr(cls, field):
+                items = [a for a in items if getattr(a, field) == value]
+            else:
+                raise Exception('invalid field %s' % field)
+        return items
+
+
+class GitCategory(FilterMixin, gitmodels.GitModel):
+    slug = fields.SlugField(required=True)
+    title = fields.CharField(required=True)
+
+    def __eq__(self, other):
+        if not other:
+            return False
+
+        if isinstance(other, dict):
+            return self.slug == other['slug']
+        return self.slug == other.slug
+
+    def __ne__(self, other):
+        if not other:
+            return True
+
+        if isinstance(other, dict):
+            return self.slug != other['slug']
+        return self.slug != other.slug
+
+    def to_dict(self):
+        return {
+            'uuid': self.id,
+            'slug': self.slug,
+            'title': self.title,
+        }
+
+    @classmethod
+    def model(cls, repo):
+        try:
+            ws = Workspace(repo.path, repo.head.name)
+        except:
+            ws = Workspace(repo.path)
+        return ws.register_model(cls)
+
+
+class GitPage(FilterMixin, gitmodels.GitModel):
+    slug = fields.SlugField(required=True)
+    title = fields.CharField(required=True)
+    content = fields.CharField(required=False)
+    published = fields.BooleanField(default=True)
+    primary_category = fields.RelatedField(GitCategory, required=False)
+
+    def to_dict(self):
+        primary_category = self.primary_category.to_dict()\
+            if self.primary_category else None
+
+        return {
+            'uuid': self.id,
+            'slug': self.slug,
+            'title': self.title,
+            'content': self.content,
+            'published': self.published,
+            'primary_category': primary_category,
+        }
+
+    @classmethod
+    def model(cls, repo):
+        try:
+            ws = Workspace(repo.path, repo.head.name)
+        except:
+            ws = Workspace(repo.path)
+        return ws.register_model(cls)
 
 
 class Post(models.Model):
