@@ -38,4 +38,7 @@ class PostTestCase(TestCase):
         git_page = GitPage.model(self.repo).all()[0]
         self.assertEquals(git_page.title, 'changed title')
         self.assertEquals(git_page.id, p.uuid)
-        p = Post.objects.get(pk=p.id)
+
+        p.delete()
+        self.assertTrue(Post.objects.all(), 1)
+        self.assertEquals(len(list(GitPage.model(self.repo).all())), 0)
