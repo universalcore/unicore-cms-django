@@ -25,6 +25,7 @@ class PostTestCase(TestCase):
         p = Post(
             title='sample title',
             description='description',
+            subtitle='subtitle',
             content='sample content')
         p.save()
         self.assertEquals(Post.objects.all().count(), 1)
@@ -38,6 +39,10 @@ class PostTestCase(TestCase):
         git_page = GitPage.model(self.repo).all()[0]
         self.assertEquals(git_page.title, 'changed title')
         self.assertEquals(git_page.id, p.uuid)
+        self.assertEquals(git_page.subtitle, 'subtitle')
+        self.assertEquals(git_page.description, 'description')
+        self.assertTrue(git_page.created_at is not None)
+        self.assertTrue(git_page.modified_at is not None)
 
         p.delete()
         self.assertEquals(Post.objects.all().count(), 0)
