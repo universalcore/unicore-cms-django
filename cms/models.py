@@ -1,9 +1,7 @@
-import re
 from datetime import datetime
 
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
-from django.template.defaultfilters import slugify
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -12,8 +10,6 @@ from ckeditor.fields import RichTextField
 from gitmodel.workspace import Workspace
 from gitmodel import fields, models as gitmodels
 from cms import utils
-
-RE_NUMERICAL_SUFFIX = re.compile(r'^[\w-]*-(\d+)+$')
 
 
 class FilterMixin(object):
@@ -188,7 +184,7 @@ class Post(models.Model):
 
     def save(self, *args, **kwargs):
         # set title as slug uniquely
-        self.slug = self.generate_slug()
+        self.slug = utils.generate_slug(self)
 
         # set created time to now if not already set.
         if not self.created:
@@ -201,55 +197,6 @@ class Post(models.Model):
             return '%s - %s' % (self.title, self.subtitle)
         else:
             return self.title
-
-    def generate_slug(self, tail_number=0):
-        """
-        Returns a new unique slug. Object must provide a SlugField called slug.
-        URL friendly slugs are generated using django.template.defaultfilters'
-        slugify. Numbers are added to the end of slugs for uniqueness.
-        """
-        # use django slugify filter to slugify
-        slug = slugify(self.title)
-
-        # Empty slugs are ugly (eg. '-1' may be generated) so force non-empty
-        if not slug:
-            slug = 'no-title'
-
-        values_list = Post.objects.filter(
-            slug__startswith=slug
-        ).values_list('id', 'slug')
-
-        # Find highest suffix
-        max = -1
-        for tu in values_list:
-            if tu[1] == slug:
-                if tu[0] == self.id:
-                    # If we encounter obj and the stored slug is the same as
-                    # the desired slug then return.
-                    return slug
-
-                if max == -1:
-                    # Set max to indicate a collision
-                    max = 0
-
-            # Update max if suffix is greater
-            match = RE_NUMERICAL_SUFFIX.match(tu[1])
-            if match is not None:
-
-                # If the collision is on self then use the existing slug
-                if tu[0] == self.id:
-                    return tu[1]
-
-                i = int(match.group(1))
-                if i > max:
-                    max = i
-
-        if max >= 0:
-            # There were collisions
-            return "%s-%s" % (slug, max + 1)
-        else:
-            # No collisions
-            return slug
 
 
 @receiver(post_save, sender=Post)
