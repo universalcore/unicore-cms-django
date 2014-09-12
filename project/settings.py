@@ -204,7 +204,7 @@ if DEBUG:
 
 # Django debug toolbar
 DEBUG_TOOLBAR_CONFIG = {
-    'DISABLE_PANELS': False,
+    'INTERCEPT_REDIRECTS': False,
     'ENABLE_STACKTRACES': True,
 }
 
