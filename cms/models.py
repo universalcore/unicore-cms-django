@@ -51,7 +51,7 @@ class GitCategory(FilterMixin, gitmodels.GitModel):
 
     def to_dict(self):
         return {
-            'uuid': self.id,
+            'uuid': self.uuid,
             'slug': self.slug,
             'title': self.title,
         }
@@ -82,7 +82,7 @@ class GitPage(FilterMixin, gitmodels.GitModel):
             if self.primary_category else None
 
         return {
-            'uuid': self.id,
+            'uuid': self.uuid,
             'slug': self.slug,
             'title': self.title,
             'content': self.content,
