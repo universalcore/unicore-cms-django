@@ -79,9 +79,5 @@ def get_git_workspace(repo):
 
 
 def sync_repo():
-    repo = init_repository()
-    try:
-        ws = Workspace(repo.path, repo.head.name)
-    except:
-        ws = Workspace(repo.path)
+    ws = get_git_workspace(init_repository())
     ws.sync_repo_index()

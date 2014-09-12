@@ -173,6 +173,7 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
 def auto_delete_post_to_git(sender, instance, **kwargs):
     GitPage.delete(
         instance.uuid, True, message='Page deleted: %s' % instance.title)
+    utils.sync_repo()
 
 
 @receiver(post_save, sender=Category)
@@ -201,3 +202,4 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
 def auto_delete_category_to_git(sender, instance, **kwargs):
     GitCategory.delete(
         instance.uuid, True, message='Category deleted: %s' % instance.title)
+    utils.sync_repo()
