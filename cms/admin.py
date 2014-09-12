@@ -18,9 +18,7 @@ class CategoriesListFilter(SimpleListFilter):
         human-readable name for the option that will appear
         in the right sidebar.
         """
-        return (
-            (category.slug, category.title)
-            for category in Category.objects.all())
+        return Category.objects.values_list('slug', 'title')
 
     def queryset(self, request, queryset):
         """
@@ -33,14 +31,14 @@ class CategoriesListFilter(SimpleListFilter):
 
 
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('title', 'subtitle', 'created')
+    list_display = ('title', 'subtitle', 'created_at')
 
-    list_filter = ('created', CategoriesListFilter,)
+    list_filter = ('created_at', CategoriesListFilter,)
     search_fields = ('title', 'description', 'content')
     fieldsets = (
         (None, {'fields': ('title', 'subtitle', 'description', 'content', )}),
         ('Meta', {'fields': (
-            'categories', 'primary_category', 'tags', 'owner', 'created'),
+            'categories', 'primary_category', 'tags', 'owner', 'created_at'),
         })
     )
 

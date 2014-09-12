@@ -8,49 +8,39 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'Post'
-        db.create_table(u'cms_post', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('title', self.gf('django.db.models.fields.CharField')(max_length=200)),
-            ('subtitle', self.gf('django.db.models.fields.CharField')(default='', max_length=200, null=True, blank=True)),
-            ('slug', self.gf('django.db.models.fields.SlugField')(unique=True, max_length=255)),
-            ('description', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('content', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, db_index=True, blank=True)),
-            ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, db_index=True, blank=True)),
-            ('owner', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True, blank=True)),
-            ('primary_category', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='primary_modelbase_set', null=True, to=orm['category.Category'])),
-        ))
-        db.send_create_signal(u'cms', ['Post'])
+        # Deleting field 'Post.created'
+        db.delete_column(u'cms_post', 'created')
 
-        # Adding M2M table for field categories on 'Post'
-        m2m_table_name = db.shorten_name(u'cms_post_categories')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('post', models.ForeignKey(orm[u'cms.post'], null=False)),
-            ('category', models.ForeignKey(orm[u'category.category'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['post_id', 'category_id'])
+        # Deleting field 'Post.modified'
+        db.delete_column(u'cms_post', 'modified')
 
-        # Adding M2M table for field tags on 'Post'
-        m2m_table_name = db.shorten_name(u'cms_post_tags')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('post', models.ForeignKey(orm[u'cms.post'], null=False)),
-            ('tag', models.ForeignKey(orm[u'category.tag'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['post_id', 'tag_id'])
+        # Adding field 'Post.created_at'
+        db.add_column(u'cms_post', 'created_at',
+                      self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime(2014, 9, 12, 0, 0), db_index=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Post.modified_at'
+        db.add_column(u'cms_post', 'modified_at',
+                      self.gf('django.db.models.fields.DateTimeField')(auto_now=True, default=datetime.datetime(2014, 9, 12, 0, 0), db_index=True, blank=True),
+                      keep_default=False)
 
 
     def backwards(self, orm):
-        # Deleting model 'Post'
-        db.delete_table(u'cms_post')
+        # Adding field 'Post.created'
+        db.add_column(u'cms_post', 'created',
+                      self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, default=datetime.datetime(2014, 9, 12, 0, 0), blank=True, db_index=True),
+                      keep_default=False)
 
-        # Removing M2M table for field categories on 'Post'
-        db.delete_table(db.shorten_name(u'cms_post_categories'))
+        # Adding field 'Post.modified'
+        db.add_column(u'cms_post', 'modified',
+                      self.gf('django.db.models.fields.DateTimeField')(auto_now=True, default=datetime.datetime(2014, 9, 12, 0, 0), blank=True, db_index=True),
+                      keep_default=False)
 
-        # Removing M2M table for field tags on 'Post'
-        db.delete_table(db.shorten_name(u'cms_post_tags'))
+        # Deleting field 'Post.created_at'
+        db.delete_column(u'cms_post', 'created_at')
+
+        # Deleting field 'Post.modified_at'
+        db.delete_column(u'cms_post', 'modified_at')
 
 
     models = {
@@ -100,13 +90,13 @@ class Migration(SchemaMigration):
             'title': ('django.db.models.fields.CharField', [], {'max_length': '200'})
         },
         u'cms.post': {
-            'Meta': {'object_name': 'Post'},
+            'Meta': {'ordering': "('-created_at',)", 'object_name': 'Post'},
             'categories': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['category.Category']", 'null': 'True', 'blank': 'True'}),
             'content': ('ckeditor.fields.RichTextField', [], {'null': 'True', 'blank': 'True'}),
-            'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'db_index': 'True', 'blank': 'True'}),
+            'created_at': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'db_index': 'True', 'blank': 'True'}),
+            'modified_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'db_index': 'True', 'blank': 'True'}),
             'owner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']", 'null': 'True', 'blank': 'True'}),
             'primary_category': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'primary_modelbase_set'", 'null': 'True', 'to': u"orm['category.Category']"}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '255'}),

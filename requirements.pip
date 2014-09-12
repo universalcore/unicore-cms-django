@@ -13,6 +13,5 @@ pep8
 pyflakes
 fabric
 django-category
-django-ckeditor
 django-grappelli
 praekelt-python-gitmodel
