@@ -112,12 +112,6 @@ class Post(models.Model):
         blank=True,
         null=True,
     )
-    categories = models.ManyToManyField(
-        Category,
-        blank=True,
-        null=True,
-        help_text=_('Categorizing this item.')
-    )
     primary_category = models.ForeignKey(
         Category,
         blank=True,
