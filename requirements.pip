@@ -6,6 +6,7 @@ raven
 nose
 django-nose
 django-haystack
+django-celery
 psycopg2
 redis
 django-debug-toolbar

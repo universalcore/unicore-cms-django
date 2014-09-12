@@ -81,3 +81,17 @@ def get_git_workspace(repo):
 def sync_repo():
     ws = get_git_workspace(init_repository())
     ws.sync_repo_index()
+
+
+def push_to_git():
+    if 'SSH_PUBKEY' in settings and 'SSH_PRIVKEY' in settings:
+        repo = init_repository()
+        key = pygit2.Keypair(
+            'git',
+            settings.SSH_PUBKEY,
+            settings.SSH_PRIVKEY,
+            settings.SSH_PASSPHRASE)
+
+        for remote in repo.remotes:
+            remote.credentials = key
+            remote.push(repo.head.name)

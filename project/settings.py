@@ -1,6 +1,9 @@
 # Django settings for skeleton project.
 
 import os
+import djcelery
+
+djcelery.setup_loader()
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -150,6 +153,7 @@ INSTALLED_APPS = (
     'gunicorn',
     'django_nose',
     'raven.contrib.django.raven_compat',
+    'djcelery',
     'debug_toolbar',
 
     # sample apps to explain usage
@@ -195,7 +199,7 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 # CELERY_ALWAYS_EAGER = DEBUG
 
 # Tell Celery where to find the tasks
-CELERY_IMPORTS = ('celery_app.tasks',)
+CELERY_IMPORTS = ('cms.tasks',)
 
 # Defer email sending to Celery, except if we're in debug mode,
 # then just print the emails to stdout for debugging.
@@ -238,8 +242,13 @@ CKEDITOR_CONFIGS = {
     }
 }
 
-GIT_REPO_URL = 'git@github.com:miltontony/unicore-cms-test-repo-django.git'  # If specified, the repo will be cloned
+GIT_REPO_URL = None
 GIT_REPO_PATH = abspath('cmsrepo')
+
+# used when pushing to Github
+SSH_PUBKEY = None
+SSH_PRIVKEY = None
+SSH_PASSPHRASE = ''
 
 try:
     from local_settings import *

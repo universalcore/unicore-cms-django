@@ -6,7 +6,7 @@ from django.db import models
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
-from cms import utils
+from cms import utils, tasks
 from cms.git.models import GitPage, GitCategory
 
 
@@ -167,6 +167,7 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         page.save(True, message='Page updated: %s' % instance.title)
 
     utils.sync_repo()
+    tasks.push_to_git.delay()
 
 
 @receiver(post_delete, sender=Post)
@@ -174,6 +175,7 @@ def auto_delete_post_to_git(sender, instance, **kwargs):
     GitPage.delete(
         instance.uuid, True, message='Page deleted: %s' % instance.title)
     utils.sync_repo()
+    tasks.push_to_git.delay()
 
 
 @receiver(post_save, sender=Category)
@@ -196,6 +198,7 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         category.save(True, message='Category updated: %s' % instance.title)
 
     utils.sync_repo()
+    tasks.push_to_git.delay()
 
 
 @receiver(post_delete, sender=Category)
@@ -203,3 +206,4 @@ def auto_delete_category_to_git(sender, instance, **kwargs):
     GitCategory.delete(
         instance.uuid, True, message='Category deleted: %s' % instance.title)
     utils.sync_repo()
+    tasks.push_to_git.delay()
