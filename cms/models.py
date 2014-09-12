@@ -5,10 +5,13 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.template.defaultfilters import slugify
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from ckeditor.fields import RichTextField
 from gitmodel.workspace import Workspace
 from gitmodel import fields, models as gitmodels
+from cms import utils
 
 RE_NUMERICAL_SUFFIX = re.compile(r'^[\w-]*-(\d+)+$')
 
@@ -29,6 +32,10 @@ class FilterMixin(object):
 class GitCategory(FilterMixin, gitmodels.GitModel):
     slug = fields.SlugField(required=True)
     title = fields.CharField(required=True)
+
+    @property
+    def uuid(self):
+        return self.id
 
     def __eq__(self, other):
         if not other:
@@ -65,9 +72,14 @@ class GitCategory(FilterMixin, gitmodels.GitModel):
 class GitPage(FilterMixin, gitmodels.GitModel):
     slug = fields.SlugField(required=True)
     title = fields.CharField(required=True)
+    description = fields.CharField(required=False)
     content = fields.CharField(required=False)
     published = fields.BooleanField(default=True)
     primary_category = fields.RelatedField(GitCategory, required=False)
+
+    @property
+    def uuid(self):
+        return self.id
 
     def to_dict(self):
         primary_category = self.primary_category.to_dict()\
@@ -96,6 +108,13 @@ class Post(models.Model):
     class Meta:
         ordering = ('-created',)
 
+    uuid = models.CharField(
+        max_length=32,
+        blank=True,
+        null=True,
+        unique=True,
+        db_index=True,
+        editable=False)
     title = models.CharField(
         _("Title"),
         max_length=200, help_text=_('A short descriptive title.'),
@@ -231,3 +250,29 @@ class Post(models.Model):
         else:
             # No collisions
             return slug
+
+
+@receiver(post_save, sender=Post)
+def auto_save_post_to_git(sender, instance, created, **kwargs):
+    repo = utils.init_repository()
+    if created:
+        Page = GitPage.model(repo)
+        page = Page()
+        page.title = instance.title
+        page.slug = instance.slug
+        page.description = instance.description
+        page.content = instance.content
+        page.save(True, message='Page created: %s' % instance.title)
+
+        # store the page's uuid on the Post instance without triggering `save`
+        Post.objects.filter(pk=instance.pk).update(uuid=page.uuid)
+    else:
+        Page = GitPage.model(repo)
+        page = Page.get(instance.uuid)
+        page.title = instance.title
+        page.slug = instance.slug
+        page.description = instance.description
+        page.content = instance.content
+        page.save(True, message='Page updated: %s' % instance.title)
+
+    utils.sync_repo()

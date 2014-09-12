@@ -241,8 +241,6 @@ CKEDITOR_CONFIGS = {
 
 GIT_REPO_URL = None  # If specified, the repo will be cloned
 GIT_REPO_PATH = abspath('cmsrepo')
-GIT_REPO_PATH_LOCAL = abspath('cmsrepo_local')
-GIT_REPO_PATH_TEST = abspath('cmsrepo_test')
 
 try:
     from local_settings import *

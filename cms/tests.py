@@ -1,10 +1,9 @@
-import os
-import pygit2
+import shutil
 
 from django.test import TestCase
-from django.conf import settings
 
 from cms.models import Post, GitPage
+from cms.utils import init_repository
 
 
 class PostTestCase(TestCase):
@@ -15,16 +14,9 @@ class PostTestCase(TestCase):
         except:
             pass
 
-    def setup_repo(self):
-        try:
-            self.repo = pygit2.Repository(settings.GIT_REPO_PATH_TEST)
-        except:
-            self.repo = pygit2.init_repository(
-                settings.GIT_REPO_PATH_TEST, False)
-
     def setUp(self):
         self.delete_repo()
-        self.setup_repo()
+        self.repo = init_repository()
 
     def tearDown(self):
         self.delete_repo()
@@ -36,5 +28,14 @@ class PostTestCase(TestCase):
             content='sample content')
         p.save()
         self.assertTrue(Post.objects.all(), 1)
+        self.assertEquals(len(list(GitPage.model(self.repo).all())), 1)
+
+        p = Post.objects.get(pk=p.pk)
+        p.title = 'changed title'
+        p.save()
 
         self.assertEquals(len(list(GitPage.model(self.repo).all())), 1)
+        git_page = GitPage.model(self.repo).all()[0]
+        self.assertEquals(git_page.title, 'changed title')
+        self.assertEquals(git_page.id, p.uuid)
+        p = Post.objects.get(pk=p.id)
