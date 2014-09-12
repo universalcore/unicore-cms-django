@@ -156,18 +156,19 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         page.created_at = instance.created_at
         page.modified_at = instance.modified_at
 
-    repo = utils.init_repository()
+        if instance.primary_category and instance.uuid:
+            category = GitCategory.get(instance.primary_category.uuid)
+            page.primary_category = category
+
     if created:
-        Page = GitPage.model(repo)
-        page = Page()
+        page = GitPage()
         update_fields(page, instance)
         page.save(True, message='Page created: %s' % instance.title)
 
         # store the page's uuid on the Post instance without triggering `save`
         Post.objects.filter(pk=instance.pk).update(uuid=page.uuid)
     else:
-        Page = GitPage.model(repo)
-        page = Page.get(instance.uuid)
+        page = GitPage.get(instance.uuid)
         update_fields(page, instance)
         page.save(True, message='Page updated: %s' % instance.title)
 
@@ -176,9 +177,7 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Post)
 def auto_delete_post_to_git(sender, instance, **kwargs):
-    repo = utils.init_repository()
-    Page = GitPage.model(repo)
-    Page.delete(
+    GitPage.delete(
         instance.uuid, True, message='Page deleted: %s' % instance.title)
 
 
@@ -189,18 +188,15 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         category.subtitle = instance.subtitle
         category.slug = instance.slug
 
-    repo = utils.init_repository()
     if created:
-        CategoryModel = GitCategory.model(repo)
-        category = CategoryModel()
+        category = GitCategory()
         update_fields(category, instance)
         category.save(True, message='Category created: %s' % instance.title)
 
         # store the page's uuid on the Post instance without triggering `save`
         Category.objects.filter(pk=instance.pk).update(uuid=category.uuid)
     else:
-        CategoryModel = GitCategory.model(repo)
-        category = CategoryModel.get(instance.uuid)
+        category = GitCategory.get(instance.uuid)
         update_fields(category, instance)
         category.save(True, message='Category updated: %s' % instance.title)
 
@@ -209,7 +205,5 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Category)
 def auto_delete_category_to_git(sender, instance, **kwargs):
-    repo = utils.init_repository()
-    CategoryModel = GitCategory.model(repo)
-    CategoryModel.delete(
+    GitCategory.delete(
         instance.uuid, True, message='Category deleted: %s' % instance.title)

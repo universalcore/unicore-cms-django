@@ -70,6 +70,14 @@ def init_repository():
     return repo
 
 
+def get_git_workspace(repo):
+    try:
+        ws = Workspace(repo.path, repo.head.name)
+    except:
+        ws = Workspace(repo.path)
+    return ws
+
+
 def sync_repo():
     repo = init_repository()
     try:

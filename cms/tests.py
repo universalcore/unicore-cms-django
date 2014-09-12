@@ -30,14 +30,14 @@ class PostTestCase(TestCase):
             content='sample content')
         p.save()
         self.assertEquals(Post.objects.all().count(), 1)
-        self.assertEquals(len(list(GitPage.model(self.repo).all())), 1)
+        self.assertEquals(len(list(GitPage.all())), 1)
 
         p = Post.objects.get(pk=p.pk)
         p.title = 'changed title'
         p.save()
 
-        self.assertEquals(len(list(GitPage.model(self.repo).all())), 1)
-        git_page = GitPage.model(self.repo).all()[0]
+        self.assertEquals(len(list(GitPage.all())), 1)
+        git_page = GitPage.all()[0]
         self.assertEquals(git_page.title, 'changed title')
         self.assertEquals(git_page.uuid, p.uuid)
         self.assertEquals(git_page.subtitle, 'subtitle')
@@ -47,7 +47,7 @@ class PostTestCase(TestCase):
 
         p.delete()
         self.assertEquals(Post.objects.all().count(), 0)
-        self.assertEquals(len(list(GitPage.model(self.repo).all())), 0)
+        self.assertEquals(len(list(GitPage.all())), 0)
 
     def test_create_category(self):
         c = Category(
@@ -56,18 +56,39 @@ class PostTestCase(TestCase):
             slug='sample-title')
         c.save()
         self.assertEquals(Category.objects.all().count(), 1)
-        self.assertEquals(len(list(GitCategory.model(self.repo).all())), 1)
+        self.assertEquals(len(list(GitCategory.all())), 1)
 
         c = Category.objects.get(pk=c.pk)
         c.title = 'changed title'
         c.save()
 
-        self.assertEquals(len(list(GitCategory.model(self.repo).all())), 1)
-        git_cat = GitCategory.model(self.repo).all()[0]
+        self.assertEquals(len(list(GitCategory.all())), 1)
+        git_cat = GitCategory.all()[0]
         self.assertEquals(git_cat.title, 'changed title')
         self.assertEquals(git_cat.uuid, c.uuid)
         self.assertEquals(git_cat.subtitle, 'subtitle')
 
         c.delete()
         self.assertEquals(Category.objects.all().count(), 0)
-        self.assertEquals(len(list(GitCategory.model(self.repo).all())), 0)
+        self.assertEquals(len(list(GitCategory.all())), 0)
+
+    def test_page_with_primary_category(self):
+        p = Post(
+            title='sample title',
+            description='description',
+            subtitle='subtitle',
+            content='sample content')
+        p.save()
+        c = Category(
+            title='guides',
+            slug='guides')
+        c.save()
+
+        p = Post.objects.get(pk=p.pk)
+        c = Category.objects.get(pk=c.pk)
+
+        p.primary_category = c
+        p.save()
+
+        git_p = GitPage.get(p.uuid)
+        self.assertEquals(git_p.primary_category.slug, 'guides')

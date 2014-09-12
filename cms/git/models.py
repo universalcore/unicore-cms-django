@@ -1,5 +1,5 @@
-from gitmodel.workspace import Workspace
 from gitmodel import fields, models as gitmodels
+from cms import utils
 
 
 class FilterMixin(object):
@@ -15,7 +15,7 @@ class FilterMixin(object):
         return items
 
 
-class GitCategory(FilterMixin, gitmodels.GitModel):
+class GitCategoryModel(FilterMixin, gitmodels.GitModel):
     slug = fields.SlugField(required=True)
     title = fields.CharField(required=True)
     subtitle = fields.CharField(required=False)
@@ -47,16 +47,8 @@ class GitCategory(FilterMixin, gitmodels.GitModel):
             'title': self.title,
         }
 
-    @classmethod
-    def model(cls, repo):
-        try:
-            ws = Workspace(repo.path, repo.head.name)
-        except:
-            ws = Workspace(repo.path)
-        return ws.register_model(cls)
 
-
-class GitPage(FilterMixin, gitmodels.GitModel):
+class GitPageModel(FilterMixin, gitmodels.GitModel):
     slug = fields.SlugField(required=True)
     title = fields.CharField(required=True)
     subtitle = fields.CharField(required=False)
@@ -65,7 +57,7 @@ class GitPage(FilterMixin, gitmodels.GitModel):
     created_at = fields.DateTimeField(required=False)
     modified_at = fields.DateTimeField(required=False)
     published = fields.BooleanField(default=True)
-    primary_category = fields.RelatedField(GitCategory, required=False)
+    primary_category = fields.RelatedField(GitCategoryModel, required=False)
 
     @property
     def uuid(self):
@@ -88,10 +80,6 @@ class GitPage(FilterMixin, gitmodels.GitModel):
             'primary_category': primary_category,
         }
 
-    @classmethod
-    def model(cls, repo):
-        try:
-            ws = Workspace(repo.path, repo.head.name)
-        except:
-            ws = Workspace(repo.path)
-        return ws.register_model(cls)
+ws = utils.get_git_workspace(utils.init_repository())
+GitPage = ws.register_model(GitPageModel)
+GitCategory = ws.register_model(GitCategoryModel)
