@@ -13,4 +13,5 @@ pep8
 pyflakes
 fabric
 django-grappelli
+django-adminplus
 praekelt-python-gitmodel

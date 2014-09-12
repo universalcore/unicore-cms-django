@@ -55,5 +55,36 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("title",)}
     list_display = ('title', 'subtitle', 'uuid')
 
+from django.shortcuts import render
+from django.conf import settings
+from cms import utils
+from datetime import datetime
+import pygit2
+
+
+@admin.site.register_view('github/', 'Github Configuration')
+def my_view(request, *args, **kwargs):
+    repo = utils.init_repository()
+    branch = repo.lookup_branch(repo.head.shorthand)
+    last = repo[branch.target]
+    commits = []
+    for commit in repo.walk(last.id, pygit2.GIT_SORT_TIME):
+        commits.append(commit)
+
+    context = {
+        'github_url': settings.GIT_REPO_URL,
+        'repo': repo,
+        'commits': [
+            {
+                'message': c.message,
+                'author': c.author.name,
+                'commit_time': datetime.fromtimestamp(c.commit_time)
+            }
+            for c in commits
+        ]
+    }
+    return render(request, 'cms/admin/github.html', context)
+
+
 admin.site.register(Post, PostAdmin)
 admin.site.register(Category, CategoryAdmin)

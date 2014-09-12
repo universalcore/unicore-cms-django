@@ -142,7 +142,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin:
-    'grappelli',
+    #'grappelli',
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
@@ -154,6 +154,7 @@ INSTALLED_APPS = (
 
     # sample apps to explain usage
     'cms',
+    'adminplus',
 )
 
 # A sample logging configuration. The only tangible logging
@@ -237,7 +238,7 @@ CKEDITOR_CONFIGS = {
     }
 }
 
-GIT_REPO_URL = None  # If specified, the repo will be cloned
+GIT_REPO_URL = 'git@github.com:miltontony/unicore-cms-test-repo-django.git'  # If specified, the repo will be cloned
 GIT_REPO_PATH = abspath('cmsrepo')
 
 try:
