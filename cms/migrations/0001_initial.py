@@ -15,7 +15,7 @@ class Migration(SchemaMigration):
             ('subtitle', self.gf('django.db.models.fields.CharField')(default='', max_length=200, null=True, blank=True)),
             ('slug', self.gf('django.db.models.fields.SlugField')(unique=True, max_length=255)),
             ('description', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('content', self.gf('ckeditor.fields.RichTextField')(null=True, blank=True)),
+            ('content', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, db_index=True, blank=True)),
             ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, db_index=True, blank=True)),
             ('owner', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True, blank=True)),

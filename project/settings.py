@@ -155,7 +155,6 @@ INSTALLED_APPS = (
     # sample apps to explain usage
     'cms',
     'category',
-    'ckeditor',
 )
 
 # A sample logging configuration. The only tangible logging

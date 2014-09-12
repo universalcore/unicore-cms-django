@@ -4,7 +4,6 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
-from ckeditor.fields import RichTextField
 from django.template.defaultfilters import slugify
 
 RE_NUMERICAL_SUFFIX = re.compile(r'^[\w-]*-(\d+)+$')
@@ -41,7 +40,7 @@ class Post(models.Model):
         blank=True,
         null=True,
     )
-    content = RichTextField(blank=True, null=True)
+    content = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(
         _('Created Date & Time'),
         blank=True,
