@@ -2,7 +2,8 @@ import shutil
 
 from django.test import TestCase
 
-from cms.models import Post, Category, GitPage, GitCategory
+from cms.models import Post, Category
+from cms.git.models import GitPage, GitCategory
 from cms.utils import init_repository
 
 
