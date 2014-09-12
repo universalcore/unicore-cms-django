@@ -27,7 +27,7 @@ class PostTestCase(TestCase):
             description='description',
             content='sample content')
         p.save()
-        self.assertTrue(Post.objects.all(), 1)
+        self.assertEquals(Post.objects.all().count(), 1)
         self.assertEquals(len(list(GitPage.model(self.repo).all())), 1)
 
         p = Post.objects.get(pk=p.pk)
@@ -40,5 +40,5 @@ class PostTestCase(TestCase):
         self.assertEquals(git_page.id, p.uuid)
 
         p.delete()
-        self.assertTrue(Post.objects.all(), 1)
+        self.assertEquals(Post.objects.all().count(), 0)
         self.assertEquals(len(list(GitPage.model(self.repo).all())), 0)

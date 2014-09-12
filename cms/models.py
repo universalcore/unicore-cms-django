@@ -3,7 +3,7 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 from ckeditor.fields import RichTextField
@@ -223,3 +223,11 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         page.save(True, message='Page updated: %s' % instance.title)
 
     utils.sync_repo()
+
+
+@receiver(post_delete, sender=Post)
+def auto_delete_post_to_git(sender, instance, **kwargs):
+    repo = utils.init_repository()
+    Page = GitPage.model(repo)
+    Page.delete(
+        instance.uuid, True, message='Page deleted: %s' % instance.title)
