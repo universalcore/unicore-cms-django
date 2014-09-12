@@ -13,7 +13,7 @@ RE_NUMERICAL_SUFFIX = re.compile(r'^[\w-]*-(\d+)+$')
 class Post(models.Model):
 
     class Meta:
-        ordering = ('-created',)
+        ordering = ('-created_at',)
 
     title = models.CharField(
         _("Title"),
@@ -42,7 +42,7 @@ class Post(models.Model):
         null=True,
     )
     content = RichTextField(blank=True, null=True)
-    created = models.DateTimeField(
+    created_at = models.DateTimeField(
         _('Created Date & Time'),
         blank=True,
         db_index=True,
@@ -50,7 +50,7 @@ class Post(models.Model):
             'Date and time on which this item was created. This is'
             'automatically set on creation, but can be changed subsequently.')
     )
-    modified = models.DateTimeField(
+    modified_at = models.DateTimeField(
         _('Modified Date & Time'),
         db_index=True,
         editable=False,
@@ -91,8 +91,8 @@ class Post(models.Model):
         self.slug = self.generate_slug()
 
         # set created time to now if not already set.
-        if not self.created:
-            self.created = datetime.now()
+        if not self.created_at:
+            self.created_at = datetime.now()
 
         super(Post, self).save(*args, **kwargs)
 
