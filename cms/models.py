@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from django.utils import timezone
 
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
@@ -92,7 +92,7 @@ class Post(models.Model):
 
         # set created time to now if not already set.
         if not self.created_at:
-            self.created_at = datetime.now()
+            self.created_at = timezone.now()
 
         super(Post, self).save(*args, **kwargs)
 
