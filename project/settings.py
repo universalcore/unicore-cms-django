@@ -85,8 +85,8 @@ STATICFILES_DIRS = (
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
-    'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'django.contrib.staticfiles.finders.FileSystemFinder',
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
@@ -111,6 +111,17 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
+TEMPLATE_CONTEXT_PROCESSORS = (
+    "django.contrib.auth.context_processors.auth",
+    "django.core.context_processors.debug",
+    "django.core.context_processors.i18n",
+    "django.core.context_processors.media",
+    "django.core.context_processors.static",
+    "django.core.context_processors.tz",
+    "django.contrib.messages.context_processors.messages",
+    "django.core.context_processors.request",
+)
+
 ROOT_URLCONF = 'project.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
@@ -131,6 +142,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin:
+    'grappelli',
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
@@ -142,6 +154,7 @@ INSTALLED_APPS = (
 
     # sample apps to explain usage
     'cms',
+    'category',
 )
 
 # A sample logging configuration. The only tangible logging
@@ -209,6 +222,20 @@ SOUTH_TESTS_MIGRATE = False  # Do not run the migrations for our tests.
 RAVEN_CONFIG = {
     # DevOps will supply you with this.
     # 'dsn': 'http://public:secret@example.com/1',
+}
+
+CKEDITOR_UPLOAD_PATH = abspath('media', 'uploads')
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': [
+        ['Styles', 'Format', 'Bold', 'Italic', 'Underline',
+            'Strike', 'SpellChecker', 'Undo', 'Redo'],
+        ['TextColor', 'BGColor'],
+        ['NumberedList', 'BulletedList'],
+        ['Smiley', 'SpecialChar'], ['Source'],
+        ],
+        'forcePasteAsPlainText': True,
+    }
 }
 
 try:

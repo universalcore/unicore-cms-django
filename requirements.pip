@@ -12,3 +12,5 @@ django-debug-toolbar
 pep8
 pyflakes
 fabric
+django-category
+django-grappelli
