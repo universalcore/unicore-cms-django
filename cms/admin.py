@@ -30,15 +30,13 @@ class CategoriesListFilter(SimpleListFilter):
 
 
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('title', 'subtitle', 'created_at')
+    list_display = ('title', 'subtitle', 'created_at', 'uuid')
 
     list_filter = ('created_at', CategoriesListFilter,)
     search_fields = ('title', 'description', 'content')
     fieldsets = (
         (None, {'fields': ('title', 'subtitle', 'description', 'content', )}),
-        ('Meta', {'fields': (
-            'categories', 'primary_category', 'tags', 'owner', 'created_at'),
-        })
+        ('Meta', {'fields': ('primary_category', 'owner', 'created_at')})
     )
 
     def save_model(self, request, obj, form, change):
@@ -52,4 +50,10 @@ class PostAdmin(admin.ModelAdmin):
             change
         )
 
+
+class CategoryAdmin(admin.ModelAdmin):
+    prepopulated_fields = {"slug": ("title",)}
+    list_display = ('title', 'subtitle', 'uuid')
+
 admin.site.register(Post, PostAdmin)
+admin.site.register(Category, CategoryAdmin)
