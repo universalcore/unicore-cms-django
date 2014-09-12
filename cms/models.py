@@ -27,6 +27,7 @@ class FilterMixin(object):
 class GitCategory(FilterMixin, gitmodels.GitModel):
     slug = fields.SlugField(required=True)
     title = fields.CharField(required=True)
+    subtitle = fields.CharField(required=False)
 
     @property
     def uuid(self):
@@ -105,6 +106,47 @@ class GitPage(FilterMixin, gitmodels.GitModel):
         return ws.register_model(cls)
 
 
+class Category(models.Model):
+    """
+    Category model to be used for categorization of content. Categories are
+    high level constructs to be used for grouping and organizing content,
+    thus creating a site's table of contents.
+    """
+    uuid = models.CharField(
+        max_length=32,
+        blank=True,
+        null=True,
+        unique=True,
+        db_index=True,
+        editable=False)
+    title = models.CharField(
+        max_length=200,
+        help_text='Short descriptive name for this category.',
+    )
+    subtitle = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        default='',
+        help_text='Some titles may be the same and cause confusion in admin '
+                  'UI. A subtitle makes a distinction.',
+    )
+    slug = models.SlugField(
+        max_length=255,
+        db_index=True,
+        unique=True,
+        help_text='Short descriptive unique name for use in urls.',
+    )
+
+    def __unicode__(self):
+        return self.title
+
+    class Meta:
+        ordering = ('title',)
+        verbose_name = 'category'
+        verbose_name_plural = 'categories'
+
+
 class Post(models.Model):
 
     class Meta:
@@ -167,25 +209,19 @@ class Post(models.Model):
         null=True,
     )
     categories = models.ManyToManyField(
-        'category.Category',
+        Category,
         blank=True,
         null=True,
         help_text=_('Categorizing this item.')
     )
     primary_category = models.ForeignKey(
-        'category.Category',
+        Category,
         blank=True,
         null=True,
         help_text=_(
             "Primary category for this item. Used to determine the"
             "object's absolute/default URL."),
         related_name="primary_modelbase_set",
-    )
-    tags = models.ManyToManyField(
-        'category.Tag',
-        blank=True,
-        null=True,
-        help_text=_('Tag this item.')
     )
 
     def save(self, *args, **kwargs):
@@ -240,3 +276,36 @@ def auto_delete_post_to_git(sender, instance, **kwargs):
     Page = GitPage.model(repo)
     Page.delete(
         instance.uuid, True, message='Page deleted: %s' % instance.title)
+
+
+@receiver(post_save, sender=Category)
+def auto_save_category_to_git(sender, instance, created, **kwargs):
+    def update_fields(category, post):
+        category.title = instance.title
+        category.subtitle = instance.subtitle
+        category.slug = instance.slug
+
+    repo = utils.init_repository()
+    if created:
+        CategoryModel = GitCategory.model(repo)
+        category = CategoryModel()
+        update_fields(category, instance)
+        category.save(True, message='Category created: %s' % instance.title)
+
+        # store the page's uuid on the Post instance without triggering `save`
+        Category.objects.filter(pk=instance.pk).update(uuid=category.uuid)
+    else:
+        CategoryModel = GitCategory.model(repo)
+        category = CategoryModel.get(instance.uuid)
+        update_fields(category, instance)
+        category.save(True, message='Category updated: %s' % instance.title)
+
+    utils.sync_repo()
+
+
+@receiver(post_delete, sender=Category)
+def auto_delete_category_to_git(sender, instance, **kwargs):
+    repo = utils.init_repository()
+    CategoryModel = GitCategory.model(repo)
+    CategoryModel.delete(
+        instance.uuid, True, message='Category deleted: %s' % instance.title)

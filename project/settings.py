@@ -154,7 +154,6 @@ INSTALLED_APPS = (
 
     # sample apps to explain usage
     'cms',
-    'category',
 )
 
 # A sample logging configuration. The only tangible logging

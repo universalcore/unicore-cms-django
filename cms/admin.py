@@ -2,8 +2,7 @@ from django.db.models import Q
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 
-from cms.models import Post
-from category.models import Category
+from cms.models import Post, Category
 
 
 class CategoriesListFilter(SimpleListFilter):

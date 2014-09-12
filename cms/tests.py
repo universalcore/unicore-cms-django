@@ -2,7 +2,7 @@ import shutil
 
 from django.test import TestCase
 
-from cms.models import Post, GitPage
+from cms.models import Post, Category, GitPage, GitCategory
 from cms.utils import init_repository
 
 
@@ -38,7 +38,7 @@ class PostTestCase(TestCase):
         self.assertEquals(len(list(GitPage.model(self.repo).all())), 1)
         git_page = GitPage.model(self.repo).all()[0]
         self.assertEquals(git_page.title, 'changed title')
-        self.assertEquals(git_page.id, p.uuid)
+        self.assertEquals(git_page.uuid, p.uuid)
         self.assertEquals(git_page.subtitle, 'subtitle')
         self.assertEquals(git_page.description, 'description')
         self.assertTrue(git_page.created_at is not None)
@@ -47,3 +47,26 @@ class PostTestCase(TestCase):
         p.delete()
         self.assertEquals(Post.objects.all().count(), 0)
         self.assertEquals(len(list(GitPage.model(self.repo).all())), 0)
+
+    def test_create_category(self):
+        c = Category(
+            title='sample title',
+            subtitle='subtitle',
+            slug='sample-title')
+        c.save()
+        self.assertEquals(Category.objects.all().count(), 1)
+        self.assertEquals(len(list(GitCategory.model(self.repo).all())), 1)
+
+        c = Category.objects.get(pk=c.pk)
+        c.title = 'changed title'
+        c.save()
+
+        self.assertEquals(len(list(GitCategory.model(self.repo).all())), 1)
+        git_cat = GitCategory.model(self.repo).all()[0]
+        self.assertEquals(git_cat.title, 'changed title')
+        self.assertEquals(git_cat.uuid, c.uuid)
+        self.assertEquals(git_cat.subtitle, 'subtitle')
+
+        c.delete()
+        self.assertEquals(Category.objects.all().count(), 0)
+        self.assertEquals(len(list(GitCategory.model(self.repo).all())), 0)
