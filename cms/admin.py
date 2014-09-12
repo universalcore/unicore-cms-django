@@ -18,9 +18,7 @@ class CategoriesListFilter(SimpleListFilter):
         human-readable name for the option that will appear
         in the right sidebar.
         """
-        return (
-            (category.slug, category.title)
-            for category in Category.objects.all())
+        return Category.objects.values_list('slug', 'title')
 
     def queryset(self, request, queryset):
         """
