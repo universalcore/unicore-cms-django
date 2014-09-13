@@ -1,7 +1,13 @@
+import pygit2
+from datetime import datetime
+
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
+from django.shortcuts import render
+from django.conf import settings
 
 from cms.models import Post, Category
+from cms.git import repo
 
 
 class CategoriesListFilter(SimpleListFilter):
@@ -54,16 +60,9 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("title",)}
     list_display = ('title', 'subtitle', 'uuid')
 
-from django.shortcuts import render
-from django.conf import settings
-from cms import utils
-from datetime import datetime
-import pygit2
-
 
 @admin.site.register_view('github/', 'Github Configuration')
 def my_view(request, *args, **kwargs):
-    repo = utils.init_repository()
     branch = repo.lookup_branch(repo.head.shorthand)
     last = repo[branch.target]
     commits = []

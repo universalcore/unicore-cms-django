@@ -86,6 +86,6 @@ class GitPageModel(FilterMixin, gitmodels.GitModel):
             'primary_category': primary_category,
         }
 
-ws = utils.get_git_workspace(utils.init_repository())
+ws = utils.get_git_workspace()
 GitPage = ws.register_model(GitPageModel)
 GitCategory = ws.register_model(GitCategoryModel)
