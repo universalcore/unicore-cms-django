@@ -8,6 +8,7 @@ from django.dispatch import receiver
 
 from cms import utils, tasks
 from cms.git.models import GitPage, GitCategory
+from gitmodel import exceptions
 
 
 class Category(models.Model):
@@ -162,9 +163,15 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         # store the page's uuid on the Post instance without triggering `save`
         Post.objects.filter(pk=instance.pk).update(uuid=page.uuid)
     else:
-        page = GitPage.get(instance.uuid)
-        update_fields(page, instance)
-        page.save(True, message='Page updated: %s' % instance.title)
+        try:
+            page = GitPage.get(instance.uuid)
+            update_fields(page, instance)
+            page.save(True, message='Page updated: %s' % instance.title)
+        except exceptions.DoesNotExist:
+            page = GitPage()
+            update_fields(page, instance)
+            page.save(True, message='Page re-created: %s' % instance.title)
+            Post.objects.filter(pk=instance.pk).update(uuid=page.uuid)
 
     utils.sync_repo()
     tasks.push_to_git.delay()
