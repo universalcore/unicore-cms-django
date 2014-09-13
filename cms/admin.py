@@ -1,4 +1,3 @@
-from django.db.models import Q
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 
@@ -25,12 +24,11 @@ class CategoriesListFilter(SimpleListFilter):
         """
         if self.value():
             category = Category.objects.get(slug=self.value())
-            return queryset.filter(
-                Q(primary_category=category) | Q(categories=category))
+            return queryset.filter(primary_category=category)
 
 
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('title', 'subtitle', 'created_at', 'uuid')
+    list_display = ('title', 'subtitle', 'primary_category', 'created_at', 'uuid')
 
     list_filter = ('created_at', CategoriesListFilter,)
     search_fields = ('title', 'description', 'content')
