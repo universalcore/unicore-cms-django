@@ -98,7 +98,7 @@ class PostTestCase(TestCase):
             content='sample content')
         p.save()
         p = Post.objects.get(pk=p.pk)
-        GitPage.delete(p.uuid, True, message='Page deleted in test')
+        GitPage.delete(p.uuid, True)
         utils.sync_repo()
 
         p.title = 'new title'
@@ -108,3 +108,20 @@ class PostTestCase(TestCase):
         git_p = GitPage.get(p.uuid)
 
         self.assertEquals(git_p.title, 'new title')
+
+    def test_category_recreated_if_not_in_git(self):
+        c = Category(
+            title='sample test title',
+            slug='slug')
+        c.save()
+        c = Category.objects.get(pk=c.pk)
+        GitCategory.delete(c.uuid, True)
+        utils.sync_repo()
+
+        c.title = 'new title'
+        c.save()
+
+        c = Category.objects.get(pk=c.pk)
+        git_c = GitCategory.get(c.uuid)
+
+        self.assertEquals(git_c.title, 'new title')

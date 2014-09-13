@@ -200,9 +200,17 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         # store the page's uuid on the Post instance without triggering `save`
         Category.objects.filter(pk=instance.pk).update(uuid=category.uuid)
     else:
-        category = GitCategory.get(instance.uuid)
-        update_fields(category, instance)
-        category.save(True, message='Category updated: %s' % instance.title)
+        try:
+            category = GitCategory.get(instance.uuid)
+            update_fields(category, instance)
+            category.save(
+                True, message='Category updated: %s' % instance.title)
+        except exceptions.DoesNotExist:
+            category = GitCategory()
+            update_fields(category, instance)
+            category.save(
+                True, message='Category re-updated: %s' % instance.title)
+            Category.objects.filter(pk=instance.pk).update(uuid=category.uuid)
 
     utils.sync_repo()
     tasks.push_to_git.delay()
