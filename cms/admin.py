@@ -28,7 +28,8 @@ class CategoriesListFilter(SimpleListFilter):
 
 
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('title', 'subtitle', 'primary_category', 'created_at', 'uuid')
+    list_display = (
+        'title', 'subtitle', 'primary_category', 'created_at', 'uuid')
 
     list_filter = ('created_at', CategoriesListFilter,)
     search_fields = ('title', 'description', 'content')
