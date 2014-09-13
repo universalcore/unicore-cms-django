@@ -12,11 +12,10 @@
 {% endblock %}
 
 {% block breadcrumbs %}
-<div class="breadcrumbs">
-<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
-&rsaquo;
-Github Configuration
-</div>
+<ul>
+<li><a href="{% url 'admin:index' %}">{% trans 'Home' %}</a></li>
+<li>Github Configuration</li>
+</ul>
 {% endblock %}
 
 {% block content %}
