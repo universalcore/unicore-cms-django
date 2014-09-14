@@ -47,6 +47,7 @@ class PostAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if not obj.owner:
             obj.owner = request.user
+        obj.last_author = request.user
 
         super(PostAdmin, self).save_model(
             request,
@@ -59,6 +60,10 @@ class PostAdmin(admin.ModelAdmin):
 class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("title",)}
     list_display = ('title', 'subtitle', 'uuid')
+
+    def save_model(self, request, obj, form, change):
+        obj.last_author = request.user
+        super(CategoryAdmin, self).save_model(request, obj, form, change)
 
 
 @admin.site.register_view('github/', 'Github Configuration')
