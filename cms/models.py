@@ -246,6 +246,7 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Category)
 def auto_delete_category_to_git(sender, instance, **kwargs):
+    author = utils.get_author_from_user(instance.last_author)
     GitCategory.delete(
         instance.uuid, True, message='Category deleted: %s' % instance.title,
         author=author)
