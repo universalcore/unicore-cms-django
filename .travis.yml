@@ -1,6 +1,9 @@
 language: python
 python:
   - "2.7"
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y redis-server
 install:
   - ./install_libgit2
   - "pip install coveralls coverage --use-wheel"

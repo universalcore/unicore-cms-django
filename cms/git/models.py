@@ -20,6 +20,9 @@ class GitCategoryModel(FilterMixin, gitmodels.GitModel):
     title = fields.CharField(required=True)
     subtitle = fields.CharField(required=False)
 
+    def __unicode__(self):
+        return self.title
+
     @property
     def uuid(self):
         return self.id
@@ -59,6 +62,9 @@ class GitPageModel(FilterMixin, gitmodels.GitModel):
     published = fields.BooleanField(default=True)
     primary_category = fields.RelatedField(GitCategoryModel, required=False)
 
+    def __unicode__(self):
+        return self.title
+
     @property
     def uuid(self):
         return self.id
@@ -80,6 +86,6 @@ class GitPageModel(FilterMixin, gitmodels.GitModel):
             'primary_category': primary_category,
         }
 
-ws = utils.get_git_workspace(utils.init_repository())
+ws = utils.get_git_workspace()
 GitPage = ws.register_model(GitPageModel)
 GitCategory = ws.register_model(GitCategoryModel)

@@ -1,8 +1,13 @@
-from django.db.models import Q
+import pygit2
+from datetime import datetime
+
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
+from django.shortcuts import render
+from django.conf import settings
 
 from cms.models import Post, Category
+from cms.git import repo
 
 
 class CategoriesListFilter(SimpleListFilter):
@@ -25,12 +30,12 @@ class CategoriesListFilter(SimpleListFilter):
         """
         if self.value():
             category = Category.objects.get(slug=self.value())
-            return queryset.filter(
-                Q(primary_category=category) | Q(categories=category))
+            return queryset.filter(primary_category=category)
 
 
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('title', 'subtitle', 'created_at', 'uuid')
+    list_display = (
+        'title', 'subtitle', 'primary_category', 'created_at', 'uuid')
 
     list_filter = ('created_at', CategoriesListFilter,)
     search_fields = ('title', 'description', 'content')
@@ -42,6 +47,7 @@ class PostAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if not obj.owner:
             obj.owner = request.user
+        obj.last_author = request.user
 
         super(PostAdmin, self).save_model(
             request,
@@ -54,6 +60,34 @@ class PostAdmin(admin.ModelAdmin):
 class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("title",)}
     list_display = ('title', 'subtitle', 'uuid')
+
+    def save_model(self, request, obj, form, change):
+        obj.last_author = request.user
+        super(CategoryAdmin, self).save_model(request, obj, form, change)
+
+
+@admin.site.register_view('github/', 'Github Configuration')
+def my_view(request, *args, **kwargs):
+    branch = repo.lookup_branch(repo.head.shorthand)
+    last = repo[branch.target]
+    commits = []
+    for commit in repo.walk(last.id, pygit2.GIT_SORT_TIME):
+        commits.append(commit)
+
+    context = {
+        'github_url': settings.GIT_REPO_URL,
+        'repo': repo,
+        'commits': [
+            {
+                'message': c.message,
+                'author': c.author.name,
+                'commit_time': datetime.fromtimestamp(c.commit_time)
+            }
+            for c in commits
+        ]
+    }
+    return render(request, 'cms/admin/github.html', context)
+
 
 admin.site.register(Post, PostAdmin)
 admin.site.register(Category, CategoryAdmin)

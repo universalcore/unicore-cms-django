@@ -6,8 +6,9 @@ from django.db import models
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
-from cms import utils
+from cms import utils, tasks
 from cms.git.models import GitPage, GitCategory
+from gitmodel import exceptions
 
 
 class Category(models.Model):
@@ -40,6 +41,12 @@ class Category(models.Model):
         db_index=True,
         unique=True,
         help_text='Short descriptive unique name for use in urls.',
+    )
+    last_author = models.ForeignKey(
+        User,
+        blank=True,
+        null=True,
+        related_name='category_last_author'
     )
 
     def __unicode__(self):
@@ -112,6 +119,12 @@ class Post(models.Model):
         blank=True,
         null=True,
     )
+    last_author = models.ForeignKey(
+        User,
+        blank=True,
+        null=True,
+        related_name='post_last_author'
+    )
     primary_category = models.ForeignKey(
         Category,
         blank=True,
@@ -154,26 +167,44 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
             category = GitCategory.get(instance.primary_category.uuid)
             page.primary_category = category
 
+    author = utils.get_author_from_user(instance.last_author)
+
     if created:
         page = GitPage()
         update_fields(page, instance)
-        page.save(True, message='Page created: %s' % instance.title)
+        page.save(
+            True, message='Page created: %s' % instance.title,
+            author=author)
 
         # store the page's uuid on the Post instance without triggering `save`
         Post.objects.filter(pk=instance.pk).update(uuid=page.uuid)
     else:
-        page = GitPage.get(instance.uuid)
-        update_fields(page, instance)
-        page.save(True, message='Page updated: %s' % instance.title)
+        try:
+            page = GitPage.get(instance.uuid)
+            update_fields(page, instance)
+            page.save(
+                True, message='Page updated: %s' % instance.title,
+                author=author)
+        except exceptions.DoesNotExist:
+            page = GitPage()
+            update_fields(page, instance)
+            page.save(
+                True, message='Page re-created: %s' % instance.title,
+                author=author)
+            Post.objects.filter(pk=instance.pk).update(uuid=page.uuid)
 
     utils.sync_repo()
+    tasks.push_to_git.delay()
 
 
 @receiver(post_delete, sender=Post)
 def auto_delete_post_to_git(sender, instance, **kwargs):
+    author = utils.get_author_from_user(instance.last_author)
     GitPage.delete(
-        instance.uuid, True, message='Page deleted: %s' % instance.title)
+        instance.uuid, True, message='Page deleted: %s' % instance.title,
+        author=author)
     utils.sync_repo()
+    tasks.push_to_git.delay()
 
 
 @receiver(post_save, sender=Category)
@@ -183,23 +214,41 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         category.subtitle = instance.subtitle
         category.slug = instance.slug
 
+    author = utils.get_author_from_user(instance.last_author)
+
     if created:
         category = GitCategory()
         update_fields(category, instance)
-        category.save(True, message='Category created: %s' % instance.title)
+        category.save(
+            True, message='Category created: %s' % instance.title,
+            author=author)
 
         # store the page's uuid on the Post instance without triggering `save`
         Category.objects.filter(pk=instance.pk).update(uuid=category.uuid)
     else:
-        category = GitCategory.get(instance.uuid)
-        update_fields(category, instance)
-        category.save(True, message='Category updated: %s' % instance.title)
+        try:
+            category = GitCategory.get(instance.uuid)
+            update_fields(category, instance)
+            category.save(
+                True, message='Category updated: %s' % instance.title,
+                author=author)
+        except exceptions.DoesNotExist:
+            category = GitCategory()
+            update_fields(category, instance)
+            category.save(
+                True, message='Category re-updated: %s' % instance.title,
+                author=author)
+            Category.objects.filter(pk=instance.pk).update(uuid=category.uuid)
 
     utils.sync_repo()
+    tasks.push_to_git.delay()
 
 
 @receiver(post_delete, sender=Category)
 def auto_delete_category_to_git(sender, instance, **kwargs):
+    author = utils.get_author_from_user(instance.last_author)
     GitCategory.delete(
-        instance.uuid, True, message='Category deleted: %s' % instance.title)
+        instance.uuid, True, message='Category deleted: %s' % instance.title,
+        author=author)
     utils.sync_repo()
+    tasks.push_to_git.delay()

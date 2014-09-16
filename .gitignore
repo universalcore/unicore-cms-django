@@ -37,3 +37,4 @@ nosetests.xml
 logs/*.log
 *.pid
 *.db
+project/local_settings.py

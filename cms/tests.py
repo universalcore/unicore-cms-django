@@ -1,26 +1,23 @@
-import shutil
-
 from django.test import TestCase
 
 from cms.models import Post, Category
 from cms.git.models import GitPage, GitCategory
-from cms.utils import init_repository
+from cms import utils
 
 
 class PostTestCase(TestCase):
 
-    def delete_repo(self):
-        try:
-            shutil.rmtree(self.repo.path)
-        except:
-            pass
+    def clean_repo(self):
+        for p in GitPage.all():
+            GitPage.delete(p.uuid, True)
+        for c in GitCategory.all():
+            GitCategory.delete(c.uuid, True)
 
     def setUp(self):
-        self.delete_repo()
-        self.repo = init_repository()
+        self.clean_repo()
 
     def tearDown(self):
-        self.delete_repo()
+        self.clean_repo()
 
     def test_create_post(self):
         p = Post(
@@ -92,3 +89,39 @@ class PostTestCase(TestCase):
 
         git_p = GitPage.get(p.uuid)
         self.assertEquals(git_p.primary_category.slug, 'guides')
+
+    def test_page_recreated_if_not_in_git(self):
+        p = Post(
+            title='sample test title',
+            description='description',
+            subtitle='subtitle',
+            content='sample content')
+        p.save()
+        p = Post.objects.get(pk=p.pk)
+        GitPage.delete(p.uuid, True)
+        utils.sync_repo()
+
+        p.title = 'new title'
+        p.save()
+
+        p = Post.objects.get(pk=p.pk)
+        git_p = GitPage.get(p.uuid)
+
+        self.assertEquals(git_p.title, 'new title')
+
+    def test_category_recreated_if_not_in_git(self):
+        c = Category(
+            title='sample test title',
+            slug='slug')
+        c.save()
+        c = Category.objects.get(pk=c.pk)
+        GitCategory.delete(c.uuid, True)
+        utils.sync_repo()
+
+        c.title = 'new title'
+        c.save()
+
+        c = Category.objects.get(pk=c.pk)
+        git_c = GitCategory.get(c.uuid)
+
+        self.assertEquals(git_c.title, 'new title')
