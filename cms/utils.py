@@ -74,11 +74,12 @@ def sync_repo():
 
 
 def push_to_git():
-    if hasattr(settings, 'SSH_PUBKEY') and hasattr(settings, 'SSH_PRIVKEY'):
+    if hasattr(settings, 'SSH_PUBKEY_PATH') and hasattr(
+            settings, 'SSH_PRIVKEY_PATH'):
         key = pygit2.Keypair(
             'git',
-            settings.SSH_PUBKEY,
-            settings.SSH_PRIVKEY,
+            settings.SSH_PUBKEY_PATH,
+            settings.SSH_PRIVKEY_PATH,
             settings.SSH_PASSPHRASE)
 
         for remote in repo.remotes:

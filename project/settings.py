@@ -246,8 +246,8 @@ GIT_REPO_URL = None
 GIT_REPO_PATH = abspath('cmsrepo')
 
 # used when pushing to Github
-SSH_PUBKEY = None
-SSH_PRIVKEY = None
+SSH_PUBKEY_PATH = None
+SSH_PRIVKEY_PATH = None
 SSH_PASSPHRASE = ''
 
 try:
