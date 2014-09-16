@@ -2,6 +2,7 @@ buildscript: scripts/build
 postinstall: scripts/postinstall.sh
 pip:
  - gunicorn
+ - praekelt-python-gitmodel
 dependencies:
  - nginx
  - postgresql-server-dev-all

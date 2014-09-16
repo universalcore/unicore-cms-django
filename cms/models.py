@@ -1,12 +1,54 @@
-import re
 from django.utils import timezone
 
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
-from django.template.defaultfilters import slugify
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
 
-RE_NUMERICAL_SUFFIX = re.compile(r'^[\w-]*-(\d+)+$')
+from cms import utils
+from cms.git.models import GitPage, GitCategory
+
+
+class Category(models.Model):
+    """
+    Category model to be used for categorization of content. Categories are
+    high level constructs to be used for grouping and organizing content,
+    thus creating a site's table of contents.
+    """
+    uuid = models.CharField(
+        max_length=32,
+        blank=True,
+        null=True,
+        unique=True,
+        db_index=True,
+        editable=False)
+    title = models.CharField(
+        max_length=200,
+        help_text='Short descriptive name for this category.',
+    )
+    subtitle = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        default='',
+        help_text='Some titles may be the same and cause confusion in admin '
+                  'UI. A subtitle makes a distinction.',
+    )
+    slug = models.SlugField(
+        max_length=255,
+        db_index=True,
+        unique=True,
+        help_text='Short descriptive unique name for use in urls.',
+    )
+
+    def __unicode__(self):
+        return self.title
+
+    class Meta:
+        ordering = ('title',)
+        verbose_name = 'category'
+        verbose_name_plural = 'categories'
 
 
 class Post(models.Model):
@@ -14,6 +56,13 @@ class Post(models.Model):
     class Meta:
         ordering = ('-created_at',)
 
+    uuid = models.CharField(
+        max_length=32,
+        blank=True,
+        null=True,
+        unique=True,
+        db_index=True,
+        editable=False)
     title = models.CharField(
         _("Title"),
         max_length=200, help_text=_('A short descriptive title.'),
@@ -63,14 +112,8 @@ class Post(models.Model):
         blank=True,
         null=True,
     )
-    categories = models.ManyToManyField(
-        'category.Category',
-        blank=True,
-        null=True,
-        help_text=_('Categorizing this item.')
-    )
     primary_category = models.ForeignKey(
-        'category.Category',
+        Category,
         blank=True,
         null=True,
         help_text=_(
@@ -78,16 +121,10 @@ class Post(models.Model):
             "object's absolute/default URL."),
         related_name="primary_modelbase_set",
     )
-    tags = models.ManyToManyField(
-        'category.Tag',
-        blank=True,
-        null=True,
-        help_text=_('Tag this item.')
-    )
 
     def save(self, *args, **kwargs):
         # set title as slug uniquely
-        self.slug = self.generate_slug()
+        self.slug = utils.generate_slug(self)
 
         # set created time to now if not already set.
         if not self.created_at:
@@ -101,51 +138,68 @@ class Post(models.Model):
         else:
             return self.title
 
-    def generate_slug(self, tail_number=0):
-        """
-        Returns a new unique slug. Object must provide a SlugField called slug.
-        URL friendly slugs are generated using django.template.defaultfilters'
-        slugify. Numbers are added to the end of slugs for uniqueness.
-        """
-        # use django slugify filter to slugify
-        slug = slugify(self.title)
 
-        # Empty slugs are ugly (eg. '-1' may be generated) so force non-empty
-        if not slug:
-            slug = 'no-title'
+@receiver(post_save, sender=Post)
+def auto_save_post_to_git(sender, instance, created, **kwargs):
+    def update_fields(page, post):
+        page.title = instance.title
+        page.subtitle = instance.subtitle
+        page.slug = instance.slug
+        page.description = instance.description
+        page.content = instance.content
+        page.created_at = instance.created_at
+        page.modified_at = instance.modified_at
 
-        values_list = Post.objects.filter(
-            slug__startswith=slug
-        ).values_list('id', 'slug')
+        if instance.primary_category and instance.uuid:
+            category = GitCategory.get(instance.primary_category.uuid)
+            page.primary_category = category
 
-        # Find highest suffix
-        max = -1
-        for tu in values_list:
-            if tu[1] == slug:
-                if tu[0] == self.id:
-                    # If we encounter obj and the stored slug is the same as
-                    # the desired slug then return.
-                    return slug
+    if created:
+        page = GitPage()
+        update_fields(page, instance)
+        page.save(True, message='Page created: %s' % instance.title)
 
-                if max == -1:
-                    # Set max to indicate a collision
-                    max = 0
+        # store the page's uuid on the Post instance without triggering `save`
+        Post.objects.filter(pk=instance.pk).update(uuid=page.uuid)
+    else:
+        page = GitPage.get(instance.uuid)
+        update_fields(page, instance)
+        page.save(True, message='Page updated: %s' % instance.title)
 
-            # Update max if suffix is greater
-            match = RE_NUMERICAL_SUFFIX.match(tu[1])
-            if match is not None:
+    utils.sync_repo()
 
-                # If the collision is on self then use the existing slug
-                if tu[0] == self.id:
-                    return tu[1]
 
-                i = int(match.group(1))
-                if i > max:
-                    max = i
+@receiver(post_delete, sender=Post)
+def auto_delete_post_to_git(sender, instance, **kwargs):
+    GitPage.delete(
+        instance.uuid, True, message='Page deleted: %s' % instance.title)
+    utils.sync_repo()
 
-        if max >= 0:
-            # There were collisions
-            return "%s-%s" % (slug, max + 1)
-        else:
-            # No collisions
-            return slug
+
+@receiver(post_save, sender=Category)
+def auto_save_category_to_git(sender, instance, created, **kwargs):
+    def update_fields(category, post):
+        category.title = instance.title
+        category.subtitle = instance.subtitle
+        category.slug = instance.slug
+
+    if created:
+        category = GitCategory()
+        update_fields(category, instance)
+        category.save(True, message='Category created: %s' % instance.title)
+
+        # store the page's uuid on the Post instance without triggering `save`
+        Category.objects.filter(pk=instance.pk).update(uuid=category.uuid)
+    else:
+        category = GitCategory.get(instance.uuid)
+        update_fields(category, instance)
+        category.save(True, message='Category updated: %s' % instance.title)
+
+    utils.sync_repo()
+
+
+@receiver(post_delete, sender=Category)
+def auto_delete_category_to_git(sender, instance, **kwargs):
+    GitCategory.delete(
+        instance.uuid, True, message='Category deleted: %s' % instance.title)
+    utils.sync_repo()

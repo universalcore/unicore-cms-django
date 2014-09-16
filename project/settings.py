@@ -154,7 +154,6 @@ INSTALLED_APPS = (
 
     # sample apps to explain usage
     'cms',
-    'category',
 )
 
 # A sample logging configuration. The only tangible logging
@@ -237,6 +236,9 @@ CKEDITOR_CONFIGS = {
         'forcePasteAsPlainText': True,
     }
 }
+
+GIT_REPO_URL = None  # If specified, the repo will be cloned
+GIT_REPO_PATH = abspath('cmsrepo')
 
 try:
     from local_settings import *
