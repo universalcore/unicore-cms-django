@@ -69,8 +69,9 @@ def get_git_workspace():
 
 
 def sync_repo():
-    ws = get_git_workspace(init_repository())
+    ws = get_git_workspace()
     ws.sync_repo_index()
+
 
 def push_to_git():
     if hasattr(settings, 'SSH_PUBKEY') and hasattr(settings, 'SSH_PRIVKEY'):
