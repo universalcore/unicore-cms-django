@@ -63,7 +63,7 @@ def generate_slug(obj, tail_number=0):
 def init_repository():
     try:
         repo = pygit2.Repository(settings.GIT_REPO_PATH)
-    except:
+    except KeyError:
         repo = pygit2.init_repository(settings.GIT_REPO_PATH, False)
     repo_helper.checkout_all_upstream(repo)
     return repo
@@ -72,7 +72,7 @@ def init_repository():
 def get_git_workspace(repo):
     try:
         ws = Workspace(repo.path, repo.head.name)
-    except:
+    except pygit2.GitError:
         ws = Workspace(repo.path)
     return ws
 
