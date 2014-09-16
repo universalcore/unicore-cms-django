@@ -63,15 +63,14 @@ def generate_slug(obj, tail_number=0):
 def get_git_workspace():
     try:
         ws = Workspace(repo.path, repo.head.name)
-    except:
+    except pygit2.GitError:
         ws = Workspace(repo.path)
     return ws
 
 
 def sync_repo():
-    ws = get_git_workspace()
+    ws = get_git_workspace(init_repository())
     ws.sync_repo_index()
-
 
 def push_to_git():
     if hasattr(settings, 'SSH_PUBKEY') and hasattr(settings, 'SSH_PRIVKEY'):
