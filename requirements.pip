@@ -15,5 +15,5 @@ pyflakes
 fabric
 django-grappelli
 django-adminplus
-praekelt-python-gitmodel
+praekelt-python-gitmodel>=0.1.2
 unicore-gitmodels
