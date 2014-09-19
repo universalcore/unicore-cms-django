@@ -14,7 +14,7 @@ pip:
  - django-debug-toolbar
  - pep8
  - pyflakes
- - django-grappelli
+ - django-grappelli<2.6.1
  - django-adminplus
  - praekelt-python-gitmodel>=0.1.2
  - unicore-gitmodels
