@@ -9,8 +9,7 @@ from cms.git import repo
 RE_NUMERICAL_SUFFIX = re.compile(r'^[\w-]*-(\d+)+$')
 
 
-def generate_slug(obj, tail_number=0):
-    from cms.models import Post
+def generate_slug(obj, model, tail_number=0):
     """
     Returns a new unique slug. Object must provide a SlugField called slug.
     URL friendly slugs are generated using django.template.defaultfilters'
@@ -23,7 +22,7 @@ def generate_slug(obj, tail_number=0):
     if not slug:
         slug = 'no-title'
 
-    values_list = Post.objects.filter(
+    values_list = model.objects.filter(
         slug__startswith=slug
     ).values_list('id', 'slug')
 

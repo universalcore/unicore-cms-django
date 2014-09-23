@@ -125,3 +125,61 @@ class PostTestCase(TestCase):
         git_c = GitCategory.get(c.uuid)
 
         self.assertEquals(git_c.title, 'new title')
+
+    def test_page_with_source(self):
+        p = Post(
+            title='sample title',
+            description='description',
+            subtitle='subtitle',
+            content='sample content',
+            language='eng-UK')
+        p.save()
+
+        p2 = Post(
+            title='sample title',
+            description='description',
+            subtitle='subtitle',
+            content='sample content',
+            language='eng-US')
+        p2.save()
+        c = Category(
+            title='guides',
+            slug='guides')
+        c.save()
+
+        p = Post.objects.get(pk=p.pk)
+        p2 = Post.objects.get(pk=p2.pk)
+        c = Category.objects.get(pk=c.pk)
+
+        p.primary_category = c
+        p.save()
+        p2.primary_category = c
+        p2.source = p
+        p2.save()
+
+        git_p = GitPage.get(p.uuid)
+        git_p2 = GitPage.get(p2.uuid)
+        self.assertEquals(git_p2.language, 'eng-US')
+        self.assertEquals(git_p2.source.language, 'eng-UK')
+
+    def test_category_with_source(self):
+        c = Category(
+            title='sample title',
+            subtitle='subtitle',
+            language='afr-ZAF')
+        c.save()
+        c2 = Category(
+            title='sample title',
+            subtitle='subtitle',
+            language='eng-UK')
+        c2.save()
+
+        c = Category.objects.get(pk=c.pk)
+        c2 = Category.objects.get(pk=c2.pk)
+        c2.source = c
+        c2.save()
+
+        c = GitCategory.get(c.uuid)
+        c2 = GitCategory.get(c2.uuid)
+        self.assertEquals(c2.language, 'eng-UK')
+        self.assertEquals(c2.source.language, 'afr-ZAF')
