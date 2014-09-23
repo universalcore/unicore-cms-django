@@ -17,7 +17,6 @@ THA_TH = 'tha-TH'  # Thai
 IND_ID = 'ind-ID'  # Bahasa
 
 LANGUAGE_CHOICES = (
-    ('', 'None'),
     (ENG_UK, 'English (United Kingdom)'),
     (SWH_TZ, 'Swahili (Tanzania)'),
     (SWH_KE, 'Swahili (Kenya)'),

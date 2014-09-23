@@ -5,6 +5,8 @@ from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.shortcuts import render
 from django.conf import settings
+from django.contrib.admin.util import unquote
+from django.contrib.admin import helpers
 
 from cms.models import Post, Category
 from cms.git import repo
@@ -35,14 +37,24 @@ class CategoriesListFilter(SimpleListFilter):
 
 class PostAdmin(admin.ModelAdmin):
     list_display = (
-        'title', 'subtitle', 'primary_category', 'created_at', 'uuid')
+        'title', 'subtitle', 'primary_category', 'created_at', 'language',
+        'source', '_derivatives', 'uuid')
 
     list_filter = ('created_at', CategoriesListFilter,)
     search_fields = ('title', 'description', 'content')
+    raw_id_fields = ('source', 'owner')
     fieldsets = (
         (None, {'fields': ('title', 'subtitle', 'description', 'content', )}),
-        ('Meta', {'fields': ('primary_category', 'owner', 'created_at')})
+        ('Meta',
+            {'fields': (
+                'primary_category', 'owner', 'created_at', 'source',
+                'language')})
     )
+
+    def _derivatives(self, post):
+        return len(post.post_set.all())
+    _derivatives.short_description = 'Derivatives'
+    _derivatives.allow_tags = True
 
     def save_model(self, request, obj, form, change):
         if not obj.owner:
@@ -55,6 +67,27 @@ class PostAdmin(admin.ModelAdmin):
             form,
             change
         )
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        obj = self.get_object(request, unquote(object_id))
+
+        if not self.has_change_permission(request, obj):
+            raise PermissionDenied
+
+        if obj is None:
+            raise Http404(_('%(name)s object with primary key %(key)r does not exist.') % {'name': force_text(opts.verbose_name), 'key': escape(object_id)})
+
+        if obj.source:
+            ModelForm = self.get_form(request, obj.source)
+            form = ModelForm(instance=obj.source)
+            extra_context['sourceform'] = helpers.AdminForm(
+                form, self.get_fieldsets(request, obj.source),
+                self.get_prepopulated_fields(request, obj.source),
+                self.get_readonly_fields(request, obj.source),
+                model_admin=self)
+        return super(PostAdmin, self).change_view(
+            request, object_id, form_url, extra_context)
 
 
 class CategoryAdmin(admin.ModelAdmin):
