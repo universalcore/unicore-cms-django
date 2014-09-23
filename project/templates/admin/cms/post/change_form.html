@@ -4,7 +4,7 @@
 
 {% block stylesheets %}
 {{ block.super }}
-{% if original.source %}
+{% if sourceform %}
 <style type="text/css">
     .grp-change-form .grp-module:not(.grp-submit-row) {
         min-width: inherit; !important;
@@ -45,7 +45,7 @@
     {{ block.super }}
     </div>
 
-    {% if original.source %}
+    {% if sourceform %}
     {% with adminform=sourceform %}
     <div class="source">
     <form {% if has_file_field %}enctype="multipart/form-data" {% endif %}action="{{ form_url }}" method="post" id="{{ opts.model_name }}_form">{% csrf_token %}{% block form_top %}{% endblock %}
@@ -80,7 +80,7 @@
             <!-- JS for prepopulated fields -->
             {% prepopulated_fields_js %}
 
-            {% if original.source %}
+            {% if sourceform %}
             <script type="text/javascript" charset="utf-8">
             (function($) {
                 $(document).ready(function() {

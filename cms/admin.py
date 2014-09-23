@@ -68,6 +68,21 @@ class PostAdmin(admin.ModelAdmin):
             change
         )
 
+    def add_view(self, request, form_url='', extra_context=None):
+        object_id = request.GET.get('source', '')
+        extra_context = extra_context or {}
+        obj = self.get_object(request, unquote(object_id))
+
+        if obj is not None:
+            ModelForm = self.get_form(request, obj)
+            form = ModelForm(instance=obj)
+            extra_context['sourceform'] = helpers.AdminForm(
+                form, self.get_fieldsets(request, obj),
+                self.get_prepopulated_fields(request, obj),
+                self.get_readonly_fields(request, obj),
+                model_admin=self)
+        return super(PostAdmin, self).add_view(request, form_url, extra_context)
+
     def change_view(self, request, object_id, form_url='', extra_context=None):
         extra_context = extra_context or {}
         obj = self.get_object(request, unquote(object_id))
