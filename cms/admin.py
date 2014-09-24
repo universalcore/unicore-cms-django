@@ -34,8 +34,33 @@ class CategoriesListFilter(SimpleListFilter):
         Returns queryset filtered on categories and primary_category.
         """
         if self.value():
-            category = Category.objects.get(slug=self.value())
-            return queryset.filter(primary_category=category)
+            return queryset.filter(primary_category__slug=self.value())
+
+
+class PostSourceListFilter(SimpleListFilter):
+    title = "sources"
+    parameter_name = "source_slug"
+
+    def lookups(self, request, model_admin):
+        return Post.objects.filter(
+            post__isnull=False).values_list('slug', 'title')
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(source__slug=self.value())
+
+
+class CategorySourceListFilter(SimpleListFilter):
+    title = "sources"
+    parameter_name = "source_slug"
+
+    def lookups(self, request, model_admin):
+        return Category.objects.filter(
+            category__isnull=False).distinct().values_list('slug', 'title')
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(source__slug=self.value())
 
 
 class TranslatableModelAdmin(admin.ModelAdmin):
@@ -85,7 +110,8 @@ class PostAdmin(TranslatableModelAdmin):
         'title', 'subtitle', 'primary_category', 'created_at', 'language',
         'source', '_derivatives', 'uuid')
 
-    list_filter = ('created_at', 'language', CategoriesListFilter,)
+    list_filter = (
+        'created_at', 'language', CategoriesListFilter, PostSourceListFilter)
     search_fields = ('title', 'description', 'content')
     raw_id_fields = ('owner', )
     fieldsets = (
@@ -115,7 +141,7 @@ class PostAdmin(TranslatableModelAdmin):
 
 
 class CategoryAdmin(TranslatableModelAdmin):
-    list_filter = ('language', )
+    list_filter = ('language', CategorySourceListFilter)
     list_display = (
         'title', 'subtitle', 'language', 'source', '_derivatives', 'uuid')
 
