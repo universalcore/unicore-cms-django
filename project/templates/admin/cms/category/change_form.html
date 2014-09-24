@@ -12,7 +12,7 @@
 {% block object-tools-items %}
     {{ block.super }}
     {% if has_add_permission %}
-        {% url 'admin:cms_post_add' as add_url %}
+        {% url 'admin:cms_category_add' as add_url %}
         <li><a href="{% add_preserved_filters add_url %}?source={{object_id}}" class="addlink">{% trans "Translate" %}</a></li>
     {% endif %}
 {% endblock %}
@@ -66,7 +66,6 @@
                     $('.source-form div.c-1').remove();
                     $('.source-form form input').attr('disabled', 'disabled').removeAttr('id').removeAttr('name'); //Disable
                     $('.source-form form textarea').attr('readonly', 'true').removeAttr('id').removeAttr('name'); //Disable
-                    $('.source-form #id_primary_category').parent().html('<div class="c-2"><input type="text" disabled="disabled" value="{{sourceform.form.instance.primary_category|default_if_none:""}}"/></div>');
                     $('.source-form #id_language').parent().html('<div class="c-2"><input type="text" disabled="disabled"value="{{sourceform.form.instance.language|default_if_none:""}}"/></div>');
                     $('.source-form form').fadeIn();
                 });

@@ -1,0 +1,20 @@
+.grp-change-form .grp-module:not(.grp-submit-row) {
+    min-width: inherit;
+}
+form:first-child{
+    padding-right: 10px;
+}
+.translation-form form{
+    width: 60%;
+}
+.source-form form{
+    width: 38%;
+    display: none;
+}
+form{
+    float: left;
+    clear: none;
+}
+.grp-row .vTextField{
+    width: 100%;
+}

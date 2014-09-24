@@ -38,15 +38,56 @@ class CategoriesListFilter(SimpleListFilter):
             return queryset.filter(primary_category=category)
 
 
-class PostAdmin(admin.ModelAdmin):
+class TranslatableModelAdmin(admin.ModelAdmin):
+
+    def add_view(self, request, form_url='', extra_context=None):
+        object_id = request.GET.get('source', '')
+        extra_context = extra_context or {}
+        obj = self.get_object(request, unquote(object_id))
+
+        if obj is not None:
+            ModelForm = self.get_form(request, obj)
+            form = ModelForm(instance=obj)
+            extra_context['sourceform'] = helpers.AdminForm(
+                form, self.get_fieldsets(request, obj),
+                self.get_prepopulated_fields(request, obj),
+                self.get_readonly_fields(request, obj),
+                model_admin=self)
+        return super(TranslatableModelAdmin, self).add_view(
+            request, form_url, extra_context)
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        obj = self.get_object(request, unquote(object_id))
+
+        if not self.has_change_permission(request, obj):
+            raise PermissionDenied
+
+        if obj is None:
+            raise Http404(
+                'Post object with primary key %(key)r does not exist.' %
+                {'key': escape(object_id)})
+
+        if obj.source:
+            ModelForm = self.get_form(request, obj.source)
+            form = ModelForm(instance=obj.source)
+            extra_context['sourceform'] = helpers.AdminForm(
+                form, self.get_fieldsets(request, obj.source),
+                self.get_prepopulated_fields(request, obj.source),
+                self.get_readonly_fields(request, obj.source),
+                model_admin=self)
+        return super(TranslatableModelAdmin, self).change_view(
+            request, object_id, form_url, extra_context)
+
+
+class PostAdmin(TranslatableModelAdmin):
     list_display = (
         'title', 'subtitle', 'primary_category', 'created_at', 'language',
         'source', '_derivatives', 'uuid')
 
     list_filter = ('created_at', 'language', CategoriesListFilter,)
     search_fields = ('title', 'description', 'content')
-    raw_id_fields = ('source', 'owner')
-    readonly_fields = ('source', )
+    raw_id_fields = ('owner', )
     fieldsets = (
         (None, {'fields': ('title', 'subtitle', 'description', 'content', )}),
         (None, {'fields': ('primary_category', 'language')}),
@@ -72,56 +113,24 @@ class PostAdmin(admin.ModelAdmin):
             change
         )
 
-    def add_view(self, request, form_url='', extra_context=None):
-        object_id = request.GET.get('source', '')
-        extra_context = extra_context or {}
-        obj = self.get_object(request, unquote(object_id))
 
-        if obj is not None:
-            ModelForm = self.get_form(request, obj)
-            form = ModelForm(instance=obj)
-            extra_context['sourceform'] = helpers.AdminForm(
-                form, self.get_fieldsets(request, obj),
-                self.get_prepopulated_fields(request, obj),
-                self.get_readonly_fields(request, obj),
-                model_admin=self)
-        return super(PostAdmin, self).add_view(
-            request, form_url, extra_context)
-
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-        extra_context = extra_context or {}
-        obj = self.get_object(request, unquote(object_id))
-
-        if not self.has_change_permission(request, obj):
-            raise PermissionDenied
-
-        if obj is None:
-            raise Http404(
-                'Post object with primary key %(key)r does not exist.' %
-                {'key': escape(object_id)})
-
-        if obj.source:
-            ModelForm = self.get_form(request, obj.source)
-            form = ModelForm(instance=obj.source)
-            extra_context['sourceform'] = helpers.AdminForm(
-                form, self.get_fieldsets(request, obj.source),
-                self.get_prepopulated_fields(request, obj.source),
-                self.get_readonly_fields(request, obj.source),
-                model_admin=self)
-        return super(PostAdmin, self).change_view(
-            request, object_id, form_url, extra_context)
-
-
-class CategoryAdmin(admin.ModelAdmin):
+class CategoryAdmin(TranslatableModelAdmin):
     list_filter = ('language', )
-    list_display = ('title', 'subtitle', 'language', 'uuid')
-    raw_id_fields = ('source', )
-    readonly_fields = ('source', )
+    list_display = (
+        'title', 'subtitle', 'language', 'source', '_derivatives', 'uuid')
 
     fieldsets = (
         (None, {'fields': ('title', 'subtitle')}),
-        (None, {'fields': ('language', 'source')})
+        (None, {'fields': ('language', )}),
+        ('Meta', {
+            'fields': ('source', ),
+            'classes': ('grp-collapse grp-closed', )})
     )
+
+    def _derivatives(self, category):
+        return len(category.category_set.all())
+    _derivatives.short_description = 'Derivatives'
+    _derivatives.allow_tags = True
 
     def save_model(self, request, obj, form, change):
         obj.last_author = request.user
