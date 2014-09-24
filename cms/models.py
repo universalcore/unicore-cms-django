@@ -10,6 +10,20 @@ from cms import utils, tasks
 from cms.git.models import GitPage, GitCategory
 from gitmodel import exceptions
 
+ENG_UK = 'eng-UK'
+SWH_TZ = 'swh-TZ'  # Swahili
+SWH_KE = 'swh-KE'  # Swahili
+THA_TH = 'tha-TH'  # Thai
+IND_ID = 'ind-ID'  # Bahasa
+
+LANGUAGE_CHOICES = (
+    (ENG_UK, 'English (United Kingdom)'),
+    (SWH_TZ, 'Swahili (Tanzania)'),
+    (SWH_KE, 'Swahili (Kenya)'),
+    (THA_TH, 'Thai (Thailand)'),
+    (IND_ID, 'Bahasa (Indonesia)')
+)
+
 
 class Category(models.Model):
     """
@@ -48,14 +62,28 @@ class Category(models.Model):
         null=True,
         related_name='category_last_author'
     )
-
-    def __unicode__(self):
-        return self.title
+    language = models.CharField(
+        max_length=6,
+        blank=True,
+        null=True,
+        choices=LANGUAGE_CHOICES)
+    source = models.ForeignKey(
+        'self',
+        blank=True,
+        null=True)
 
     class Meta:
         ordering = ('title',)
         verbose_name = 'category'
         verbose_name_plural = 'categories'
+
+    def __unicode__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        # set title as slug uniquely
+        self.slug = utils.generate_slug(self, Category)
+        super(Category, self).save(*args, **kwargs)
 
 
 class Post(models.Model):
@@ -80,8 +108,8 @@ class Post(models.Model):
         null=True,
         default='',
         help_text=_(
-            'Some titles may be the same and cause confusion in admin'
-            'UI. A subtitle makes a distinction.'),
+            'Some titles may be the same and cause confusion in admin UI. '
+            'A subtitle makes a distinction.'),
     )
     slug = models.SlugField(
         editable=False,
@@ -129,15 +157,21 @@ class Post(models.Model):
         Category,
         blank=True,
         null=True,
-        help_text=_(
-            "Primary category for this item. Used to determine the"
-            "object's absolute/default URL."),
         related_name="primary_modelbase_set",
     )
+    language = models.CharField(
+        max_length=6,
+        blank=True,
+        null=True,
+        choices=LANGUAGE_CHOICES)
+    source = models.ForeignKey(
+        'self',
+        blank=True,
+        null=True)
 
     def save(self, *args, **kwargs):
         # set title as slug uniquely
-        self.slug = utils.generate_slug(self)
+        self.slug = utils.generate_slug(self, Post)
 
         # set created time to now if not already set.
         if not self.created_at:
@@ -162,10 +196,15 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         page.content = instance.content
         page.created_at = instance.created_at
         page.modified_at = instance.modified_at
+        page.language = instance.language
 
         if instance.primary_category and instance.uuid:
             category = GitCategory.get(instance.primary_category.uuid)
             page.primary_category = category
+
+        if instance.source and instance.uuid:
+            source = GitPage.get(instance.source.uuid)
+            page.source = source
 
     author = utils.get_author_from_user(instance.last_author)
 
@@ -213,6 +252,11 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         category.title = instance.title
         category.subtitle = instance.subtitle
         category.slug = instance.slug
+        category.language = instance.language
+
+        if instance.source and instance.uuid:
+            source = GitCategory.get(instance.source.uuid)
+            category.source = source
 
     author = utils.get_author_from_user(instance.last_author)
 
