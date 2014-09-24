@@ -7,6 +7,9 @@ from django.shortcuts import render
 from django.conf import settings
 from django.contrib.admin.util import unquote
 from django.contrib.admin import helpers
+from django.http import Http404
+from django.utils.html import escape
+from django.core.exceptions import PermissionDenied
 
 from cms.models import Post, Category
 from cms.git import repo
@@ -81,7 +84,8 @@ class PostAdmin(admin.ModelAdmin):
                 self.get_prepopulated_fields(request, obj),
                 self.get_readonly_fields(request, obj),
                 model_admin=self)
-        return super(PostAdmin, self).add_view(request, form_url, extra_context)
+        return super(PostAdmin, self).add_view(
+            request, form_url, extra_context)
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
         extra_context = extra_context or {}
@@ -91,7 +95,9 @@ class PostAdmin(admin.ModelAdmin):
             raise PermissionDenied
 
         if obj is None:
-            raise Http404(_('%(name)s object with primary key %(key)r does not exist.') % {'name': force_text(opts.verbose_name), 'key': escape(object_id)})
+            raise Http404(
+                'Post object with primary key %(key)r does not exist.' %
+                {'key': escape(object_id)})
 
         if obj.source:
             ModelForm = self.get_form(request, obj.source)
