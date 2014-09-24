@@ -48,7 +48,7 @@
     {% if sourceform %}
     {% with adminform=sourceform %}
     <div class="source">
-    <form {% if has_file_field %}enctype="multipart/form-data" {% endif %}action="{{ form_url }}" method="post" id="{{ opts.model_name }}_form">{% csrf_token %}{% block form_top %}{% endblock %}
+    <form>
         <div>
             <!-- Popup Hidden Field -->
             {% if is_popup %}<input type="hidden" name="_popup" value="1" />{% endif %}
@@ -87,8 +87,8 @@
                     $('.source div.c-1').remove();
                     $('.source form input').attr('disabled', 'disabled').removeAttr('id').removeAttr('name'); //Disable
                     $('.source form textarea').attr('readonly', 'true').removeAttr('id').removeAttr('name'); //Disable
-                    $('.source #id_primary_category').parent().html('<div class="c-2"><input type="text" disabled="disabled"value="{{original.source.primary_category.title}}"/></div>')
-                    $('.source #id_language').parent().html('<div class="c-2"><input type="text" disabled="disabled"value="{{original.source.language}}"/></div>')
+                    $('.source #id_primary_category').parent().html('<div class="c-2"><input type="text" disabled="disabled" value="{{sourceform.form.instance.primary_category}}"/></div>');
+                    $('.source #id_language').parent().html('<div class="c-2"><input type="text" disabled="disabled"value="{{sourceform.form.instance.language}}"/></div>');
                     $('.source form').show();
                 });
             })(grp.jQuery);

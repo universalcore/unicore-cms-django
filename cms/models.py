@@ -157,9 +157,6 @@ class Post(models.Model):
         Category,
         blank=True,
         null=True,
-        help_text=_(
-            "Primary category for this item. Used to determine the"
-            "object's absolute/default URL."),
         related_name="primary_modelbase_set",
     )
     language = models.CharField(
