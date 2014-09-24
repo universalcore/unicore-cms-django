@@ -89,7 +89,7 @@
                     $('.source form textarea').attr('readonly', 'true').removeAttr('id').removeAttr('name'); //Disable
                     $('.source #id_primary_category').parent().html('<div class="c-2"><input type="text" disabled="disabled" value="{{sourceform.form.instance.primary_category}}"/></div>');
                     $('.source #id_language').parent().html('<div class="c-2"><input type="text" disabled="disabled"value="{{sourceform.form.instance.language}}"/></div>');
-                    $('.source form').show();
+                    $('.source form').fadeIn();
                 });
             })(grp.jQuery);
         </script>

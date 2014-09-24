@@ -108,8 +108,8 @@ class Post(models.Model):
         null=True,
         default='',
         help_text=_(
-            'Some titles may be the same and cause confusion in admin'
-            'UI. A subtitle makes a distinction.'),
+            'Some titles may be the same and cause confusion in admin UI. '
+            'A subtitle makes a distinction.'),
     )
     slug = models.SlugField(
         editable=False,
