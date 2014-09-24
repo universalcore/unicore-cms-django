@@ -1,6 +1,7 @@
 buildscript: scripts/build
 postinstall: scripts/postinstall.sh
 pip:
+ - Django<1.7
  - gunicorn
  - South
  - python-memcached
