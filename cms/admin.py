@@ -46,12 +46,13 @@ class PostAdmin(admin.ModelAdmin):
     list_filter = ('created_at', 'language', CategoriesListFilter,)
     search_fields = ('title', 'description', 'content')
     raw_id_fields = ('source', 'owner')
+    readonly_fields = ('source', )
     fieldsets = (
         (None, {'fields': ('title', 'subtitle', 'description', 'content', )}),
-        ('Meta',
-            {'fields': (
-                'primary_category', 'owner', 'created_at', 'source',
-                'language')})
+        (None, {'fields': ('primary_category', 'language')}),
+        ('Meta', {
+            'fields': ('owner', 'created_at', 'source'),
+            'classes': ('grp-collapse grp-closed',)})
     )
 
     def _derivatives(self, post):
@@ -112,8 +113,15 @@ class PostAdmin(admin.ModelAdmin):
 
 
 class CategoryAdmin(admin.ModelAdmin):
-    prepopulated_fields = {"slug": ("title",)}
-    list_display = ('title', 'subtitle', 'uuid')
+    list_filter = ('language', )
+    list_display = ('title', 'subtitle', 'language', 'uuid')
+    raw_id_fields = ('source', )
+    readonly_fields = ('source', )
+
+    fieldsets = (
+        (None, {'fields': ('title', 'subtitle')}),
+        (None, {'fields': ('language', 'source')})
+    )
 
     def save_model(self, request, obj, form, change):
         obj.last_author = request.user
