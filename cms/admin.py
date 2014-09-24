@@ -43,7 +43,7 @@ class PostAdmin(admin.ModelAdmin):
         'title', 'subtitle', 'primary_category', 'created_at', 'language',
         'source', '_derivatives', 'uuid')
 
-    list_filter = ('created_at', CategoriesListFilter,)
+    list_filter = ('created_at', 'language', CategoriesListFilter,)
     search_fields = ('title', 'description', 'content')
     raw_id_fields = ('source', 'owner')
     fieldsets = (
