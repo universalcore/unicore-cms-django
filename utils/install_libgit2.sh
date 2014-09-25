@@ -1,3 +1,7 @@
+#!/bin/bash
+
+set -e
+
 export LIBGIT2=$VIRTUAL_ENV
 export LDFLAGS="-Wl,-rpath='$LIBGIT2/lib',--enable-new-dtags $LDFLAGS"
 wget https://github.com/libgit2/libgit2/archive/v0.21.1.tar.gz

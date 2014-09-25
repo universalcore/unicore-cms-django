@@ -5,9 +5,9 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y redis-server
 install:
-  - ./install_libgit2
+  - ./utils/install_libgit2.sh
   - "pip install coveralls coverage --use-wheel"
-  - "pip install -r requirements.pip --use-wheel"
+  - "pip install -e . --use-wheel"
 script:
   - LIBGIT2=$VIRTUAL_ENV DJANGO_SETTINGS_MODULE=test_settings coverage run --source=cms manage.py test cms
 after_success:
