@@ -108,15 +108,21 @@ class TranslatableModelAdmin(admin.ModelAdmin):
 class PostAdmin(TranslatableModelAdmin):
     list_display = (
         'title', 'subtitle', 'primary_category', 'created_at', 'language',
-        'source', '_derivatives', 'uuid')
+        'source', '_derivatives', 'uuid', 'featured_in_category')
 
     list_filter = (
-        'created_at', 'language', CategoriesListFilter, PostSourceListFilter)
+        'featured_in_category', 'created_at', 'language',
+        CategoriesListFilter, PostSourceListFilter
+    )
     search_fields = ('title', 'description', 'content')
     raw_id_fields = ('owner', )
     fieldsets = (
         (None, {'fields': ('title', 'subtitle', 'description', 'content', )}),
-        (None, {'fields': ('primary_category', 'language')}),
+        (None, {'fields': (
+            'primary_category',
+            'language',
+            'featured_in_category',
+        )}),
         ('Meta', {
             'fields': ('owner', 'created_at', 'source'),
             'classes': ('grp-collapse grp-closed',)})
