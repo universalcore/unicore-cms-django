@@ -159,6 +159,13 @@ class Post(models.Model):
         null=True,
         related_name="primary_modelbase_set",
     )
+    featured_in_category = models.BooleanField(
+        _('Feature in category post listing'),
+        default=False,
+        help_text=_(
+            'If checked this post will be displayed in the category\'s '
+            'list of featured posts.'))
+
     language = models.CharField(
         max_length=6,
         blank=True,
@@ -197,6 +204,7 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         page.created_at = instance.created_at
         page.modified_at = instance.modified_at
         page.language = instance.language
+        page.featured_in_category = instance.featured_in_category
 
         if instance.primary_category and instance.uuid:
             category = GitCategory.get(instance.primary_category.uuid)
