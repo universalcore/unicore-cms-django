@@ -26,6 +26,7 @@ class PostTestCase(TestCase):
             subtitle='subtitle',
             content='sample content')
         p.save()
+        self.assertEquals(p.featured_in_category, False)
         self.assertEquals(Post.objects.all().count(), 1)
         self.assertEquals(len(list(GitPage.all())), 1)
 
@@ -39,6 +40,7 @@ class PostTestCase(TestCase):
         self.assertEquals(git_page.uuid, p.uuid)
         self.assertEquals(git_page.subtitle, 'subtitle')
         self.assertEquals(git_page.description, 'description')
+        self.assertEquals(git_page.featured_in_category, False)
         self.assertTrue(git_page.created_at is not None)
         self.assertTrue(git_page.modified_at is not None)
 
@@ -161,6 +163,20 @@ class PostTestCase(TestCase):
         git_p2 = GitPage.get(p2.uuid)
         self.assertEquals(git_p2.language, 'eng-US')
         self.assertEquals(git_p2.source.language, 'eng-UK')
+
+    def test_page_featured_in_category(self):
+        p = Post(
+            title='sample title',
+            description='description',
+            subtitle='subtitle',
+            content='sample content',
+            language='eng-UK',
+            featured_in_category=True)
+        p.save()
+
+        p = Post.objects.get(pk=p.pk)
+        git_p = GitPage.get(p.uuid)
+        self.assertTrue(git_p.featured_in_category)
 
     def test_category_with_source(self):
         c = Category(
