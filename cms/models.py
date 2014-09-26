@@ -214,11 +214,11 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         page.featured_in_category = instance.featured_in_category
         page.featured = instance.featured
 
-        if instance.primary_category and instance.uuid:
+        if instance.primary_category:
             category = GitCategory.get(instance.primary_category.uuid)
             page.primary_category = category
 
-        if instance.source and instance.uuid:
+        if instance.source:
             source = GitPage.get(instance.source.uuid)
             page.source = source
 

@@ -72,22 +72,21 @@ class PostTestCase(TestCase):
         self.assertEquals(len(list(GitCategory.all())), 0)
 
     def test_page_with_primary_category(self):
+        c = Category(
+            title='guides',
+            slug='guides')
+        c.save()
+        c = Category.objects.get(pk=c.pk)
+
         p = Post(
             title='sample title',
             description='description',
             subtitle='subtitle',
             content='sample content')
-        p.save()
-        c = Category(
-            title='guides',
-            slug='guides')
-        c.save()
-
-        p = Post.objects.get(pk=p.pk)
-        c = Category.objects.get(pk=c.pk)
-
         p.primary_category = c
         p.save()
+
+        p = Post.objects.get(pk=p.pk)
 
         git_p = GitPage.get(p.uuid)
         self.assertEquals(git_p.primary_category.slug, 'guides')
@@ -129,6 +128,12 @@ class PostTestCase(TestCase):
         self.assertEquals(git_c.title, 'new title')
 
     def test_page_with_source(self):
+        c = Category(
+            title='guides',
+            slug='guides')
+        c.save()
+        c = Category.objects.get(pk=c.pk)
+
         p = Post(
             title='sample title',
             description='description',
@@ -136,6 +141,7 @@ class PostTestCase(TestCase):
             content='sample content',
             language='eng-UK')
         p.save()
+        p = Post.objects.get(pk=p.pk)
 
         p2 = Post(
             title='sample title',
@@ -143,23 +149,11 @@ class PostTestCase(TestCase):
             subtitle='subtitle',
             content='sample content',
             language='eng-US')
-        p2.save()
-        c = Category(
-            title='guides',
-            slug='guides')
-        c.save()
-
-        p = Post.objects.get(pk=p.pk)
-        p2 = Post.objects.get(pk=p2.pk)
-        c = Category.objects.get(pk=c.pk)
-
-        p.primary_category = c
-        p.save()
         p2.primary_category = c
         p2.source = p
         p2.save()
+        p2 = Post.objects.get(pk=p2.pk)
 
-        git_p = GitPage.get(p.uuid)
         git_p2 = GitPage.get(p2.uuid)
         self.assertEquals(git_p2.language, 'eng-US')
         self.assertEquals(git_p2.source.language, 'eng-UK')
