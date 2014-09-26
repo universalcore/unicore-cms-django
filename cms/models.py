@@ -10,11 +10,11 @@ from cms import utils, tasks
 from cms.git.models import GitPage, GitCategory
 from gitmodel import exceptions
 
-ENG_UK = 'eng-UK'
-SWH_TZ = 'swh-TZ'  # Swahili
-SWH_KE = 'swh-KE'  # Swahili
-THA_TH = 'tha-TH'  # Thai
-IND_ID = 'ind-ID'  # Bahasa
+ENG_UK = 'eng_UK'
+SWH_TZ = 'swh_TZ'  # Swahili
+SWH_KE = 'swh_KE'  # Swahili
+THA_TH = 'tha_TH'  # Thai
+IND_ID = 'ind_ID'  # Bahasa
 
 LANGUAGE_CHOICES = (
     (ENG_UK, 'English (United Kingdom)'),
