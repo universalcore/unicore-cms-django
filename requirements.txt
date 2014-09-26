@@ -16,4 +16,4 @@ fabric
 django-grappelli<2.6.1
 django-adminplus
 praekelt-python-gitmodel>=0.1.2
-unicore-gitmodels==1.2.0
+unicore-gitmodels==1.3.0

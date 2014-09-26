@@ -159,6 +159,13 @@ class Post(models.Model):
         null=True,
         related_name="primary_modelbase_set",
     )
+
+    featured = models.BooleanField(
+        _('Feature on homepage'),
+        default=False,
+        help_text=_(
+            'If checked this post will be displayed on the homepage.'))
+
     featured_in_category = models.BooleanField(
         _('Feature in category post listing'),
         default=False,
@@ -205,6 +212,7 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         page.modified_at = instance.modified_at
         page.language = instance.language
         page.featured_in_category = instance.featured_in_category
+        page.featured = instance.featured
 
         if instance.primary_category and instance.uuid:
             category = GitCategory.get(instance.primary_category.uuid)

@@ -108,10 +108,10 @@ class TranslatableModelAdmin(admin.ModelAdmin):
 class PostAdmin(TranslatableModelAdmin):
     list_display = (
         'title', 'subtitle', 'primary_category', 'created_at', 'language',
-        'source', '_derivatives', 'uuid', 'featured_in_category')
+        'source', '_derivatives', 'uuid', 'featured_in_category', 'featured')
 
     list_filter = (
-        'featured_in_category', 'created_at', 'language',
+        'featured_in_category', 'featured', 'created_at', 'language',
         CategoriesListFilter, PostSourceListFilter
     )
     search_fields = ('title', 'description', 'content')
@@ -122,6 +122,7 @@ class PostAdmin(TranslatableModelAdmin):
             'primary_category',
             'language',
             'featured_in_category',
+            'featured',
         )}),
         ('Meta', {
             'fields': ('owner', 'created_at', 'source'),
