@@ -178,6 +178,36 @@ class PostTestCase(TestCase):
         git_p = GitPage.get(p.uuid)
         self.assertTrue(git_p.featured_in_category)
 
+    def test_page_get_featured(self):
+        post = Post(
+            title='sample title',
+            description='description',
+            subtitle='subtitle',
+            content='sample content',
+            language='eng-UK')
+        post.save()
+
+        featured_post = Post(
+            title='featured sample title',
+            description='featured description',
+            subtitle='featured subtitle',
+            content='featured sample content',
+            language='eng-UK',
+            featured=True)
+        featured_post.save()
+
+        post = Post.objects.get(pk=post.pk)
+        git_post = GitPage.get(post.uuid)
+
+        featured_post = Post.objects.get(pk=featured_post.pk)
+        featured_git_post = GitPage.get(featured_post.uuid)
+
+        self.assertEqual(post.featured, False)
+        self.assertEquals(git_post.featured, False)
+
+        self.assertEqual(featured_post.featured, True)
+        self.assertEquals(featured_git_post.featured, True)
+
     def test_category_with_source(self):
         c = Category(
             title='sample title',
