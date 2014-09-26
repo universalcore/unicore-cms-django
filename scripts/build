@@ -2,5 +2,5 @@
 
 cp -a $REPO ./build/
 
-${PIP} install -r $REPO/requirements.pip
+${PIP} install -r $REPO/requirements.txt
 
