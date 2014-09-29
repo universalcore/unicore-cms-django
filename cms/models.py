@@ -71,6 +71,12 @@ class Category(models.Model):
         'self',
         blank=True,
         null=True)
+    featured_in_navbar = models.BooleanField(
+        _('Featured in navigation bar'),
+        default=False,
+        help_text=_(
+            'If checked this category will be displayed on the top'
+            'navigation bar. It will always appear on the homepage.'))
 
     class Meta:
         ordering = ('title',)
@@ -271,6 +277,7 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         category.subtitle = instance.subtitle
         category.slug = instance.slug
         category.language = instance.language
+        category.featured_in_navbar = instance.featured_in_navbar
 
         if instance.source and instance.uuid:
             source = GitCategory.get(instance.source.uuid)

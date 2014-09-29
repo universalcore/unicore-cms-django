@@ -223,3 +223,15 @@ class PostTestCase(TestCase):
         c2 = GitCategory.get(c2.uuid)
         self.assertEquals(c2.language, 'eng-UK')
         self.assertEquals(c2.source.language, 'afr-ZAF')
+
+    def test_category_with_featured_in_navbar(self):
+        c = Category(
+            title='sample title',
+            subtitle='subtitle',
+            language='afr-ZAF',
+            featured_in_navbar=True)
+        c.save()
+
+        c = Category.objects.get(pk=c.pk)
+        git_c = GitCategory.get(c.uuid)
+        self.assertTrue(git_c.featured_in_navbar)
