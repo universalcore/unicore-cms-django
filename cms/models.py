@@ -5,6 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.db import models
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from django.template.defaultfilters import slugify
 
 from cms import utils, tasks
 from cms.git.models import GitPage, GitCategory
@@ -53,7 +54,6 @@ class Category(models.Model):
     slug = models.SlugField(
         max_length=255,
         db_index=True,
-        unique=True,
         help_text='Short descriptive unique name for use in urls.',
     )
     last_author = models.ForeignKey(
@@ -81,8 +81,10 @@ class Category(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
-        # set title as slug uniquely
-        self.slug = utils.generate_slug(self, Category)
+        # use django slugify filter to slugify
+        if not self.slug:
+            self.slug = slugify(self.title)
+
         super(Category, self).save(*args, **kwargs)
 
 
@@ -112,10 +114,9 @@ class Post(models.Model):
             'A subtitle makes a distinction.'),
     )
     slug = models.SlugField(
-        editable=False,
         max_length=255,
         db_index=True,
-        unique=True,
+        help_text='Short descriptive unique name for use in urls.',
     )
     description = models.TextField(
         help_text=_(
@@ -184,8 +185,9 @@ class Post(models.Model):
         null=True)
 
     def save(self, *args, **kwargs):
-        # set title as slug uniquely
-        self.slug = utils.generate_slug(self, Post)
+        # use django slugify filter to slugify
+        if not self.slug:
+            self.slug = slugify(self.title)
 
         # set created time to now if not already set.
         if not self.created_at:
