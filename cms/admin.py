@@ -152,12 +152,13 @@ class PostAdmin(TranslatableModelAdmin):
 class CategoryAdmin(TranslatableModelAdmin):
     list_filter = ('language', CategorySourceListFilter)
     list_display = (
-        'title', 'subtitle', 'language', 'source', '_derivatives', 'uuid')
+        'title', 'subtitle', 'language', 'featured_in_navbar', 'source',
+        '_derivatives', 'uuid')
 
     prepopulated_fields = {"slug": ("title",)}
     fieldsets = (
         (None, {'fields': ('title', 'slug', 'subtitle')}),
-        (None, {'fields': ('language', )}),
+        (None, {'fields': ('language', 'featured_in_navbar')}),
         ('Meta', {
             'fields': ('source', ),
             'classes': ('grp-collapse grp-closed', )})
