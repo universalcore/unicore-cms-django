@@ -114,10 +114,12 @@ class PostAdmin(TranslatableModelAdmin):
         'featured_in_category', 'featured', 'created_at', 'language',
         CategoriesListFilter, PostSourceListFilter
     )
+    prepopulated_fields = {"slug": ("title",)}
     search_fields = ('title', 'description', 'content')
     raw_id_fields = ('owner', )
     fieldsets = (
-        (None, {'fields': ('title', 'subtitle', 'description', 'content', )}),
+        (None, {'fields': (
+            'title', 'slug', 'subtitle', 'description', 'content', )}),
         (None, {'fields': (
             'primary_category',
             'language',
@@ -152,8 +154,9 @@ class CategoryAdmin(TranslatableModelAdmin):
     list_display = (
         'title', 'subtitle', 'language', 'source', '_derivatives', 'uuid')
 
+    prepopulated_fields = {"slug": ("title",)}
     fieldsets = (
-        (None, {'fields': ('title', 'subtitle')}),
+        (None, {'fields': ('title', 'slug', 'subtitle')}),
         (None, {'fields': ('language', )}),
         ('Meta', {
             'fields': ('source', ),
