@@ -1,6 +1,13 @@
 import pygit2
 from datetime import datetime
 
+# ensure celery autodiscovery runs
+from djcelery import admin as celery_admin
+
+from djcelery.models import (
+    TaskState, WorkerState, PeriodicTask, IntervalSchedule, CrontabSchedule)
+
+
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.shortcuts import render
@@ -199,3 +206,10 @@ def my_view(request, *args, **kwargs):
 
 admin.site.register(Post, PostAdmin)
 admin.site.register(Category, CategoryAdmin)
+
+# remove celery from admin
+admin.site.unregister(TaskState)
+admin.site.unregister(WorkerState)
+admin.site.unregister(IntervalSchedule)
+admin.site.unregister(CrontabSchedule)
+admin.site.unregister(PeriodicTask)
