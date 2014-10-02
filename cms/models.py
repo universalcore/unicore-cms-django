@@ -209,10 +209,10 @@ class Post(models.Model):
             return self.title
 
 
-def push_to_git():
+def celery_push_to_git():
     if hasattr(settings, 'SSH_PUBKEY_PATH') and hasattr(
             settings, 'SSH_PRIVKEY_PATH'):
-        tasks.push_to_git.delay(
+        tasks.celery_push_to_git.delay(
             settings.GIT_REPO_PATH,
             settings.SSH_PUBKEY_PATH,
             settings.SSH_PRIVKEY_PATH,
@@ -268,7 +268,7 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
             Post.objects.filter(pk=instance.pk).update(uuid=page.uuid)
 
     utils.sync_repo()
-    push_to_git()
+    celery_push_to_git()
 
 
 @receiver(post_delete, sender=Post)
@@ -278,7 +278,7 @@ def auto_delete_post_to_git(sender, instance, **kwargs):
         instance.uuid, True, message='Page deleted: %s' % instance.title,
         author=author)
     utils.sync_repo()
-    push_to_git()
+    celery_push_to_git()
 
 
 @receiver(post_save, sender=Category)
@@ -321,7 +321,7 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
             Category.objects.filter(pk=instance.pk).update(uuid=category.uuid)
 
     utils.sync_repo()
-    push_to_git()
+    celery_push_to_git()
 
 
 @receiver(post_delete, sender=Category)
@@ -331,4 +331,4 @@ def auto_delete_category_to_git(sender, instance, **kwargs):
         instance.uuid, True, message='Category deleted: %s' % instance.title,
         author=author)
     utils.sync_repo()
-    push_to_git()
+    celery_push_to_git()
