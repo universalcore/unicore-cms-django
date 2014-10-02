@@ -4,20 +4,18 @@ from gitmodel.utils import repo_helper
 from django.conf import settings
 
 
-def get_credentials():
-    if hasattr(settings, 'SSH_PUBKEY_PATH') and hasattr(
-            settings, 'SSH_PRIVKEY_PATH'):
+def get_credentials(ssh_pubkey_path, ssh_privkey_path, ssh_passphrase=None):
+    if ssh_pubkey_path and ssh_privkey_path:
         return pygit2.Keypair(
             'git',
-            settings.SSH_PUBKEY_PATH,
-            settings.SSH_PRIVKEY_PATH,
-            settings.SSH_PASSPHRASE)
+            ssh_pubkey_path,
+            ssh_privkey_path,
+            ssh_passphrase)
     return None
 
 
-def init_repository(repo_path, repo_url=None):
+def init_repository(repo_path, repo_url=None, credentials=None):
     if repo_url and not os.path.exists(repo_path):
-        credentials = get_credentials()
         pygit2.clone_repository(repo_url, repo_path, credentials=credentials)
 
     try:
@@ -27,4 +25,7 @@ def init_repository(repo_path, repo_url=None):
     repo_helper.checkout_all_upstream(repo)
     return repo
 
-repo = init_repository(settings.GIT_REPO_PATH, settings.GIT_REPO_URL)
+repo = init_repository(
+    settings.GIT_REPO_PATH,
+    settings.GIT_REPO_URL,
+    get_credentials(settings.SSH_PUBKEY_PATH, settings.SSH_PRIVKEY_PATH))
