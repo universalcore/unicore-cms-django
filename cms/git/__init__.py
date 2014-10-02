@@ -15,19 +15,16 @@ def get_credentials():
     return None
 
 
-def init_repository():
-    if settings.GIT_REPO_URL and not os.path.exists(settings.GIT_REPO_PATH):
+def init_repository(repo_path, repo_url=None):
+    if repo_url and not os.path.exists(repo_path):
         credentials = get_credentials()
-        pygit2.clone_repository(
-            settings.GIT_REPO_URL,
-            settings.GIT_REPO_PATH,
-            credentials=credentials)
+        pygit2.clone_repository(repo_url, repo_path, credentials=credentials)
 
     try:
-        repo = pygit2.Repository(settings.GIT_REPO_PATH)
+        repo = pygit2.Repository(repo_path)
     except KeyError:
-        repo = pygit2.init_repository(settings.GIT_REPO_PATH, False)
+        repo = pygit2.init_repository(repo_path, False)
     repo_helper.checkout_all_upstream(repo)
     return repo
 
-repo = init_repository()
+repo = init_repository(settings.GIT_REPO_PATH, settings.GIT_REPO_URL)

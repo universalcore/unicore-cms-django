@@ -1,8 +1,7 @@
 import pygit2
-from django.conf import settings
 
 from gitmodel.workspace import Workspace
-from cms.git import repo
+from cms.git import repo, init_repository
 
 
 def get_git_workspace():
@@ -18,14 +17,11 @@ def sync_repo():
     ws.sync_repo_index()
 
 
-def push_to_git():
-    if hasattr(settings, 'SSH_PUBKEY_PATH') and hasattr(
-            settings, 'SSH_PRIVKEY_PATH'):
+def push_to_git(repo_path, ssh_pubkey_path, ssh_privkey_path, passphrase=None):
+    repo = init_repository(repo_path)
+    if ssh_pubkey_path and ssh_privkey_path:
         key = pygit2.Keypair(
-            'git',
-            settings.SSH_PUBKEY_PATH,
-            settings.SSH_PRIVKEY_PATH,
-            settings.SSH_PASSPHRASE)
+            'git', ssh_pubkey_path, ssh_privkey_path, passphrase)
 
         for remote in repo.remotes:
             remote.credentials = key
