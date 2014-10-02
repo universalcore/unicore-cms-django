@@ -212,7 +212,7 @@ class Post(models.Model):
 def celery_push_to_git():
     if hasattr(settings, 'SSH_PUBKEY_PATH') and hasattr(
             settings, 'SSH_PRIVKEY_PATH'):
-        tasks.celery_push_to_git.delay(
+        tasks.push_to_git.delay(
             settings.GIT_REPO_PATH,
             settings.SSH_PUBKEY_PATH,
             settings.SSH_PRIVKEY_PATH,
