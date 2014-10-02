@@ -18,15 +18,13 @@ def sync_repo():
 
 
 def push_to_git(repo_path, ssh_pubkey_path, ssh_privkey_path, passphrase=None):
-    credentials = get_credentials(
-        ssh_pubkey_path, ssh_privkey_path, passphrase)
     repo = init_repository(repo_path)
     if ssh_pubkey_path and ssh_privkey_path:
-        key = pygit2.Keypair(
-            'git', ssh_pubkey_path, ssh_privkey_path, passphrase)
+        credentials = get_credentials(
+            ssh_pubkey_path, ssh_privkey_path, passphrase)
 
         for remote in repo.remotes:
-            remote.credentials = key
+            remote.credentials = credentials
             remote.push(repo.head.name)
 
 
