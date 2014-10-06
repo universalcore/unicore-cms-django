@@ -156,6 +156,7 @@ INSTALLED_APPS = (
     'djcelery',
     'debug_toolbar',
     'sortedm2m',
+    'pagedown',
 
     # sample apps to explain usage
     'cms',

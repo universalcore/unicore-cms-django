@@ -19,6 +19,7 @@ from django.utils.html import escape
 from django.core.exceptions import PermissionDenied
 
 from cms.models import Post, Category
+from cms.forms import PostForm
 from cms.git import repo
 
 
@@ -113,6 +114,8 @@ class TranslatableModelAdmin(admin.ModelAdmin):
 
 
 class PostAdmin(TranslatableModelAdmin):
+    form = PostForm
+
     list_display = (
         'title', 'subtitle', 'primary_category', 'created_at', 'language',
         'source', '_derivatives', 'uuid', 'featured_in_category', 'featured')
