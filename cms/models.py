@@ -87,7 +87,10 @@ class Category(models.Model):
         verbose_name_plural = 'categories'
 
     def __unicode__(self):
-        return self.title
+        if self.language:
+            return '%s (%s)' % (self.title, self.language)
+        else:
+            return self.title
 
     def save(self, *args, **kwargs):
         # use django slugify filter to slugify
