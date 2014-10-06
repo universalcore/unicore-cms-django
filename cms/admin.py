@@ -132,6 +132,7 @@ class PostAdmin(TranslatableModelAdmin):
             'language',
             'featured_in_category',
             'featured',
+            'related_posts',
         )}),
         ('Meta', {
             'fields': ('owner', 'created_at', 'source'),
