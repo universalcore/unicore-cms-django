@@ -8,6 +8,8 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 
+from sortedm2m.fields import SortedManyToManyField
+
 from cms import utils, tasks
 from cms.git.models import GitPage, GitCategory
 from gitmodel import exceptions
@@ -181,6 +183,8 @@ class Post(models.Model):
             'If checked this post will be displayed in the category\'s '
             'list of featured posts.'))
 
+    related_posts = SortedManyToManyField('self', blank=True)
+
     language = models.CharField(
         max_length=6,
         blank=True,
@@ -232,6 +236,8 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         page.language = instance.language
         page.featured_in_category = instance.featured_in_category
         page.featured = instance.featured
+        page.linked_pages = [post.uuid
+                             for post in instance.related_posts.all()]
 
         if instance.primary_category:
             category = GitCategory.get(instance.primary_category.uuid)

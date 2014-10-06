@@ -155,6 +155,7 @@ INSTALLED_APPS = (
     'raven.contrib.django.raven_compat',
     'djcelery',
     'debug_toolbar',
+    'sortedm2m',
 
     # sample apps to explain usage
     'cms',
