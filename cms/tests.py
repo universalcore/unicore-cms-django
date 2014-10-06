@@ -235,3 +235,17 @@ class PostTestCase(TestCase):
         c = Category.objects.get(pk=c.pk)
         git_c = GitCategory.get(c.uuid)
         self.assertTrue(git_c.featured_in_navbar)
+
+    def test_localisation_for_helper(self):
+        localisations = Localisation.objects.filter(
+            language_code='eng', country_code='UK')
+        self.assertEqual(localisations.count(), 0)
+        localisation1 = Localisation._for('eng_UK')
+        localisation2 = Localisation._for('eng_UK')
+        self.assertEqual(localisations.count(), 1)
+        self.assertEquals(localisation1.pk, localisation2.pk)
+
+    def test_localisation_get_code_helper(self):
+        self.assertEqual(
+            Localisation._for('eng_UK').get_code(),
+            'eng_UK')
