@@ -10,6 +10,7 @@ from djcelery.models import (
 
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
+from django.contrib.sites.models import Site
 from django.shortcuts import render
 from django.conf import settings
 from django.contrib.admin.util import unquote
@@ -18,7 +19,7 @@ from django.http import Http404
 from django.utils.html import escape
 from django.core.exceptions import PermissionDenied
 
-from cms.models import Post, Category
+from cms.models import Post, Category, Localisation
 from cms.forms import PostForm
 from cms.git import repo
 
@@ -117,11 +118,11 @@ class PostAdmin(TranslatableModelAdmin):
     form = PostForm
 
     list_display = (
-        'title', 'subtitle', 'primary_category', 'created_at', 'language',
+        'title', 'subtitle', 'primary_category', 'created_at', 'localisation',
         'source', '_derivatives', 'uuid', 'featured_in_category', 'featured')
 
     list_filter = (
-        'featured_in_category', 'featured', 'created_at', 'language',
+        'featured_in_category', 'featured', 'created_at', 'localisation',
         CategoriesListFilter, PostSourceListFilter
     )
     prepopulated_fields = {"slug": ("title",)}
@@ -132,7 +133,7 @@ class PostAdmin(TranslatableModelAdmin):
             'title', 'slug', 'subtitle', 'description', 'content', )}),
         (None, {'fields': (
             'primary_category',
-            'language',
+            'localisation',
             'featured_in_category',
             'featured',
             'related_posts',
@@ -161,17 +162,17 @@ class PostAdmin(TranslatableModelAdmin):
 
 
 class CategoryAdmin(TranslatableModelAdmin):
-    list_filter = ('language', CategorySourceListFilter)
+    list_filter = ('localisation', CategorySourceListFilter)
     list_display = (
-        'title', 'subtitle', 'language', 'featured_in_navbar', 'source',
-        '_derivatives', 'uuid')
+        'title', 'subtitle', 'localisation', 'featured_in_navbar', 'source',
+        '_derivatives', 'uuid',)
 
     prepopulated_fields = {"slug": ("title",)}
     fieldsets = (
         (None, {'fields': ('title', 'slug', 'subtitle')}),
-        (None, {'fields': ('language', 'featured_in_navbar')}),
+        (None, {'fields': ('localisation', 'featured_in_navbar',)}),
         ('Meta', {
-            'fields': ('source', ),
+            'fields': ('source', 'site'),
             'classes': ('grp-collapse grp-closed', )})
     )
 
@@ -183,6 +184,17 @@ class CategoryAdmin(TranslatableModelAdmin):
     def save_model(self, request, obj, form, change):
         obj.last_author = request.user
         super(CategoryAdmin, self).save_model(request, obj, form, change)
+
+
+class CategoryInline(admin.StackedInline):
+    model = Category
+    extra = 0
+    sortable_field_name = 'position'
+    sortable_excludes = ('localisation',)
+
+
+class LocalisationAdmin(admin.ModelAdmin):
+    inlines = (CategoryInline,)
 
 
 @admin.site.register_view('github/', 'Github Configuration')
@@ -217,3 +229,5 @@ admin.site.unregister(WorkerState)
 admin.site.unregister(IntervalSchedule)
 admin.site.unregister(CrontabSchedule)
 admin.site.unregister(PeriodicTask)
+
+admin.site.register(Localisation, LocalisationAdmin)

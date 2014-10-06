@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from cms.models import Post, Category
+from cms.models import Post, Category, Localisation
 from cms.git.models import GitPage, GitCategory
 from cms import utils
 
@@ -139,7 +139,7 @@ class PostTestCase(TestCase):
             description='description',
             subtitle='subtitle',
             content='sample content',
-            language='eng-UK')
+            localisation=Localisation._for('eng_UK'))
         p.save()
         p = Post.objects.get(pk=p.pk)
 
@@ -148,15 +148,15 @@ class PostTestCase(TestCase):
             description='description',
             subtitle='subtitle',
             content='sample content',
-            language='eng-US')
+            localisation=Localisation._for('eng_US'))
         p2.primary_category = c
         p2.source = p
         p2.save()
         p2 = Post.objects.get(pk=p2.pk)
 
         git_p2 = GitPage.get(p2.uuid)
-        self.assertEquals(git_p2.language, 'eng-US')
-        self.assertEquals(git_p2.source.language, 'eng-UK')
+        self.assertEquals(git_p2.language, 'eng_US')
+        self.assertEquals(git_p2.source.language, 'eng_UK')
 
     def test_page_featured_in_category(self):
         p = Post(
@@ -164,7 +164,7 @@ class PostTestCase(TestCase):
             description='description',
             subtitle='subtitle',
             content='sample content',
-            language='eng-UK',
+            localisation=Localisation._for('eng_UK'),
             featured_in_category=True)
         p.save()
 
@@ -178,7 +178,7 @@ class PostTestCase(TestCase):
             description='description',
             subtitle='subtitle',
             content='sample content',
-            language='eng-UK')
+            localisation=Localisation._for('eng_UK'))
         post.save()
 
         featured_post = Post(
@@ -186,7 +186,7 @@ class PostTestCase(TestCase):
             description='featured description',
             subtitle='featured subtitle',
             content='featured sample content',
-            language='eng-UK',
+            localisation=Localisation._for('eng_UK'),
             featured=True)
         featured_post.save()
 
@@ -206,12 +206,12 @@ class PostTestCase(TestCase):
         c = Category(
             title='sample title',
             subtitle='subtitle',
-            language='afr-ZAF')
+            localisation=Localisation._for('afr_ZA'))
         c.save()
         c2 = Category(
             title='sample title',
             subtitle='subtitle',
-            language='eng-UK')
+            localisation=Localisation._for('eng_UK'))
         c2.save()
 
         c = Category.objects.get(pk=c.pk)
@@ -221,14 +221,14 @@ class PostTestCase(TestCase):
 
         c = GitCategory.get(c.uuid)
         c2 = GitCategory.get(c2.uuid)
-        self.assertEquals(c2.language, 'eng-UK')
-        self.assertEquals(c2.source.language, 'afr-ZAF')
+        self.assertEquals(c2.language, 'eng_UK')
+        self.assertEquals(c2.source.language, 'afr_ZA')
 
     def test_category_with_featured_in_navbar(self):
         c = Category(
             title='sample title',
             subtitle='subtitle',
-            language='afr-ZAF',
+            localisation=Localisation._for('afr_ZA'),
             featured_in_navbar=True)
         c.save()
 
