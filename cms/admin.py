@@ -10,7 +10,6 @@ from djcelery.models import (
 
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
-from django.contrib.sites.models import Site
 from django.shortcuts import render
 from django.conf import settings
 from django.contrib.admin.util import unquote
@@ -172,7 +171,7 @@ class CategoryAdmin(TranslatableModelAdmin):
         (None, {'fields': ('title', 'slug', 'subtitle')}),
         (None, {'fields': ('localisation', 'featured_in_navbar',)}),
         ('Meta', {
-            'fields': ('source', 'site'),
+            'fields': ('source', ),
             'classes': ('grp-collapse grp-closed', )})
     )
 
