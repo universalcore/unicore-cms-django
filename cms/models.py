@@ -228,7 +228,7 @@ def celery_push_to_git():
 
 @receiver(post_save, sender=Post)
 def auto_save_post_to_git(sender, instance, created, **kwargs):
-    def update_fields(page, post):
+    def update_fields(page):
         page.title = instance.title
         page.subtitle = instance.subtitle
         page.slug = instance.slug
@@ -250,30 +250,25 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
             source = GitPage.get(instance.source.uuid)
             page.source = source
 
+        if instance.uuid:
+            page.id = instance.uuid
+
     author = utils.get_author_from_user(instance.last_author)
 
-    if created:
+    try:
+        page = GitPage.get(instance.uuid)
+        update_fields(page)
+        page.save(
+            True, message='Page updated: %s' % instance.title,
+            author=author)
+    except exceptions.DoesNotExist:
         page = GitPage()
-        update_fields(page, instance)
+        update_fields(page)
         page.save(
             True, message='Page created: %s' % instance.title,
             author=author)
 
-        # store the page's uuid on the Post instance without triggering `save`
-        Post.objects.filter(pk=instance.pk).update(uuid=page.uuid)
-    else:
-        try:
-            page = GitPage.get(instance.uuid)
-            update_fields(page, instance)
-            page.save(
-                True, message='Page updated: %s' % instance.title,
-                author=author)
-        except exceptions.DoesNotExist:
-            page = GitPage()
-            update_fields(page, instance)
-            page.save(
-                True, message='Page re-created: %s' % instance.title,
-                author=author)
+        if not instance.uuid:
             Post.objects.filter(pk=instance.pk).update(uuid=page.uuid)
 
     utils.sync_repo()
@@ -283,16 +278,19 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=Post)
 def auto_delete_post_to_git(sender, instance, **kwargs):
     author = utils.get_author_from_user(instance.last_author)
-    GitPage.delete(
-        instance.uuid, True, message='Page deleted: %s' % instance.title,
-        author=author)
-    utils.sync_repo()
-    celery_push_to_git()
+    try:
+        GitPage.delete(
+            instance.uuid, True, message='Page deleted: %s' % instance.title,
+            author=author)
+        utils.sync_repo()
+        celery_push_to_git()
+    except:
+        pass
 
 
 @receiver(post_save, sender=Category)
 def auto_save_category_to_git(sender, instance, created, **kwargs):
-    def update_fields(category, post):
+    def update_fields(category):
         category.title = instance.title
         category.subtitle = instance.subtitle
         category.slug = instance.slug
@@ -303,30 +301,25 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
             source = GitCategory.get(instance.source.uuid)
             category.source = source
 
+        if instance.uuid:
+            category.id = instance.uuid
+
     author = utils.get_author_from_user(instance.last_author)
 
-    if created:
+    try:
+        category = GitCategory.get(instance.uuid)
+        update_fields(category)
+        category.save(
+            True, message='Category updated: %s' % instance.title,
+            author=author)
+    except exceptions.DoesNotExist:
         category = GitCategory()
-        update_fields(category, instance)
+        update_fields(category)
         category.save(
             True, message='Category created: %s' % instance.title,
             author=author)
 
-        # store the page's uuid on the Post instance without triggering `save`
-        Category.objects.filter(pk=instance.pk).update(uuid=category.uuid)
-    else:
-        try:
-            category = GitCategory.get(instance.uuid)
-            update_fields(category, instance)
-            category.save(
-                True, message='Category updated: %s' % instance.title,
-                author=author)
-        except exceptions.DoesNotExist:
-            category = GitCategory()
-            update_fields(category, instance)
-            category.save(
-                True, message='Category re-updated: %s' % instance.title,
-                author=author)
+        if not instance.uuid:
             Category.objects.filter(pk=instance.pk).update(uuid=category.uuid)
 
     utils.sync_repo()
@@ -336,8 +329,12 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=Category)
 def auto_delete_category_to_git(sender, instance, **kwargs):
     author = utils.get_author_from_user(instance.last_author)
-    GitCategory.delete(
-        instance.uuid, True, message='Category deleted: %s' % instance.title,
-        author=author)
-    utils.sync_repo()
-    celery_push_to_git()
+    try:
+        GitCategory.delete(
+            instance.uuid, True,
+            message='Category deleted: %s' % instance.title,
+            author=author)
+        utils.sync_repo()
+        celery_push_to_git()
+    except:
+        pass
