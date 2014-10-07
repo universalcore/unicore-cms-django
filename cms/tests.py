@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.core.management import call_command
 
 from cms.models import Post, Category, Localisation
 from cms.git.models import GitPage, GitCategory
@@ -18,6 +19,31 @@ class PostTestCase(TestCase):
 
     def tearDown(self):
         self.clean_repo()
+
+    def create_categories(
+            self, names=[u'Diarrhoea', u'Hygiene'], locale='eng_UK',
+            featured_in_navbar=False):
+        categories = []
+        for name in names:
+            category = GitCategory(title=name, language=locale)
+            category.featured_in_navbar = featured_in_navbar
+            category.slug = category.slugify(name)
+            category.save(True, message=u'added %s Category' % (name,))
+            categories.append(GitCategory.get(category.uuid))
+
+        return categories
+
+    def create_pages(self, count=2, locale='eng_UK'):
+        pages = []
+        for i in range(count):
+            page = GitPage(
+                title=u'Test Page %s' % (i,),
+                content=u'this is sample content for pg %s' % (i,),
+                language=locale)
+            page.save(True, message=u'added page %s' % (i,))
+            pages.append(GitPage.get(page.uuid))
+
+        return pages
 
     def test_create_post(self):
         p = Post(
@@ -244,6 +270,36 @@ class PostTestCase(TestCase):
         localisation2 = Localisation._for('eng_UK')
         self.assertEqual(localisations.count(), 1)
         self.assertEquals(localisation1.pk, localisation2.pk)
+
+    def test_import_from_git_command(self):
+        cat1, cat2 = self.create_categories()
+        cat1.source = cat2
+        cat1.save(True, message='Added source to category.')
+        pages = self.create_pages(count=10)
+
+        for page in pages[:8]:
+            page.primary_category = cat1
+            page.save(True, message='Added category.')
+
+        page0 = pages[0]
+        page0.linked_pages = [pages[1].uuid, pages[2].uuid, pages[3].uuid]
+        page0.source = pages[4]
+        page0.save(True, message='Added related fields.')
+
+        self.assertEquals(Category.objects.all().count(), 0)
+        self.assertEquals(Post.objects.all().count(), 0)
+        call_command('import_from_git', quiet=True)
+
+        self.assertEquals(Category.objects.all().count(), 2)
+        self.assertEquals(Post.objects.all().count(), 10)
+
+        c = Category.objects.get(uuid=cat1.uuid)
+        self.assertEquals(c.source.uuid, cat2.uuid)
+
+        p = Post.objects.get(uuid=page0.uuid)
+        self.assertEquals(p.related_posts.count(), 3)
+        self.assertEquals(p.primary_category.uuid, cat1.uuid)
+        self.assertEquals(p.source.uuid, pages[4].uuid)
 
     def test_localisation_get_code_helper(self):
         self.assertEqual(
