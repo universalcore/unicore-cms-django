@@ -3,7 +3,7 @@ from django.utils.six.moves import input
 
 from optparse import make_option
 
-from cms.models import Post, Category
+from cms.models import Post, Category, Localisation
 from cms.git.models import GitPage, GitCategory
 
 from html2text import html2text
@@ -43,7 +43,7 @@ class Command(BaseCommand):
                 slug=instance.slug,
                 title=instance.title,
                 subtitle=instance.subtitle,
-                language=instance.language,
+                localisation=Localisation._for(instance.language),
                 featured_in_navbar=instance.featured_in_navbar,
                 uuid=instance.uuid
             )
@@ -73,7 +73,7 @@ class Command(BaseCommand):
                 modified_at=instance.modified_at,
                 featured_in_category=instance.featured_in_category,
                 featured=instance.featured,
-                language=instance.language,
+                localisation=Localisation._for(instance.language),
                 primary_category=primary_category,
                 uuid=instance.uuid
             )
