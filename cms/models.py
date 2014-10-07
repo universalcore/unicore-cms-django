@@ -29,6 +29,36 @@ LANGUAGE_CHOICES = (
 )
 
 
+class Localisation(models.Model):
+    country_code = models.CharField(
+        _('2 letter country code'), max_length=2,
+        help_text=(
+            'See http://www.worldatlas.com/aatlas/ctycodes.htm '
+            'for reference.'))
+    language_code = models.CharField(
+        _('3 letter language code'), max_length=3,
+        help_text=(
+            'See http://www.loc.gov/standards/iso639-2/php/code_list.php '
+            'for reference.'))
+
+    @classmethod
+    def _for(cls, language):
+        language_code, _, country_code = language.partition('_')
+        localisation, _ = cls.objects.get_or_create(
+            language_code=language_code, country_code=country_code)
+        return localisation
+
+    def get_code(self):
+        return u'%s_%s' % (self.language_code, self.country_code)
+
+    def __unicode__(self):
+        """
+        FIXME: this is probably a bad idea
+        """
+        language = self.get_code()
+        return unicode(dict(LANGUAGE_CHOICES).get(language, language))
+
+
 class Category(models.Model):
     """
     Category model to be used for categorization of content. Categories are
@@ -65,11 +95,8 @@ class Category(models.Model):
         null=True,
         related_name='category_last_author'
     )
-    language = models.CharField(
-        max_length=6,
-        blank=True,
-        null=True,
-        choices=LANGUAGE_CHOICES)
+    localisation = models.ForeignKey(
+        Localisation, blank=True, null=True)
     source = models.ForeignKey(
         'self',
         blank=True,
@@ -80,15 +107,17 @@ class Category(models.Model):
         help_text=_(
             'If checked this category will be displayed on the top'
             'navigation bar. It will always appear on the homepage.'))
+    position = models.PositiveIntegerField(
+        _('Position in Ordering'), null=True)
 
     class Meta:
-        ordering = ('title',)
+        ordering = ('position', 'title',)
         verbose_name = 'category'
         verbose_name_plural = 'categories'
 
     def __unicode__(self):
-        if self.language:
-            return '%s (%s)' % (self.title, self.language)
+        if self.localisation:
+            return '%s (%s)' % (self.title, self.localisation)
         else:
             return self.title
 
@@ -188,11 +217,8 @@ class Post(models.Model):
 
     related_posts = SortedManyToManyField('self', blank=True)
 
-    language = models.CharField(
-        max_length=6,
-        blank=True,
-        null=True,
-        choices=LANGUAGE_CHOICES)
+    localisation = models.ForeignKey(
+        Localisation, blank=True, null=True)
     source = models.ForeignKey(
         'self',
         blank=True,
@@ -236,11 +262,13 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         page.content = instance.content
         page.created_at = instance.created_at
         page.modified_at = instance.modified_at
-        page.language = instance.language
+        page.language = (
+            instance.localisation.get_code()
+            if instance.localisation else None)
         page.featured_in_category = instance.featured_in_category
         page.featured = instance.featured
-        page.linked_pages = [post.uuid
-                             for post in instance.related_posts.all()]
+        page.linked_pages = [related_post.uuid
+                             for related_post in instance.related_posts.all()]
 
         if instance.primary_category:
             category = GitCategory.get(instance.primary_category.uuid)
@@ -294,7 +322,9 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         category.title = instance.title
         category.subtitle = instance.subtitle
         category.slug = instance.slug
-        category.language = instance.language
+        category.language = (
+            instance.localisation.get_code()
+            if instance.localisation else None)
         category.featured_in_navbar = instance.featured_in_navbar
 
         if instance.source and instance.uuid:
