@@ -1,15 +1,10 @@
-import os
-import pygit2
-import shutil
-
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.utils.six.moves import input
 
 from optparse import make_option
-from gitmodel.workspace import Workspace
-from unicore_gitmodels import models
 
 from cms.models import Post, Category
+from cms.git.models import GitPage, GitCategory
 
 from html2text import html2text
 
@@ -19,46 +14,21 @@ class Command(BaseCommand):
 
     option_list = BaseCommand.option_list + (
         make_option(
-            '--repo',
-            action='store',
-            dest='repo',
-            default=False,
-            help='The url for the github repository'),
-        make_option(
-            '--fake',
+            '--quiet',
             action='store_true',
-            dest='fake',
+            dest='quiet',
             default=False,
-            help='Exports the data without saving to db')
+            help='imports the data using default arguments'),
     )
 
     def handle(self, *args, **options):
-        repo_url = options.get('repo')
+        quiet = options.get('quiet')
 
-        if not repo_url:
-            raise CommandError(
-                'Missing options. --repo is reqiured.')
-
-        print 'cloning repo..'
-
-        repo_path = os.path.join(os.getcwd(), 'cms_temp_repo')
-
-        if os.path.exists(repo_path):
-            shutil.rmtree(repo_path)
-
-        self.repo = pygit2.clone_repository(
-            repo_url, repo_path)
-
-        try:
-            ws = Workspace(self.repo.path, self.repo.head.name)
-        except pygit2.GitError:
-            ws = Workspace(self.repo.path)
-
-        self.GitPage = ws.register_model(models.GitPageModel)
-        self.GitCategory = ws.register_model(models.GitCategoryModel)
-
-        must_delete = self.get_input_data(
-            'Do you want to delete existing data? Y/n: ', 'y')
+        if not quiet:
+            must_delete = self.get_input_data(
+                'Do you want to delete existing data? Y/n: ', 'y')
+        else:
+            must_delete = 'y'
 
         if must_delete.lower() == 'y':
             print 'deleting existing content..'
@@ -66,7 +36,9 @@ class Command(BaseCommand):
             Category.objects.all().delete()
 
         print 'creating categories..'
-        for instance in self.GitCategory.all():
+        categories = list(GitCategory.all())
+
+        for instance in categories:
             Category.objects.create(
                 slug=instance.slug,
                 title=instance.title,
@@ -76,8 +48,17 @@ class Command(BaseCommand):
                 uuid=instance.uuid
             )
 
+        # second pass to add related fields
+        for instance in categories:
+            if instance.source:
+                p = Category.objects.get(uuid=instance.uuid)
+                p.source = Category.objects.get(uuid=instance.source.uuid)
+                p.save()
+
         print 'creating pages..'
-        for instance in self.GitPage.all():
+        pages = list(GitPage.all())
+
+        for instance in pages:
             primary_category = None
             if instance.primary_category:
                 primary_category = Category.objects.get(
@@ -98,10 +79,10 @@ class Command(BaseCommand):
             )
 
         # second pass to add related fields
-        for instance in self.GitPage.all():
+        for instance in pages:
             if instance.source:
                 p = Post.objects.get(uuid=instance.uuid)
-                p.source = Post.get(uuid=instance.source.uuid)
+                p.source = Post.objects.get(uuid=instance.source.uuid)
                 p.save()
 
             if instance.linked_pages:
