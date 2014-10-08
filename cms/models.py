@@ -203,17 +203,18 @@ class Post(models.Model):
     )
 
     featured = models.BooleanField(
-        _('Feature on homepage'),
+        _('Feature in latest'),
         default=False,
         help_text=_(
-            'If checked this post will be displayed on the homepage.'))
+            'If checked this post will be displayed on the homepage '
+            'under the latest section.'))
 
     featured_in_category = models.BooleanField(
         _('Feature in category post listing'),
         default=False,
         help_text=_(
             'If checked this post will be displayed in the category\'s '
-            'list of featured posts.'))
+            'list of featured posts on the homepage.'))
 
     related_posts = SortedManyToManyField('self', blank=True)
 
