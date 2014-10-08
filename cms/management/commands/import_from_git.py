@@ -65,7 +65,8 @@ class Command(BaseCommand):
                 subtitle=instance.subtitle,
                 localisation=Localisation._for(instance.language),
                 featured_in_navbar=instance.featured_in_navbar,
-                uuid=instance.uuid
+                uuid=instance.uuid,
+                position=instance.position,
             )
 
         # second pass to add related fields

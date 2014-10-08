@@ -22,10 +22,11 @@ class PostTestCase(TestCase):
 
     def create_categories(
             self, names=[u'Diarrhoea', u'Hygiene'], locale='eng_UK',
-            featured_in_navbar=False):
+            featured_in_navbar=False, position=0):
         categories = []
         for name in names:
             category = GitCategory(title=name, language=locale)
+            category.position = position
             category.featured_in_navbar = featured_in_navbar
             category.slug = category.slugify(name)
             category.save(True, message=u'added %s Category' % (name,))
@@ -272,8 +273,9 @@ class PostTestCase(TestCase):
         self.assertEquals(localisation1.pk, localisation2.pk)
 
     def test_import_from_git_command(self):
-        cat1, cat2 = self.create_categories()
+        cat1, cat2 = self.create_categories(position=3)
         cat1.source = cat2
+        cat1.position = 4
         cat1.save(True, message='Added source to category.')
         pages = self.create_pages(count=10)
 
@@ -295,6 +297,7 @@ class PostTestCase(TestCase):
 
         c = Category.objects.get(uuid=cat1.uuid)
         self.assertEquals(c.source.uuid, cat2.uuid)
+        self.assertEquals(c.position, 4)
 
         p = Post.objects.get(uuid=page0.uuid)
         self.assertEquals(p.related_posts.count(), 3)
@@ -305,3 +308,16 @@ class PostTestCase(TestCase):
         self.assertEqual(
             Localisation._for('eng_UK').get_code(),
             'eng_UK')
+
+    def test_category_position_is_saved(self):
+        c = Category(
+            title='sample title',
+            subtitle='subtitle',
+            localisation=Localisation._for('afr_ZA'),
+            featured_in_navbar=True,
+            position=4)
+        c.save()
+
+        c = Category.objects.get(pk=c.pk)
+        git_c = GitCategory.get(c.uuid)
+        self.assertEquals(git_c.position, 4)

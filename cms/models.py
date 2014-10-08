@@ -323,6 +323,7 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         category.title = instance.title
         category.subtitle = instance.subtitle
         category.slug = instance.slug
+        category.position = instance.position
         category.language = (
             instance.localisation.get_code()
             if instance.localisation else None)
