@@ -63,20 +63,25 @@ class Command(BaseCommand):
             if instance.primary_category:
                 primary_category = Category.objects.get(
                     uuid=instance.primary_category.uuid)
-            Post.objects.create(
-                title=instance.title,
-                subtitle=instance.subtitle,
-                slug=instance.slug,
-                description=instance.description,
-                content=html2text(instance.content),
-                created_at=instance.created_at,
-                modified_at=instance.modified_at,
-                featured_in_category=instance.featured_in_category,
-                featured=instance.featured,
-                localisation=Localisation._for(instance.language),
-                primary_category=primary_category,
-                uuid=instance.uuid
-            )
+            try:
+                Post.objects.create(
+                    title=instance.title,
+                    subtitle=instance.subtitle,
+                    slug=instance.slug,
+                    description=instance.description,
+                    content=html2text(instance.content),
+                    created_at=instance.created_at,
+                    modified_at=instance.modified_at,
+                    featured_in_category=instance.featured_in_category,
+                    featured=instance.featured,
+                    localisation=Localisation._for(instance.language),
+                    primary_category=primary_category,
+                    uuid=instance.uuid
+                )
+            except Exception, e:
+                print 'An error occured with: %s(%s)' % (
+                    instance.title, instance.uuid)
+                print e
 
         # second pass to add related fields
         for instance in pages:
