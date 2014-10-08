@@ -1,9 +1,13 @@
 from django.core.management.base import BaseCommand
 from django.utils.six.moves import input
+from django.db.models.signals import post_save, post_delete
 
 from optparse import make_option
 
-from cms.models import Post, Category, Localisation
+from cms.models import (
+    Post, Category, Localisation, auto_save_post_to_git,
+    auto_save_category_to_git, auto_delete_post_to_git,
+    auto_delete_category_to_git)
 from cms.git.models import GitPage, GitCategory
 
 from html2text import html2text
@@ -21,8 +25,24 @@ class Command(BaseCommand):
             help='imports the data using default arguments'),
     )
 
+    def disconnect_signals(self):
+        post_save.disconnect(auto_save_post_to_git, sender=Post)
+        post_delete.disconnect(auto_delete_post_to_git, sender=Post)
+
+        post_save.disconnect(auto_save_category_to_git, sender=Category)
+        post_delete.disconnect(auto_delete_category_to_git, sender=Category)
+
+    def reconnect_signals(self):
+        post_save.connect(auto_save_post_to_git, sender=Post)
+        post_delete.connect(auto_delete_post_to_git, sender=Post)
+
+        post_save.connect(auto_save_category_to_git, sender=Category)
+        post_delete.connect(auto_delete_category_to_git, sender=Category)
+
     def handle(self, *args, **options):
         quiet = options.get('quiet')
+
+        self.disconnect_signals()
 
         if not quiet:
             must_delete = self.get_input_data(
@@ -96,6 +116,7 @@ class Command(BaseCommand):
                     Post.objects.filter(uuid__in=instance.linked_pages)))
                 p.save()
 
+        self.reconnect_signals()
         print 'done.'
 
     def get_input_data(self, message, default=None):
