@@ -1,3 +1,4 @@
+import json
 import pygit2
 from datetime import datetime
 
@@ -7,20 +8,20 @@ from djcelery import admin as celery_admin
 from djcelery.models import (
     TaskState, WorkerState, PeriodicTask, IntervalSchedule, CrontabSchedule)
 
-
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.shortcuts import render
 from django.conf import settings
 from django.contrib.admin.util import unquote
 from django.contrib.admin import helpers
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.utils.html import escape
 from django.core.exceptions import PermissionDenied
 
 from cms.models import Post, Category, Localisation
 from cms.forms import PostForm
 from cms.git import repo
+from cms import utils, tasks
 
 
 class CategoriesListFilter(SimpleListFilter):
@@ -219,6 +220,22 @@ def my_view(request, *args, **kwargs):
         ]
     }
     return render(request, 'cms/admin/github.html', context)
+
+
+@admin.site.register_view('github/push/', 'Push to github')
+def push_to_github(request, *args, **kwargs):
+    if hasattr(settings, 'SSH_PUBKEY_PATH') and hasattr(
+            settings, 'SSH_PRIVKEY_PATH'):
+        utils.sync_repo()
+        tasks.push_to_git.delay(
+            settings.GIT_REPO_PATH,
+            settings.SSH_PUBKEY_PATH,
+            settings.SSH_PRIVKEY_PATH,
+            settings.SSH_PASSPHRASE)
+
+    return HttpResponse(
+        json.dumps({'success': True}),
+        mimetype='application/json')
 
 
 admin.site.register(Post, PostAdmin)
