@@ -10,7 +10,8 @@ from djcelery.models import (
 
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.contrib.admin.util import unquote
 from django.contrib.admin import helpers
@@ -233,9 +234,12 @@ def push_to_github(request, *args, **kwargs):
             settings.SSH_PRIVKEY_PATH,
             settings.SSH_PASSPHRASE)
 
-    return HttpResponse(
-        json.dumps({'success': True}),
-        mimetype='application/json')
+    if request.is_ajax():
+        return HttpResponse(
+            json.dumps({'success': True}),
+            mimetype='application/json')
+
+    return redirect(reverse('admin:index'))
 
 
 admin.site.register(Post, PostAdmin)
