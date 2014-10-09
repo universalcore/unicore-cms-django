@@ -126,7 +126,7 @@ class PostAdmin(TranslatableModelAdmin):
     )
     prepopulated_fields = {"slug": ("title",)}
     search_fields = ('title', 'description', 'content')
-    raw_id_fields = ('owner', )
+    raw_id_fields = ('owner', 'source')
     fieldsets = (
         (None, {'fields': (
             'title', 'slug', 'subtitle', 'description', 'content', )}),
@@ -166,6 +166,7 @@ class CategoryAdmin(TranslatableModelAdmin):
         'title', 'subtitle', 'localisation', 'featured_in_navbar', 'source',
         '_derivatives', 'uuid',)
 
+    raw_id_fields = ('source', )
     prepopulated_fields = {"slug": ("title",)}
     fieldsets = (
         (None, {'fields': ('title', 'slug', 'subtitle')}),
@@ -190,6 +191,7 @@ class CategoryInline(admin.StackedInline):
     extra = 0
     sortable_field_name = 'position'
     sortable_excludes = ('localisation',)
+    raw_id_fields = ('source', 'last_author')
 
 
 class LocalisationAdmin(admin.ModelAdmin):
