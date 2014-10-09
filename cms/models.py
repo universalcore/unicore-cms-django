@@ -1,6 +1,5 @@
 from django.utils import timezone
 
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
@@ -10,7 +9,7 @@ from django.template.defaultfilters import slugify
 
 from sortedm2m.fields import SortedManyToManyField
 
-from cms import utils, tasks
+from cms import utils
 from cms.git.models import GitPage, GitCategory
 from gitmodel import exceptions
 
@@ -243,16 +242,6 @@ class Post(models.Model):
             return self.title
 
 
-def celery_push_to_git():
-    if hasattr(settings, 'SSH_PUBKEY_PATH') and hasattr(
-            settings, 'SSH_PRIVKEY_PATH'):
-        tasks.push_to_git.delay(
-            settings.GIT_REPO_PATH,
-            settings.SSH_PUBKEY_PATH,
-            settings.SSH_PRIVKEY_PATH,
-            settings.SSH_PASSPHRASE)
-
-
 @receiver(post_save, sender=Post)
 def auto_save_post_to_git(sender, instance, created, **kwargs):
     def update_fields(page):
@@ -300,9 +289,6 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         if not instance.uuid:
             Post.objects.filter(pk=instance.pk).update(uuid=page.uuid)
 
-    utils.sync_repo()
-    celery_push_to_git()
-
 
 @receiver(post_delete, sender=Post)
 def auto_delete_post_to_git(sender, instance, **kwargs):
@@ -311,8 +297,6 @@ def auto_delete_post_to_git(sender, instance, **kwargs):
         GitPage.delete(
             instance.uuid, True, message='Page deleted: %s' % instance.title,
             author=author)
-        utils.sync_repo()
-        celery_push_to_git()
     except:
         pass
 
@@ -354,9 +338,6 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         if not instance.uuid:
             Category.objects.filter(pk=instance.pk).update(uuid=category.uuid)
 
-    utils.sync_repo()
-    celery_push_to_git()
-
 
 @receiver(post_delete, sender=Category)
 def auto_delete_category_to_git(sender, instance, **kwargs):
@@ -366,7 +347,5 @@ def auto_delete_category_to_git(sender, instance, **kwargs):
             instance.uuid, True,
             message='Category deleted: %s' % instance.title,
             author=author)
-        utils.sync_repo()
-        celery_push_to_git()
     except:
         pass

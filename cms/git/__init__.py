@@ -1,6 +1,7 @@
 import os
 import pygit2
 from gitmodel.utils import repo_helper
+from gitmodel.workspace import Workspace
 from django.conf import settings
 
 
@@ -29,3 +30,12 @@ repo = init_repository(
     settings.GIT_REPO_PATH,
     settings.GIT_REPO_URL,
     get_credentials(settings.SSH_PUBKEY_PATH, settings.SSH_PRIVKEY_PATH))
+
+
+def get_git_workspace():
+    try:
+        return Workspace(repo.path, repo.head.name)
+    except pygit2.GitError:
+        return Workspace(repo.path)
+
+workspace = get_git_workspace()

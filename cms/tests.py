@@ -3,6 +3,7 @@ from django.core.management import call_command
 
 from cms.models import Post, Category, Localisation
 from cms.git.models import GitPage, GitCategory
+from cms.git import workspace
 from cms import utils
 
 
@@ -127,7 +128,6 @@ class PostTestCase(TestCase):
         p.save()
         p = Post.objects.get(pk=p.pk)
         GitPage.delete(p.uuid, True)
-        utils.sync_repo()
 
         p.title = 'new title'
         p.save()
@@ -144,7 +144,6 @@ class PostTestCase(TestCase):
         c.save()
         c = Category.objects.get(pk=c.pk)
         GitCategory.delete(c.uuid, True)
-        utils.sync_repo()
 
         c.title = 'new title'
         c.save()
