@@ -20,8 +20,8 @@ from django.core.exceptions import PermissionDenied
 
 from cms.models import Post, Category, Localisation
 from cms.forms import PostForm
-from cms.git import repo
-from cms import utils, tasks
+from cms.git import repo, workspace
+from cms import tasks
 
 
 class CategoriesListFilter(SimpleListFilter):
@@ -216,7 +216,7 @@ def my_view(request, *args, **kwargs):
                 'author': c.author.name,
                 'commit_time': datetime.fromtimestamp(c.commit_time)
             }
-            for c in commits
+            for c in commits[:10]
         ]
     }
     return render(request, 'cms/admin/github.html', context)
@@ -226,7 +226,7 @@ def my_view(request, *args, **kwargs):
 def push_to_github(request, *args, **kwargs):
     if hasattr(settings, 'SSH_PUBKEY_PATH') and hasattr(
             settings, 'SSH_PRIVKEY_PATH'):
-        utils.sync_repo()
+        workspace.sync_repo_index()
         tasks.push_to_git.delay(
             settings.GIT_REPO_PATH,
             settings.SSH_PUBKEY_PATH,

@@ -1,6 +1,6 @@
 from unicore_gitmodels import models
-from cms import utils
+from cms.git import workspace
 
-ws = utils.get_git_workspace()
-GitPage = ws.register_model(models.GitPageModel)
-GitCategory = ws.register_model(models.GitCategoryModel)
+
+GitPage = workspace.register_model(models.GitPageModel)
+GitCategory = workspace.register_model(models.GitCategoryModel)

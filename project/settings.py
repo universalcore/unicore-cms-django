@@ -123,6 +123,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.tz",
     "django.contrib.messages.context_processors.messages",
     "django.core.context_processors.request",
+    "cms.context_processors.workspace_changes",
 )
 
 ROOT_URLCONF = 'project.urls'
