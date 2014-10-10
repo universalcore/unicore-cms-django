@@ -224,7 +224,7 @@ class Post(models.Model):
         blank=True,
         null=True)
     position = models.PositiveIntegerField(
-        _('Position in Ordering'), null=True, blank=True)
+        _('Position in Ordering'), null=True, blank=True, default=0)
 
     def save(self, *args, **kwargs):
         # use django slugify filter to slugify
