@@ -59,19 +59,23 @@ DEFAULT_REPO_LICENSE = 'BY-NC-ND-4.0'
 
 
 class ContentRepository(models.Model):
-    url = models.CharField(
-        _('The URL of the repository.'),
-        max_length=255)
-    name = models.CharField(
-        _('The name of the repository.'),
-        null=False, max_length=255,
-        help_text=_('Leave blank to use the name in the repository URL.'))
-    ssh_public_key = models.TextField(
-        _('The public key for SSH based authentication.'),
-        null=True, unique=True)
-    ssh_private_key = models.TextField(
-        _('The private key for SSH based authentication.'),
-        null=True, unique=True)
+    # NOTE:
+    #       Support for this will grow with tickets focussing on
+    #       the targets.
+    #
+    # url = models.CharField(
+    #     _('The URL of the repository.'),
+    #     max_length=255)
+    # name = models.CharField(
+    #     _('The name of the repository.'),
+    #     null=False, max_length=255,
+    #     help_text=_('Leave blank to use the name in the repository URL.'))
+    # ssh_public_key = models.TextField(
+    #     _('The public key for SSH based authentication.'),
+    #     null=True, unique=True)
+    # ssh_private_key = models.TextField(
+    #     _('The private key for SSH based authentication.'),
+    #     null=True, unique=True)
     license = models.CharField(
         _('The license to use with this content.'),
         max_length=255, choices=CONTENT_REPO_LICENSES,
