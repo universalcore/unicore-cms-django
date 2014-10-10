@@ -20,7 +20,7 @@ from django.utils.html import escape
 from django.core.exceptions import PermissionDenied
 
 from cms.models import Post, Category, Localisation
-from cms.forms import PostForm
+from cms.forms import PostForm, CategoryForm
 from cms.git import repo, workspace
 from cms import tasks
 
@@ -173,6 +173,8 @@ class PostInline(admin.StackedInline):
 
 
 class CategoryAdmin(TranslatableModelAdmin):
+    form = CategoryForm
+
     list_filter = ('localisation', CategorySourceListFilter)
     list_display = (
         'title', 'subtitle', 'localisation', 'featured_in_navbar', 'source',
