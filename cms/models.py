@@ -260,6 +260,7 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
             if instance.localisation else None)
         page.featured_in_category = instance.featured_in_category
         page.featured = instance.featured
+        page.position = instance.position
         page.linked_pages = [related_post.uuid
                              for related_post in instance.related_posts.all()]
 

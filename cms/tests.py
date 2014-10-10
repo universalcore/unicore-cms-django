@@ -52,7 +52,8 @@ class PostTestCase(TestCase):
             title='sample title',
             description='description',
             subtitle='subtitle',
-            content='sample content')
+            content='sample content',
+            position=3)
         p.save()
         self.assertEquals(p.featured_in_category, False)
         self.assertEquals(Post.objects.all().count(), 1)
@@ -69,6 +70,7 @@ class PostTestCase(TestCase):
         self.assertEquals(git_page.subtitle, 'subtitle')
         self.assertEquals(git_page.description, 'description')
         self.assertEquals(git_page.featured_in_category, False)
+        self.assertEquals(git_page.position, 3)
         self.assertTrue(git_page.created_at is not None)
         self.assertTrue(git_page.modified_at is not None)
 
