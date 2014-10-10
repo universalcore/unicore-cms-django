@@ -1,17 +1,21 @@
-from django.utils import timezone
+import os
 
 from django.contrib.auth.models import User
-from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
+from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 
 from sortedm2m.fields import SortedManyToManyField
 
 from cms import utils
 from cms.git.models import GitPage, GitCategory
+
 from gitmodel import exceptions
+
 
 ENG_UK = 'eng_UK'
 SWH_TZ = 'swh_TZ'  # Swahili
@@ -26,6 +30,58 @@ LANGUAGE_CHOICES = (
     (THA_TH, 'Thai (Thailand)'),
     (IND_ID, 'Bahasa (Indonesia)')
 )
+
+
+CONTENT_REPO_LICENSE_PATH = os.path.join(
+    settings.PROJECT_ROOT, '..', 'licenses')
+
+CONTENT_REPO_LICENSES = (
+    ('CC-BY-4.0',
+        'Creative Commons Attribution 4.0 International License.'),
+    ('CC-BY-NC-4.0',
+        'Creative Commons Attribution-NonCommercial 4.0 '
+        'International License.'),
+    ('CC-BY-NC-ND-4.0',
+        'Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 '
+        'International License.'),
+    ('CC-BY-NC-SA-4.0',
+        'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 '
+        'International License.'),
+    ('CC-BY-ND-4.0',
+        'Creative Commons Attribution-NoDerivatives 4.0 '
+        'International License.'),
+    ('CC-BY-SA-4.0',
+        'Creative Commons Attribution-ShareAlike 4.0 '
+        'International License.'),
+)
+
+DEFAULT_REPO_LICENSE = 'BY-NC-ND-4.0'
+
+
+class ContentRepository(models.Model):
+    url = models.CharField(
+        _('The URL of the repository.'),
+        max_length=255)
+    name = models.CharField(
+        _('The name of the repository.'),
+        null=False, max_length=255,
+        help_text=_('Leave blank to use the name in the repository URL.'))
+    ssh_public_key = models.TextField(
+        _('The public key for SSH based authentication.'),
+        null=True, unique=True)
+    ssh_private_key = models.TextField(
+        _('The private key for SSH based authentication.'),
+        null=True, unique=True)
+    license = models.CharField(
+        _('The license to use with this content.'),
+        max_length=255, choices=CONTENT_REPO_LICENSES,
+        default=DEFAULT_REPO_LICENSE)
+
+    def get_license_text(self):
+        file_path = os.path.join(
+            CONTENT_REPO_LICENSE_PATH, '%s.txt' % (self.license,))
+        with open(file_path) as fp:
+            return fp.read()
 
 
 class Localisation(models.Model):
