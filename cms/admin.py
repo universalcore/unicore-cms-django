@@ -162,6 +162,16 @@ class PostAdmin(TranslatableModelAdmin):
         )
 
 
+class PostInline(admin.StackedInline):
+    model = Post
+    extra = 0
+    sortable_field_name = 'position'
+    sortable_excludes = ('primary_category',)
+    raw_id_fields = ('owner', 'source', )
+    fields = ('title', 'position')
+    readonly_fields = ('title', )
+
+
 class CategoryAdmin(TranslatableModelAdmin):
     list_filter = ('localisation', CategorySourceListFilter)
     list_display = (
@@ -177,6 +187,7 @@ class CategoryAdmin(TranslatableModelAdmin):
             'fields': ('source', ),
             'classes': ('grp-collapse grp-closed', )})
     )
+    inlines = (PostInline, )
 
     def _derivatives(self, category):
         return len(category.category_set.all())
@@ -194,6 +205,8 @@ class CategoryInline(admin.StackedInline):
     sortable_field_name = 'position'
     sortable_excludes = ('localisation',)
     raw_id_fields = ('source', 'last_author')
+    fields = ('title', 'position')
+    readonly_fields = ('title', )
 
 
 class LocalisationAdmin(admin.ModelAdmin):
