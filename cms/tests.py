@@ -52,7 +52,8 @@ class PostTestCase(TestCase):
             title='sample title',
             description='description',
             subtitle='subtitle',
-            content='sample content')
+            content='sample content',
+            position=3)
         p.save()
         self.assertEquals(p.featured_in_category, False)
         self.assertEquals(Post.objects.all().count(), 1)
@@ -69,6 +70,7 @@ class PostTestCase(TestCase):
         self.assertEquals(git_page.subtitle, 'subtitle')
         self.assertEquals(git_page.description, 'description')
         self.assertEquals(git_page.featured_in_category, False)
+        self.assertEquals(git_page.position, 3)
         self.assertTrue(git_page.created_at is not None)
         self.assertTrue(git_page.modified_at is not None)
 
@@ -320,3 +322,22 @@ class PostTestCase(TestCase):
         c = Category.objects.get(pk=c.pk)
         git_c = GitCategory.get(c.uuid)
         self.assertEquals(git_c.position, 4)
+
+    def test_page_ordering(self):
+        Post.objects.create(
+            title=u'New page',
+            content=u'New page sample content',
+            localisation=Localisation._for('afr_ZA'),
+        )
+        self.assertEquals(Post.objects.all()[0].title, 'New page')
+        self.assertEquals(Post.objects.all()[0].position, 0)
+
+        Post.objects.create(
+            title=u'New page 2',
+            content=u'New page sample content 2',
+            localisation=Localisation._for('afr_ZA'),
+        )
+        self.assertEquals(Post.objects.all()[0].title, 'New page 2')
+        self.assertEquals(Post.objects.all()[0].position, 0)
+        self.assertEquals(Post.objects.all()[1].title, 'New page')
+        self.assertEquals(Post.objects.all()[1].position, 1)
