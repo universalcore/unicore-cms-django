@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
+from django.db.models import F
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
@@ -272,6 +273,9 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
 
         if instance.uuid:
             page.id = instance.uuid
+
+    if created:
+        Post.objects.exclude(pk=instance.pk).update(position=F('position') + 1)
 
     author = utils.get_author_from_user(instance.last_author)
 

@@ -320,3 +320,22 @@ class PostTestCase(TestCase):
         c = Category.objects.get(pk=c.pk)
         git_c = GitCategory.get(c.uuid)
         self.assertEquals(git_c.position, 4)
+
+    def test_page_ordering(self):
+        Post.objects.create(
+            title=u'New page',
+            content=u'New page sample content',
+            localisation=Localisation._for('afr_ZA'),
+        )
+        self.assertEquals(Post.objects.all()[0].title, 'New page')
+        self.assertEquals(Post.objects.all()[0].position, 0)
+
+        Post.objects.create(
+            title=u'New page 2',
+            content=u'New page sample content 2',
+            localisation=Localisation._for('afr_ZA'),
+        )
+        self.assertEquals(Post.objects.all()[0].title, 'New page 2')
+        self.assertEquals(Post.objects.all()[0].position, 0)
+        self.assertEquals(Post.objects.all()[1].title, 'New page')
+        self.assertEquals(Post.objects.all()[1].position, 1)
