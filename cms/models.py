@@ -131,7 +131,7 @@ class Category(models.Model):
 class Post(models.Model):
 
     class Meta:
-        ordering = ('-created_at',)
+        ordering = ('position', '-created_at',)
 
     uuid = models.CharField(
         max_length=32,
