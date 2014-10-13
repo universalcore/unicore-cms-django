@@ -20,3 +20,7 @@ unicore-gitmodels==1.6.0
 django-sortedm2m==0.8.1
 django-pagedown==0.1.0
 html2text==2014.9.25
+pytest
+pytest-django
+pytest-cov
+pytest-xdist
