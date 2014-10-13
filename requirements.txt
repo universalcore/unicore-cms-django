@@ -23,3 +23,4 @@ html2text==2014.9.25
 pytest
 pytest-django
 pytest-cov
+pytest-xdist

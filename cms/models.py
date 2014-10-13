@@ -13,6 +13,7 @@ from sortedm2m.fields import SortedManyToManyField
 
 from cms import utils
 from cms.git.models import GitPage, GitCategory
+from cms.git import workspace
 
 from gitmodel import exceptions
 
@@ -295,6 +296,13 @@ class Post(models.Model):
             return '%s - %s' % (self.title, self.subtitle)
         else:
             return self.title
+
+
+@receiver(post_save, sender=ContentRepository)
+def auto_save_content_repository_to_git(sender, instance, created, **kwargs):
+    with workspace.commit_on_success(
+            'Specify %s license.' % (instance.license,)):
+        workspace.add_blob('LICENSE', instance.get_license_text())
 
 
 @receiver(post_save, sender=Post)
