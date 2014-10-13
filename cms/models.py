@@ -3,6 +3,7 @@ import os
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import models
+from django.db.models import F
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
@@ -187,7 +188,7 @@ class Category(models.Model):
 class Post(models.Model):
 
     class Meta:
-        ordering = ('-created_at',)
+        ordering = ('position', '-created_at',)
 
     uuid = models.CharField(
         max_length=32,
@@ -279,6 +280,8 @@ class Post(models.Model):
         'self',
         blank=True,
         null=True)
+    position = models.PositiveIntegerField(
+        _('Position in Ordering'), null=True, blank=True, default=0)
 
     def save(self, *args, **kwargs):
         # use django slugify filter to slugify
@@ -320,6 +323,7 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
             if instance.localisation else None)
         page.featured_in_category = instance.featured_in_category
         page.featured = instance.featured
+        page.position = instance.position
         page.linked_pages = [related_post.uuid
                              for related_post in instance.related_posts.all()]
 
@@ -333,6 +337,9 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
 
         if instance.uuid:
             page.id = instance.uuid
+
+    if created:
+        Post.objects.exclude(pk=instance.pk).update(position=F('position') + 1)
 
     author = utils.get_author_from_user(instance.last_author)
 
