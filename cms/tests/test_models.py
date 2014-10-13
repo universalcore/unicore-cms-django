@@ -1,5 +1,4 @@
 import os
-import shutil
 
 from cms.tests.base import BaseCmsTestCase
 from cms.models import ContentRepository
@@ -22,6 +21,7 @@ class TestContentRepository(BaseCmsTestCase):
         repo = ContentRepository(license='CC-BY-4.0')
         repo.save()
         file_path = os.path.join(settings.GIT_REPO_PATH, 'LICENSE')
+        workspace.sync_repo_index()
         with open(file_path, 'r') as fp:
             license_text = fp.read()
         self.assertEqual(license_text, repo.get_license_text())
