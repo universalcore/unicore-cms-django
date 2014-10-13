@@ -6,6 +6,6 @@ install:
   - "pip install coveralls coverage --use-wheel"
   - "pip install -e . --use-wheel"
 script:
-  - LIBGIT2=$VIRTUAL_ENV DJANGO_SETTINGS_MODULE=project.settings py.test --verbose --cov ./cms cms
+  - ./run_tests.sh
 after_success:
   - coveralls
