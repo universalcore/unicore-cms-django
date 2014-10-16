@@ -152,6 +152,14 @@ class PostTestCase(BaseCmsTestCase):
         self.assertEquals(git_p2.language, 'eng_US')
         self.assertEquals(git_p2.source.language, 'eng_UK')
 
+        p2.source = None
+        p2.primary_category = None
+        p2.save()
+
+        git_p2 = GitPage.get(p2.uuid)
+        self.assertEquals(git_p2.source, None)
+        self.assertEquals(git_p2.primary_category, None)
+
     def test_page_featured_in_category(self):
         p = Post(
             title='sample title',
