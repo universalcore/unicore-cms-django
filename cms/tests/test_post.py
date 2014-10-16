@@ -221,10 +221,15 @@ class PostTestCase(BaseCmsTestCase):
         c2.source = c
         c2.save()
 
-        c = GitCategory.get(c.uuid)
-        c2 = GitCategory.get(c2.uuid)
-        self.assertEquals(c2.language, 'eng_UK')
-        self.assertEquals(c2.source.language, 'afr_ZA')
+        git_c2 = GitCategory.get(c2.uuid)
+        self.assertEquals(git_c2.language, 'eng_UK')
+        self.assertEquals(git_c2.source.language, 'afr_ZA')
+
+        c2.source = None
+        c2.save()
+
+        git_c2 = GitCategory.get(c2.uuid)
+        self.assertEquals(git_c2.source, None)
 
     def test_category_with_featured_in_navbar(self):
         c = Category(

@@ -390,6 +390,8 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         if instance.source and instance.uuid:
             source = GitCategory.get(instance.source.uuid)
             category.source = source
+        else:
+            category.source = None
 
         if instance.uuid:
             category.id = instance.uuid
