@@ -341,3 +341,45 @@ class PostTestCase(TestCase):
         self.assertEquals(Post.objects.all()[0].position, 0)
         self.assertEquals(Post.objects.all()[1].title, 'New page')
         self.assertEquals(Post.objects.all()[1].position, 1)
+
+    def test_related_post_saving_to_git(self):
+        post1 = Post(
+            title='sample title',
+            description='description',
+            subtitle='subtitle',
+            content='sample content',
+            localisation=Localisation._for('eng_UK'))
+        post1.save()
+
+        post1 = Post.objects.get(pk=post1.pk)
+        git_post1 = GitPage.get(post1.uuid)
+
+        post2 = Post(
+            title='featured sample title',
+            description='featured description',
+            subtitle='featured subtitle',
+            content='featured sample content',
+            localisation=Localisation._for('eng_UK'),
+            featured=True)
+        post2.save()
+        post2.related_posts.add(post1)
+        post2.save()
+
+        post2 = Post.objects.get(pk=post2.pk)
+        git_post2 = GitPage.get(post2.uuid)
+
+        self.assertEqual(post2.related_posts.all()[0].uuid, post1.uuid)
+        self.assertEquals(git_post2.linked_pages, [post1.uuid, ])
+
+        post2.related_posts.remove(post1)
+        post2.save()
+
+        git_post2 = GitPage.get(post2.uuid)
+        self.assertEquals(git_post2.linked_pages, [])
+
+        post2.related_posts.add(post1)
+        post2.save()
+
+        git_post2 = GitPage.get(post2.uuid)
+        self.assertEqual(post2.related_posts.all()[0].uuid, post1.uuid)
+        self.assertEquals(git_post2.linked_pages, [post1.uuid, ])
