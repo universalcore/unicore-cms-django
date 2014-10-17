@@ -8,6 +8,7 @@ from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+from django.core.exceptions import ValidationError
 
 from sortedm2m.fields import SortedManyToManyField
 
@@ -72,6 +73,11 @@ class ContentRepository(models.Model):
     # - ssh_public_key
     # - ssh_private_key
     # - ssh_passphrase
+
+    class Meta:
+        verbose_name = 'Content Repository Information'
+        verbose_name_plural = 'Content Repositories Information'
+
     existing_license = models.CharField(
         _('The license to use with this content.'),
         max_length=255, choices=CONTENT_REPO_LICENSES,
@@ -98,6 +104,10 @@ class ContentRepository(models.Model):
         if self.existing_license:
             return self.existing_license
         return 'Custom License'
+
+    def clean(self):
+        if not any([self.existing_license, self.custom_license]):
+            raise ValidationError('You must specify a license.')
 
 
 class Localisation(models.Model):

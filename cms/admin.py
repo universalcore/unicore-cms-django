@@ -200,6 +200,12 @@ class LocalisationAdmin(admin.ModelAdmin):
     inlines = (CategoryInline,)
 
 
+class ContentRepositoryAdmin(admin.ModelAdmin):
+
+    def has_add_permission(self, *args, **kwargs):
+        return not ContentRepository.objects.exists()
+
+
 @admin.site.register_view('github/', 'Github Configuration')
 def my_view(request, *args, **kwargs):
     branch = repo.lookup_branch(repo.head.shorthand)
@@ -244,7 +250,7 @@ def push_to_github(request, *args, **kwargs):
 
 admin.site.register(Post, PostAdmin)
 admin.site.register(Category, CategoryAdmin)
-admin.site.register(ContentRepository)
+admin.site.register(ContentRepository, ContentRepositoryAdmin)
 
 # remove celery from admin
 admin.site.unregister(TaskState)
