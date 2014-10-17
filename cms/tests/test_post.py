@@ -18,7 +18,8 @@ class PostTestCase(BaseCmsTestCase):
             title='sample title',
             description='description',
             subtitle='subtitle',
-            content='sample content')
+            content='sample content',
+            position=3)
         p.save()
         self.assertEquals(p.featured_in_category, False)
         self.assertEquals(Post.objects.all().count(), 1)
@@ -35,6 +36,7 @@ class PostTestCase(BaseCmsTestCase):
         self.assertEquals(git_page.subtitle, 'subtitle')
         self.assertEquals(git_page.description, 'description')
         self.assertEquals(git_page.featured_in_category, False)
+        self.assertEquals(git_page.position, 3)
         self.assertTrue(git_page.created_at is not None)
         self.assertTrue(git_page.modified_at is not None)
 
@@ -150,6 +152,14 @@ class PostTestCase(BaseCmsTestCase):
         self.assertEquals(git_p2.language, 'eng_US')
         self.assertEquals(git_p2.source.language, 'eng_UK')
 
+        p2.source = None
+        p2.primary_category = None
+        p2.save()
+
+        git_p2 = GitPage.get(p2.uuid)
+        self.assertEquals(git_p2.source, None)
+        self.assertEquals(git_p2.primary_category, None)
+
     def test_page_featured_in_category(self):
         p = Post(
             title='sample title',
@@ -211,10 +221,15 @@ class PostTestCase(BaseCmsTestCase):
         c2.source = c
         c2.save()
 
-        c = GitCategory.get(c.uuid)
-        c2 = GitCategory.get(c2.uuid)
-        self.assertEquals(c2.language, 'eng_UK')
-        self.assertEquals(c2.source.language, 'afr_ZA')
+        git_c2 = GitCategory.get(c2.uuid)
+        self.assertEquals(git_c2.language, 'eng_UK')
+        self.assertEquals(git_c2.source.language, 'afr_ZA')
+
+        c2.source = None
+        c2.save()
+
+        git_c2 = GitCategory.get(c2.uuid)
+        self.assertEquals(git_c2.source, None)
 
     def test_category_with_featured_in_navbar(self):
         c = Category(
@@ -286,3 +301,22 @@ class PostTestCase(BaseCmsTestCase):
         c = Category.objects.get(pk=c.pk)
         git_c = GitCategory.get(c.uuid)
         self.assertEquals(git_c.position, 4)
+
+    def test_page_ordering(self):
+        Post.objects.create(
+            title=u'New page',
+            content=u'New page sample content',
+            localisation=Localisation._for('afr_ZA'),
+        )
+        self.assertEquals(Post.objects.all()[0].title, 'New page')
+        self.assertEquals(Post.objects.all()[0].position, 0)
+
+        Post.objects.create(
+            title=u'New page 2',
+            content=u'New page sample content 2',
+            localisation=Localisation._for('afr_ZA'),
+        )
+        self.assertEquals(Post.objects.all()[0].title, 'New page 2')
+        self.assertEquals(Post.objects.all()[0].position, 0)
+        self.assertEquals(Post.objects.all()[1].title, 'New page')
+        self.assertEquals(Post.objects.all()[1].position, 1)
