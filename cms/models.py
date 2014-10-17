@@ -13,11 +13,9 @@ from django.core.exceptions import ValidationError
 
 from sortedm2m.fields import SortedManyToManyField
 
-from cms import utils
-from cms.git.models import GitPage, GitCategory
-from cms.git import workspace
+from elasticgit import EG
 
-from gitmodel import exceptions
+from unicore.content import models as eg_models
 
 
 ENG_UK = 'eng_UK'
@@ -329,61 +327,53 @@ class Post(models.Model):
 
 @receiver(post_save, sender=ContentRepository)
 def auto_save_content_repository_to_git(sender, instance, created, **kwargs):
-    with workspace.commit_on_success('Specify license.'):
-        workspace.add_blob('LICENSE', instance.get_license_text())
+    workspace = EG.workspace(settings.GIT_REPO_PATH)
+    workspace.sm.store_data(
+        'LICENSE', instance.get_license_text(), 'Specify license.')
 
 
 @receiver(post_save, sender=Post)
 def auto_save_post_to_git(sender, instance, created, **kwargs):
-    def update_fields(page):
-        page.title = instance.title
-        page.subtitle = instance.subtitle
-        page.slug = instance.slug
-        page.description = instance.description
-        page.content = instance.content
-        page.created_at = instance.created_at
-        page.modified_at = instance.modified_at
-        page.language = (
+
+    data = {
+        "title": instance.title,
+        "subtitle": instance.subtitle,
+        "slug": instance.slug,
+        "description": instance.description,
+        "content": instance.content,
+        "created_at": instance.created_at,
+        "modified_at": instance.modified_at,
+        # TODO: We should migrate this to localisation everywhere
+        "language": (
             instance.localisation.get_code()
-            if instance.localisation else None)
-        page.featured_in_category = instance.featured_in_category
-        page.featured = instance.featured
-        page.position = instance.position
-        page.linked_pages = [related_post.uuid
-                             for related_post in instance.related_posts.all()]
+            if instance.localisation else None),
+        "featured_in_category": instance.featured_in_category,
+        "featured": instance.featured,
+        "position": instance.position,
+        "linked_pages": [related_post.uuid
+                         for related_post in instance.related_posts.all()],
+        "primary_category": instance.primary_category,
+        "source": instance.source,
+    }
 
-        if instance.primary_category:
-            category = GitCategory.get(instance.primary_category.uuid)
-            page.primary_category = category
-        else:
-            page.primary_category = None
-
-        if instance.source:
-            source = GitPage.get(instance.source.uuid)
-            page.source = source
-        else:
-            page.source = None
-
-        if instance.uuid:
-            page.id = instance.uuid
-
+    # NOTE: If newly created always give it the highest ordering position
     if created:
         Post.objects.exclude(pk=instance.pk).update(position=F('position') + 1)
 
-    author = utils.get_author_from_user(instance.last_author)
+    # TODO: Setting the author on a commit is currently not supported
+    #       by elastic-git
+    #       See: https://github.com/universalcore/elastic-git/issues/23
+    # author = utils.get_author_from_user(instance.last_author)
 
     try:
-        page = GitPage.get(instance.uuid)
-        update_fields(page)
-        page.save(
-            True, message='Page updated: %s' % instance.title,
-            author=author)
-    except exceptions.DoesNotExist:
-        page = GitPage()
-        update_fields(page)
-        page.save(
-            True, message='Page created: %s' % instance.title,
-            author=author)
+        workspace = EG.workspace(settings.GIT_REPO_PATH)
+        [page] = workspace.S(eg_models.Page).filter(uuid=instance.uuid)
+        original = page.get_object()
+        updated = original.update(data)
+        workspace.save(updated, 'Page updated: %s' % instance.title)
+    except ValueError:
+        page = eg_models.Page(data)
+        workspace.save(page, 'Page created: %s' % instance.title)
 
         if not instance.uuid:
             Post.objects.filter(pk=instance.pk).update(uuid=page.uuid)
@@ -391,50 +381,46 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Post)
 def auto_delete_post_to_git(sender, instance, **kwargs):
-    author = utils.get_author_from_user(instance.last_author)
+    # TODO: Allow author information to be set in EG.
+    # author = utils.get_author_from_user(instance.last_author)
+    workspace = EG.workspace(settings.GIT_REPO_PATH)
     try:
-        GitPage.delete(
-            instance.uuid, True, message='Page deleted: %s' % instance.title,
-            author=author)
-    except:
+        [page] = workspace.S(eg_models.Page).filter(uuid=instance.uuid)
+        workspace.delete(
+            page.get_object(), 'Page deleted: %s' % (instance.title,))
+    except ValueError:
         pass
 
 
 @receiver(post_save, sender=Category)
 def auto_save_category_to_git(sender, instance, created, **kwargs):
-    def update_fields(category):
-        category.title = instance.title
-        category.subtitle = instance.subtitle
-        category.slug = instance.slug
-        category.position = instance.position
-        category.language = (
+
+    data = {
+        "title": instance.title,
+        "subtitle": instance.subtitle,
+        "slug": instance.slug,
+        "position": instance.position,
+        "language": (
             instance.localisation.get_code()
-            if instance.localisation else None)
-        category.featured_in_navbar = instance.featured_in_navbar
+            if instance.localisation else None),
+        "featured_in_navbar": instance.featured_in_navbar,
+        "source": instance.source,
+    }
 
-        if instance.source and instance.uuid:
-            source = GitCategory.get(instance.source.uuid)
-            category.source = source
-        else:
-            category.source = None
+    # TODO: Not yet implemented
+    # author = utils.get_author_from_user(instance.last_author)
 
-        if instance.uuid:
-            category.id = instance.uuid
-
-    author = utils.get_author_from_user(instance.last_author)
-
+    workspace = EG.workspace(settings.GIT_REPO_PATH)
     try:
-        category = GitCategory.get(instance.uuid)
-        update_fields(category)
-        category.save(
-            True, message='Category updated: %s' % instance.title,
-            author=author)
-    except exceptions.DoesNotExist:
-        category = GitCategory()
-        update_fields(category)
-        category.save(
-            True, message='Category created: %s' % instance.title,
-            author=author)
+        # FIXME: This can fail if we ever store a value with None
+        #        as the uuid.
+        [category] = workspace.S(eg_models.Category).filter(uuid=instance.uuid)
+        original = category.get_object()
+        updated = original.update(data)
+        workspace.save(updated, 'Category updated: %s' % instance.title)
+    except ValueError:
+        category = eg_models.Category(data)
+        workspace.save(category, 'Category created: %s' % instance.title)
 
         if not instance.uuid:
             Category.objects.filter(pk=instance.pk).update(uuid=category.uuid)
@@ -442,11 +428,12 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Category)
 def auto_delete_category_to_git(sender, instance, **kwargs):
-    author = utils.get_author_from_user(instance.last_author)
+    # TODO: Not yet implemented
+    # author = utils.get_author_from_user(instance.last_author)
+    workspace = EG.workspace(settings.GIT_REPO_PATH)
     try:
-        GitCategory.delete(
-            instance.uuid, True,
-            message='Category deleted: %s' % instance.title,
-            author=author)
-    except:
+        [category] = workspace.S(eg_models.Category).filter(uuid=instance.uuid)
+        original = category.get_object()
+        workspace.delete(original, 'Category deleted: %s' % instance.title)
+    except ValueError:
         pass
