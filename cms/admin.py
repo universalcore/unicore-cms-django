@@ -19,7 +19,7 @@ from django.http import Http404, HttpResponse
 from django.utils.html import escape
 from django.core.exceptions import PermissionDenied
 
-from cms.models import Post, Category, Localisation
+from cms.models import Post, Category, Localisation, ContentRepository
 from cms.forms import PostForm
 from cms.git import repo, workspace
 from cms import tasks
@@ -244,6 +244,7 @@ def push_to_github(request, *args, **kwargs):
 
 admin.site.register(Post, PostAdmin)
 admin.site.register(Category, CategoryAdmin)
+admin.site.register(ContentRepository)
 
 # remove celery from admin
 admin.site.unregister(TaskState)
