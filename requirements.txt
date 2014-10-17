@@ -2,7 +2,7 @@ Django<1.7
 South
 gunicorn
 python-memcached
-raven
+raven==5.0.0
 nose
 django-nose
 django-haystack

@@ -9,6 +9,7 @@ from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+from django.core.exceptions import ValidationError
 
 from sortedm2m.fields import SortedManyToManyField
 
@@ -73,16 +74,41 @@ class ContentRepository(models.Model):
     # - ssh_public_key
     # - ssh_private_key
     # - ssh_passphrase
-    license = models.CharField(
+
+    class Meta:
+        verbose_name = 'Content Repository Information'
+        verbose_name_plural = 'Content Repositories Information'
+
+    existing_license = models.CharField(
         _('The license to use with this content.'),
         max_length=255, choices=CONTENT_REPO_LICENSES,
-        default=DEFAULT_REPO_LICENSE)
+        blank=True, null=True)
+    custom_license = models.TextField(
+        _('Should you decide to go with a custom license, paste '
+          'the text here.'), blank=True, null=True)
 
     def get_license_text(self):
+        if self.existing_license:
+            return self.get_existing_license_text()
+        return self.get_custom_license_text()
+
+    def get_custom_license_text(self):
+        return self.custom_license
+
+    def get_existing_license_text(self):
         file_path = os.path.join(
-            CONTENT_REPO_LICENSE_PATH, '%s.txt' % (self.license,))
+            CONTENT_REPO_LICENSE_PATH, '%s.txt' % (self.existing_license,))
         with open(file_path) as fp:
             return fp.read()
+
+    def __unicode__(self):
+        if self.existing_license:
+            return self.existing_license
+        return 'Custom License'
+
+    def clean(self):
+        if not any([self.existing_license, self.custom_license]):
+            raise ValidationError('You must specify a license.')
 
 
 class Localisation(models.Model):
@@ -303,8 +329,7 @@ class Post(models.Model):
 
 @receiver(post_save, sender=ContentRepository)
 def auto_save_content_repository_to_git(sender, instance, created, **kwargs):
-    with workspace.commit_on_success(
-            'Specify %s license.' % (instance.license,)):
+    with workspace.commit_on_success('Specify license.'):
         workspace.add_blob('LICENSE', instance.get_license_text())
 
 
@@ -330,10 +355,14 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         if instance.primary_category:
             category = GitCategory.get(instance.primary_category.uuid)
             page.primary_category = category
+        else:
+            page.primary_category = None
 
         if instance.source:
             source = GitPage.get(instance.source.uuid)
             page.source = source
+        else:
+            page.source = None
 
         if instance.uuid:
             page.id = instance.uuid
@@ -386,6 +415,8 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         if instance.source and instance.uuid:
             source = GitCategory.get(instance.source.uuid)
             category.source = source
+        else:
+            category.source = None
 
         if instance.uuid:
             category.id = instance.uuid
