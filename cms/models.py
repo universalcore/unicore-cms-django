@@ -94,6 +94,11 @@ class ContentRepository(models.Model):
         with open(file_path) as fp:
             return fp.read()
 
+    def __unicode__(self):
+        if self.existing_license:
+            return self.existing_license
+        return 'Custom License'
+
 
 class Localisation(models.Model):
     country_code = models.CharField(
