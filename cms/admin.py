@@ -223,22 +223,19 @@ class ContentRepositoryAdmin(admin.ModelAdmin):
 
 @admin.site.register_view('github/', 'Github Configuration')
 def my_view(request, *args, **kwargs):
-    branch = repo.lookup_branch(repo.head.shorthand)
-    last = repo[branch.target]
-    commits = []
-    for commit in repo.walk(last.id, pygit2.GIT_SORT_TIME):
-        commits.append(commit)
+    workspace = EG.workspace(settings.GIT_REPO_PATH)
+    commits = workspace.repo.iter_commits(max_count=10)
 
     context = {
         'github_url': settings.GIT_REPO_URL,
-        'repo': repo,
+        'repo': settings.GIT_REPO_PATH,
         'commits': [
             {
                 'message': c.message,
                 'author': c.author.name,
                 'commit_time': datetime.fromtimestamp(c.commit_time)
             }
-            for c in commits[:10]
+            for c in commits
         ]
     }
     return render(request, 'cms/admin/github.html', context)
