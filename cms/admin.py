@@ -234,6 +234,14 @@ class ContentRepositoryAdmin(admin.ModelAdmin):
         return not ContentRepository.objects.exists()
 
 
+class PublishingTargetAdmin(admin.ModelAdmin):
+    readonly_fields = ('url', 'name')
+
+    def has_change_permission(self, *args, **kwargs):
+        ensure_has_default_target = PublishingTarget.get_default_target()
+        return True
+
+
 @admin.site.register_view('github/', 'Github Configuration')
 def my_view(request, *args, **kwargs):
     branch = repo.lookup_branch(repo.head.shorthand)
@@ -279,6 +287,7 @@ def push_to_github(request, *args, **kwargs):
 admin.site.register(Post, PostAdmin)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(ContentRepository, ContentRepositoryAdmin)
+admin.site.register(PublishingTarget, PublishingTargetAdmin)
 
 # remove celery from admin
 admin.site.unregister(TaskState)

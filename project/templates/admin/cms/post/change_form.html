@@ -54,7 +54,9 @@
                         This content will be published under the
                         <a href="{% url 'admin:cms_contentrepository_change' content_repo.pk %}">{{content_repo.get_license_display}}</a>
                         to the following publishing targets:
-                        {{ content_repo.targets.all|join:', ' }}
+                        {% for target in content_repo.targets.all %}
+                            <a href="{% url 'admin:cms_publishingtarget_change' target.pk %}">{{ target.name }}</a>
+                        {% endfor %}
                     {% endif %}
                 {% endfor %}
             {% endif %}
