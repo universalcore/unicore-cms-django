@@ -36,24 +36,26 @@ LANGUAGE_CHOICES = (
 CONTENT_REPO_LICENSE_PATH = os.path.join(
     settings.PROJECT_ROOT, '..', 'licenses')
 
+CUSTOM_REPO_LICENSE_TYPE = '_custom'
 CONTENT_REPO_LICENSES = (
+    (CUSTOM_REPO_LICENSE_TYPE, 'Custom license'),
     ('CC-BY-4.0',
-        'Creative Commons Attribution 4.0 International License.'),
+        'Creative Commons Attribution 4.0 International License'),
     ('CC-BY-NC-4.0',
         'Creative Commons Attribution-NonCommercial 4.0 '
-        'International License.'),
+        'International License'),
     ('CC-BY-NC-ND-4.0',
         'Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 '
-        'International License.'),
+        'International License'),
     ('CC-BY-NC-SA-4.0',
         'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 '
-        'International License.'),
+        'International License'),
     ('CC-BY-ND-4.0',
         'Creative Commons Attribution-NoDerivatives 4.0 '
-        'International License.'),
+        'International License'),
     ('CC-BY-SA-4.0',
         'Creative Commons Attribution-ShareAlike 4.0 '
-        'International License.'),
+        'International License'),
 )
 
 DEFAULT_REPO_LICENSE = 'BY-NC-ND-4.0'
@@ -67,8 +69,6 @@ class ContentRepository(models.Model):
     # This is the entity that'll grow support for what we've been
     # calling targets, it'll store things like:
     #
-    # - url
-    # - name
     # - ssh_public_key
     # - ssh_private_key
     # - ssh_passphrase
@@ -77,36 +77,81 @@ class ContentRepository(models.Model):
         verbose_name = 'Content Repository Information'
         verbose_name_plural = 'Content Repositories Information'
 
-    existing_license = models.CharField(
+    @classmethod
+    def get_default_name(cls):
+        url_head, url_path = settings.GIT_REPO_URL.rsplit('/', 1)
+        repo_name, _, dot_git = url_path.rpartition('.')
+        return repo_name
+
+    @classmethod
+    def get_default_url(cls):
+        return settings.GIT_REPO_URL
+
+    name = models.CharField(
+        _('The name of the content repository'),
+        max_length=255, blank=True, null=True,
+        default=lambda: ContentRepository.get_default_name())
+    url = models.CharField(
+        _('Internet address of where this content repository lives'),
+        max_length=255, blank=True, null=True,
+        default=lambda: ContentRepository.get_default_url())
+    license = models.CharField(
         _('The license to use with this content.'),
         max_length=255, choices=CONTENT_REPO_LICENSES,
+        default=DEFAULT_REPO_LICENSE,
         blank=True, null=True)
-    custom_license = models.TextField(
+    custom_license_name = models.CharField(
+        _('Name for the custom license.'),
+        help_text=_('This name is for your own reference only.'),
+        max_length=255, blank=True, null=True)
+    custom_license_text = models.TextField(
         _('Should you decide to go with a custom license, paste '
           'the text here.'), blank=True, null=True)
+    targets = models.ManyToManyField('PublishingTarget')
 
     def get_license_text(self):
-        if self.existing_license:
+        if self.license != CUSTOM_REPO_LICENSE_TYPE:
             return self.get_existing_license_text()
         return self.get_custom_license_text()
 
     def get_custom_license_text(self):
-        return self.custom_license
+        return self.custom_license_text
 
     def get_existing_license_text(self):
         file_path = os.path.join(
-            CONTENT_REPO_LICENSE_PATH, '%s.txt' % (self.existing_license,))
+            CONTENT_REPO_LICENSE_PATH, '%s.txt' % (self.license,))
         with open(file_path) as fp:
             return fp.read()
 
     def __unicode__(self):
-        if self.existing_license:
-            return self.existing_license
-        return 'Custom License'
+        if self.license == CUSTOM_REPO_LICENSE_TYPE:
+            return '%s (%s)' % (self.custom_license_name,
+                                self.get_license_display())
+        return self.get_license_display()
 
     def clean(self):
-        if not any([self.existing_license, self.custom_license]):
-            raise ValidationError('You must specify a license.')
+        if (self.license == CUSTOM_REPO_LICENSE_TYPE
+                and not all([self.custom_license_text,
+                             self.custom_license_name])):
+            raise ValidationError(
+                'You must specify a license name & text for a custom license.')
+
+
+class PublishingTarget(models.Model):
+
+    name = models.CharField(
+        _('Name for the publishing target.'), max_length=255)
+    url = models.URLField(
+        _('The Internet address for this target.'))
+
+    @classmethod
+    def get_default_target(cls):
+        target, _ = cls.objects.get_or_create(
+            name=settings.DEFAULT_TARGET_NAME)
+        return target
+
+    def __unicode__(self):
+        return self.name
 
 
 class Localisation(models.Model):
@@ -327,6 +372,9 @@ class Post(models.Model):
 
 @receiver(post_save, sender=ContentRepository)
 def auto_save_content_repository_to_git(sender, instance, created, **kwargs):
+    if not instance.license:
+        return
+
     workspace = EG.workspace(settings.GIT_REPO_PATH)
     workspace.sm.store_data(
         'LICENSE', instance.get_license_text(), 'Specify license.')

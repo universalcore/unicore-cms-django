@@ -1,6 +1,8 @@
 from django.conf import settings
 from elasticgit import EG
 
+from cms.models import ContentRepository
+
 
 def workspace_changes(request):
     workspace = EG.workspace(settings.GIT_REPO_PATH)
@@ -9,5 +11,6 @@ def workspace_changes(request):
     origin = repo.remote()
     remote_master = origin.refs.master
     return {
-        'repo_changes': len(index.diff(remote_master.commit))
+        'repo_changes': len(index.diff(remote_master.commit)),
+        'content_repositories': ContentRepository.objects.all(),
     }

@@ -19,7 +19,8 @@ from django.http import Http404, HttpResponse
 from django.utils.html import escape
 from django.core.exceptions import PermissionDenied
 
-from cms.models import Post, Category, Localisation, ContentRepository
+from cms.models import (
+    Post, Category, Localisation, ContentRepository, PublishingTarget)
 from cms.forms import PostForm, CategoryForm
 from cms.git import repo, workspace
 from cms import tasks
@@ -217,8 +218,28 @@ class LocalisationAdmin(admin.ModelAdmin):
 
 class ContentRepositoryAdmin(admin.ModelAdmin):
 
+    readonly_fields = ('url', 'name', 'targets')
+
+    def get_object(self, request, object_id):
+        obj = super(ContentRepositoryAdmin, self).get_object(
+            request, object_id)
+        if obj is None:
+            return
+
+        if not obj.targets.exists():
+            obj.targets.add(PublishingTarget.get_default_target())
+        return obj
+
     def has_add_permission(self, *args, **kwargs):
         return not ContentRepository.objects.exists()
+
+
+class PublishingTargetAdmin(admin.ModelAdmin):
+    readonly_fields = ('url', 'name')
+
+    def has_add_permission(self, *args, **kwargs):
+        _ = PublishingTarget.get_default_target()
+        return False
 
 
 @admin.site.register_view('github/', 'Github Configuration')
@@ -263,6 +284,7 @@ def push_to_github(request, *args, **kwargs):
 admin.site.register(Post, PostAdmin)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(ContentRepository, ContentRepositoryAdmin)
+admin.site.register(PublishingTarget, PublishingTargetAdmin)
 
 # remove celery from admin
 admin.site.unregister(TaskState)
