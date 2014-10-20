@@ -8,17 +8,31 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'ContentRepository'
-        db.create_table(u'cms_contentrepository', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('license', self.gf('django.db.models.fields.CharField')(default='BY-NC-ND-4.0', max_length=255)),
-        ))
-        db.send_create_signal(u'cms', ['ContentRepository'])
+        # Deleting field 'ContentRepository.license'
+        db.delete_column(u'cms_contentrepository', 'license')
+
+        # Adding field 'ContentRepository.existing_license'
+        db.add_column(u'cms_contentrepository', 'existing_license',
+                      self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'ContentRepository.custom_license'
+        db.add_column(u'cms_contentrepository', 'custom_license',
+                      self.gf('django.db.models.fields.TextField')(null=True, blank=True),
+                      keep_default=False)
 
 
     def backwards(self, orm):
-        # Deleting model 'ContentRepository'
-        db.delete_table(u'cms_contentrepository')
+        # Adding field 'ContentRepository.license'
+        db.add_column(u'cms_contentrepository', 'license',
+                      self.gf('django.db.models.fields.CharField')(default='BY-NC-ND-4.0', max_length=255),
+                      keep_default=False)
+
+        # Deleting field 'ContentRepository.existing_license'
+        db.delete_column(u'cms_contentrepository', 'existing_license')
+
+        # Deleting field 'ContentRepository.custom_license'
+        db.delete_column(u'cms_contentrepository', 'custom_license')
 
 
     models = {
@@ -66,8 +80,9 @@ class Migration(SchemaMigration):
         },
         u'cms.contentrepository': {
             'Meta': {'object_name': 'ContentRepository'},
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'license': ('django.db.models.fields.CharField', [], {'default': "'BY-NC-ND-4.0'", 'max_length': '255'})
+            'custom_license': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
+            'existing_license': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
         },
         u'cms.localisation': {
             'Meta': {'object_name': 'Localisation'},

@@ -2,6 +2,7 @@ import pygit2
 
 from cms.git import repo
 from gitmodel.utils import repo_helper
+from cms.models import ContentRepository
 
 
 def workspace_changes(request):
@@ -17,5 +18,6 @@ def workspace_changes(request):
 
     branch = repo.lookup_branch(remote_name, pygit2.GIT_BRANCH_REMOTE)
     return {
-        'repo_changes': len(repo.diff(local_branch.name, branch.name))
+        'repo_changes': len(repo.diff(local_branch.name, branch.name)),
+        'content_repositories': ContentRepository.objects.all(),
     }
