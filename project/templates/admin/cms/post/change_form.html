@@ -1,6 +1,6 @@
 {% extends "admin/change_form.html" %}
 {% load admin_static i18n admin_modify admin_urls grp_tags %}
-
+{% load admin_urls %}
 
 {% block stylesheets %}
 {{ block.super }}
@@ -47,7 +47,18 @@
                 {% endfor %}
             {% endblock %}
 
-            {% block after_field_sets %}{% endblock %}
+            {% block after_field_sets %}
+            {% if not content_repositories.empty %}
+                {% for content_repo in content_repositories %}
+                    {% if not content_repo.targets.empty %}
+                        This content will be published under the
+                        <a href="{% url 'admin:cms_contentrepository_change' content_repo.pk %}">{{content_repo.get_license_display}}</a>
+                        to the following publishing targets:
+                        {{ content_repo.targets.all|join:', ' }}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            {% endblock %}
 
             <!-- Inlines -->
             {% block inline_field_sets %}
