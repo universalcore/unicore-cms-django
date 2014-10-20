@@ -79,12 +79,24 @@ class ContentRepository(models.Model):
         verbose_name = 'Content Repository Information'
         verbose_name_plural = 'Content Repositories Information'
 
+    @classmethod
+    def get_default_name(cls):
+        url_head, url_path = settings.GIT_REPO_URL.rsplit('/', 1)
+        repo_name, _, dot_git = url_path.rpartition('.')
+        return repo_name
+
+    @classmethod
+    def get_default_url(cls):
+        return settings.GIT_REPO_URL
+
     name = models.CharField(
         _('The name of the content repository'),
-        max_length=255, blank=True, null=True)
+        max_length=255, blank=True, null=True,
+        default=lambda: ContentRepository.get_default_name())
     url = models.CharField(
         _('Where Internet address of where this content repository lives'),
-        max_length=255, blank=True, null=True)
+        max_length=255, blank=True, null=True,
+        default=lambda: ContentRepository.get_default_url())
     license = models.CharField(
         _('The license to use with this content.'),
         max_length=255, choices=CONTENT_REPO_LICENSES,
@@ -133,6 +145,12 @@ class PublishingTarget(models.Model):
         _('Name for the publishing target.'), max_length=255)
     url = models.URLField(
         _('The Internet address for this target.'))
+
+    @classmethod
+    def get_default_target(cls):
+        target, _ = cls.objects.get_or_create(
+            name=settings.DEFAULT_TARGET_NAME)
+        return target
 
     def __unicode__(self):
         return self.name
@@ -356,6 +374,9 @@ class Post(models.Model):
 
 @receiver(post_save, sender=ContentRepository)
 def auto_save_content_repository_to_git(sender, instance, created, **kwargs):
+    if not instance.license:
+        return
+
     with workspace.commit_on_success('Specify license.'):
         workspace.add_blob('LICENSE', instance.get_license_text())
 

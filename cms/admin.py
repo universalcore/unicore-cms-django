@@ -226,16 +226,8 @@ class ContentRepositoryAdmin(admin.ModelAdmin):
         if obj is None:
             return
 
-        if not any([obj.name, obj.url]):
-            target, _ = PublishingTarget.objects.get_or_create(
-                name='Default Target')
-
-            url_head, url_path = settings.GIT_REPO_URL.rsplit('/', 1)
-            repo_name, _, dot_git = url_path.rpartition('.')
-
-            obj.url = settings.GIT_REPO_URL
-            obj.name = repo_name
-            obj.targets.add(target)
+        if not obj.targets.exists():
+            obj.targets.add(PublishingTarget.get_default_target())
         return obj
 
     def has_add_permission(self, *args, **kwargs):
