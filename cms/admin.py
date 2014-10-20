@@ -223,6 +223,8 @@ class ContentRepositoryAdmin(admin.ModelAdmin):
     def get_object(self, request, object_id):
         obj = super(ContentRepositoryAdmin, self).get_object(
             request, object_id)
+        if obj is None:
+            return
 
         if not any([obj.name, obj.url]):
             target, _ = PublishingTarget.objects.get_or_create(
