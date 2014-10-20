@@ -4,16 +4,13 @@ from cms.models import Post, Category, Localisation
 from cms.git.models import GitPage, GitCategory
 from cms.tests.base import BaseCmsTestCase
 
+from unicore.content import models as eg_models
+
 
 class PostTestCase(BaseCmsTestCase):
 
-    def setUp(self):
-        self.clean_repo()
-
-    def tearDown(self):
-        self.clean_repo()
-
     def test_create_post(self):
+        workspace = self.mk_workspace()
         p = Post(
             title='sample title',
             description='description',
@@ -23,26 +20,26 @@ class PostTestCase(BaseCmsTestCase):
         p.save()
         self.assertEquals(p.featured_in_category, False)
         self.assertEquals(Post.objects.all().count(), 1)
-        self.assertEquals(len(list(GitPage.all())), 1)
+        self.assertEquals(workspace.S(eg_models.Page).count(), 1)
 
         p = Post.objects.get(pk=p.pk)
         p.title = 'changed title'
         p.save()
 
-        self.assertEquals(len(list(GitPage.all())), 1)
-        git_page = GitPage.all()[0]
-        self.assertEquals(git_page.title, 'changed title')
-        self.assertEquals(git_page.uuid, p.uuid)
-        self.assertEquals(git_page.subtitle, 'subtitle')
-        self.assertEquals(git_page.description, 'description')
-        self.assertEquals(git_page.featured_in_category, False)
-        self.assertEquals(git_page.position, 3)
-        self.assertTrue(git_page.created_at is not None)
-        self.assertTrue(git_page.modified_at is not None)
+        self.assertEquals(workspace.S(eg_models.Page).count(), 1)
+        [eg_page] = workspace.S(eg_models.Page).everything()
+        self.assertEquals(eg_page.title, 'changed title')
+        self.assertEquals(eg_page.uuid, p.uuid)
+        self.assertEquals(eg_page.subtitle, 'subtitle')
+        self.assertEquals(eg_page.description, 'description')
+        self.assertEquals(eg_page.featured_in_category, False)
+        self.assertEquals(eg_page.position, 3)
+        self.assertTrue(eg_page.created_at is not None)
+        self.assertTrue(eg_page.modified_at is not None)
 
         p.delete()
         self.assertEquals(Post.objects.all().count(), 0)
-        self.assertEquals(len(list(GitPage.all())), 0)
+        self.assertEquals(workspace.S(eg_models.Page).count(), 0)
 
     def test_create_category(self):
         c = Category(

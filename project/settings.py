@@ -248,6 +248,7 @@ CKEDITOR_CONFIGS = {
 GIT_REPO_URL = None
 GIT_REPO_PATH = abspath('cmsrepo')
 DEFAULT_TARGET_NAME = 'Default Target'
+ELASTIC_GIT_INDEX_PREFIX = 'elastic-git'
 
 # used when pushing to Github
 SSH_PUBKEY_PATH = None

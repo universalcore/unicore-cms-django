@@ -244,7 +244,8 @@ class PublishingTargetAdmin(admin.ModelAdmin):
 
 @admin.site.register_view('github/', 'Github Configuration')
 def my_view(request, *args, **kwargs):
-    workspace = EG.workspace(settings.GIT_REPO_PATH)
+    workspace = EG.workspace(settings.GIT_REPO_PATH,
+                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
     commits = workspace.repo.iter_commits(max_count=10)
 
     context = {

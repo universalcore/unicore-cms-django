@@ -375,7 +375,8 @@ def auto_save_content_repository_to_git(sender, instance, created, **kwargs):
     if not instance.license:
         return
 
-    workspace = EG.workspace(settings.GIT_REPO_PATH)
+    workspace = EG.workspace(settings.GIT_REPO_PATH,
+                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
     workspace.sm.store_data(
         'LICENSE', instance.get_license_text(), 'Specify license.')
 
@@ -389,8 +390,8 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         "slug": instance.slug,
         "description": instance.description,
         "content": instance.content,
-        "created_at": instance.created_at,
-        "modified_at": instance.modified_at,
+        "created_at": instance.created_at.isoformat(),
+        "modified_at": instance.modified_at.isoformat(),
         # TODO: We should migrate this to localisation everywhere
         "language": (
             instance.localisation.get_code()
@@ -414,15 +415,18 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
     # author = utils.get_author_from_user(instance.last_author)
 
     try:
-        workspace = EG.workspace(settings.GIT_REPO_PATH)
+        workspace = EG.workspace(
+            settings.GIT_REPO_PATH,
+            index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
         [page] = workspace.S(eg_models.Page).filter(uuid=instance.uuid)
         original = page.get_object()
         updated = original.update(data)
         workspace.save(updated, 'Page updated: %s' % instance.title)
+        workspace.refresh_index()
     except ValueError:
         page = eg_models.Page(data)
         workspace.save(page, 'Page created: %s' % instance.title)
-
+        workspace.refresh_index()
         if not instance.uuid:
             Post.objects.filter(pk=instance.pk).update(uuid=page.uuid)
 
@@ -431,11 +435,13 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
 def auto_delete_post_to_git(sender, instance, **kwargs):
     # TODO: Allow author information to be set in EG.
     # author = utils.get_author_from_user(instance.last_author)
-    workspace = EG.workspace(settings.GIT_REPO_PATH)
+    workspace = EG.workspace(settings.GIT_REPO_PATH,
+                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
     try:
         [page] = workspace.S(eg_models.Page).filter(uuid=instance.uuid)
         workspace.delete(
             page.get_object(), 'Page deleted: %s' % (instance.title,))
+        workspace.refresh_index()
     except ValueError:
         pass
 
@@ -458,7 +464,8 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
     # TODO: Not yet implemented
     # author = utils.get_author_from_user(instance.last_author)
 
-    workspace = EG.workspace(settings.GIT_REPO_PATH)
+    workspace = EG.workspace(settings.GIT_REPO_PATH,
+                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
     try:
         # FIXME: This can fail if we ever store a value with None
         #        as the uuid.
@@ -466,10 +473,11 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         original = category.get_object()
         updated = original.update(data)
         workspace.save(updated, 'Category updated: %s' % instance.title)
+        workspace.refresh_index()
     except ValueError:
         category = eg_models.Category(data)
         workspace.save(category, 'Category created: %s' % instance.title)
-
+        workspace.refresh_index()
         if not instance.uuid:
             Category.objects.filter(pk=instance.pk).update(uuid=category.uuid)
 
@@ -478,10 +486,12 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
 def auto_delete_category_to_git(sender, instance, **kwargs):
     # TODO: Not yet implemented
     # author = utils.get_author_from_user(instance.last_author)
-    workspace = EG.workspace(settings.GIT_REPO_PATH)
+    workspace = EG.workspace(settings.GIT_REPO_PATH,
+                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
     try:
         [category] = workspace.S(eg_models.Category).filter(uuid=instance.uuid)
         original = category.get_object()
         workspace.delete(original, 'Category deleted: %s' % instance.title)
+        workspace.refresh_index()
     except ValueError:
         pass
