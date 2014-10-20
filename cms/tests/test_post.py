@@ -4,6 +4,7 @@ from cms.models import Post, Category, Localisation
 from cms.git.models import GitPage, GitCategory
 from cms.tests.base import BaseCmsTestCase
 
+from elasticgit import EG
 from unicore.content import models as eg_models
 
 
@@ -87,28 +88,31 @@ class PostTestCase(BaseCmsTestCase):
         self.assertEquals(git_p.primary_category, c.uuid)
 
     def test_page_recreated_if_not_in_git(self):
-        print self.workspace
-        p = Post(
-            title='sample test title',
-            description='description',
-            subtitle='subtitle',
-            content='sample content')
-        p.save()
-        p = Post.objects.get(pk=p.pk)
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+            p = Post(
+                title='sample test title',
+                description='description',
+                subtitle='subtitle',
+                content='sample content')
+            p.save()
+            p = Post.objects.get(pk=p.pk)
 
-        [git_page] = self.workspace.S(eg_models.Page).filter(uuid=p.uuid)
-        print git_page.uuid
-        print git_page.get_object()
-        self.workspace.delete(git_page.get_object())
-        self.assertEquals(self.workspace.S(eg_models.Post).count(), 0)
+            # Manually delete the git page
+            [git_page] = self.workspace.S(eg_models.Page).filter(uuid=p.uuid)
+            self.workspace.delete(git_page.get_object(),
+                                  'Removing: %s' % p.uuid)
+            self.workspace.refresh_index()
+            self.assertEquals(
+                self.workspace.S(eg_models.Page).filter(uuid=p.uuid).count(),
+                0)
 
-        p.title = 'new title'
-        p.save()
+            p.title = 'new title'
+            p.save()
 
-        p = Post.objects.get(pk=p.pk)
-        [git_p] = self.workspace.S(eg_models.Page).filter(uuid=p.uuid)
+            p = Post.objects.get(pk=p.pk)
+            [git_p] = self.workspace.S(eg_models.Page).filter(uuid=p.uuid)
 
-        self.assertEquals(git_p.title, 'new title')
+            self.assertEquals(git_p.title, 'new title')
 
     def test_category_recreated_if_not_in_git(self):
         c = Category(

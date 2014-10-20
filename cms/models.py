@@ -1,5 +1,7 @@
 import os
 
+from uuid import uuid4
+
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import models
@@ -417,6 +419,8 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
     # author = utils.get_author_from_user(instance.last_author)
 
     try:
+        print 'GIT_REPO_PATH', settings.GIT_REPO_PATH
+        print 'ELASTIC_GIT_INDEX_PREFIX', settings.ELASTIC_GIT_INDEX_PREFIX
         workspace = EG.workspace(
             settings.GIT_REPO_PATH,
             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
@@ -426,14 +430,13 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         workspace.save(updated, 'Page updated: %s' % instance.title)
         workspace.refresh_index()
     except ValueError:
-        data.update({
-            'uuid': instance.uuid,
-        })
         page = eg_models.Page(data)
         workspace.save(page, 'Page created: %s' % instance.title)
         workspace.refresh_index()
-        if not instance.uuid:
-            Post.objects.filter(pk=instance.pk).update(uuid=page.uuid)
+        print 'workspace!', workspace.working_dir
+        print 'repo!', workspace.repo
+        # Always update the UUID as we've just generated a new one.
+        Post.objects.filter(pk=instance.pk).update(uuid=page.uuid)
 
 
 @receiver(post_delete, sender=Post)
