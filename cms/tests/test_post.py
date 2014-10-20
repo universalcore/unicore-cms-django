@@ -308,7 +308,7 @@ class PostTestCase(BaseCmsTestCase):
         c.save()
 
         c = Category.objects.get(pk=c.pk)
-        git_c = GitCategory.get(c.uuid)
+        [git_c] = self.workspace.S(eg_models.Category).filter(uuid=c.uuid)
         self.assertEquals(git_c.position, 4)
 
     def test_page_ordering(self):
