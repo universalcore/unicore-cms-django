@@ -38,7 +38,9 @@ LANGUAGE_CHOICES = (
 CONTENT_REPO_LICENSE_PATH = os.path.join(
     settings.PROJECT_ROOT, '..', 'licenses')
 
+CUSTOM_REPO_LICENSE_TYPE = '_custom'
 CONTENT_REPO_LICENSES = (
+    (CUSTOM_REPO_LICENSE_TYPE, 'Custom license.'),
     ('CC-BY-4.0',
         'Creative Commons Attribution 4.0 International License.'),
     ('CC-BY-NC-4.0',
@@ -79,36 +81,42 @@ class ContentRepository(models.Model):
         verbose_name = 'Content Repository Information'
         verbose_name_plural = 'Content Repositories Information'
 
-    existing_license = models.CharField(
+    license = models.CharField(
         _('The license to use with this content.'),
         max_length=255, choices=CONTENT_REPO_LICENSES,
+        default=DEFAULT_REPO_LICENSE,
         blank=True, null=True)
-    custom_license = models.TextField(
+    custom_license_name = models.CharField(
+        _('Name for the custom license.'),
+        help_text=_('This name is for your own reference only.'),
+        max_length=255, blank=True, null=True)
+    custom_license_text = models.TextField(
         _('Should you decide to go with a custom license, paste '
           'the text here.'), blank=True, null=True)
 
     def get_license_text(self):
-        if self.existing_license:
+        if self.license != CUSTOM_REPO_LICENSE_TYPE:
             return self.get_existing_license_text()
         return self.get_custom_license_text()
 
     def get_custom_license_text(self):
-        return self.custom_license
+        return self.custom_license_text
 
     def get_existing_license_text(self):
         file_path = os.path.join(
-            CONTENT_REPO_LICENSE_PATH, '%s.txt' % (self.existing_license,))
+            CONTENT_REPO_LICENSE_PATH, '%s.txt' % (self.license,))
         with open(file_path) as fp:
             return fp.read()
 
     def __unicode__(self):
-        if self.existing_license:
-            return self.existing_license
-        return 'Custom License'
+        return self.get_license_display()
 
     def clean(self):
-        if not any([self.existing_license, self.custom_license]):
-            raise ValidationError('You must specify a license.')
+        if (self.license == CUSTOM_REPO_LICENSE_TYPE
+                and not all([self.custom_license_text,
+                             self.custom_license_name])):
+            raise ValidationError(
+                'You must specify a license name & text for a custom license.')
 
 
 class Localisation(models.Model):

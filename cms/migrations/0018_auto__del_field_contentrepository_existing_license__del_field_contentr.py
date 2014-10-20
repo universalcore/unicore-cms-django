@@ -8,17 +8,47 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'ContentRepository'
-        db.create_table(u'cms_contentrepository', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('license', self.gf('django.db.models.fields.CharField')(default='BY-NC-ND-4.0', max_length=255)),
-        ))
-        db.send_create_signal(u'cms', ['ContentRepository'])
+        # Deleting field 'ContentRepository.existing_license'
+        db.delete_column(u'cms_contentrepository', 'existing_license')
+
+        # Deleting field 'ContentRepository.custom_license'
+        db.delete_column(u'cms_contentrepository', 'custom_license')
+
+        # Adding field 'ContentRepository.license'
+        db.add_column(u'cms_contentrepository', 'license',
+                      self.gf('django.db.models.fields.CharField')(default='BY-NC-ND-4.0', max_length=255, null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'ContentRepository.custom_license_name'
+        db.add_column(u'cms_contentrepository', 'custom_license_name',
+                      self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'ContentRepository.custom_license_text'
+        db.add_column(u'cms_contentrepository', 'custom_license_text',
+                      self.gf('django.db.models.fields.TextField')(null=True, blank=True),
+                      keep_default=False)
 
 
     def backwards(self, orm):
-        # Deleting model 'ContentRepository'
-        db.delete_table(u'cms_contentrepository')
+        # Adding field 'ContentRepository.existing_license'
+        db.add_column(u'cms_contentrepository', 'existing_license',
+                      self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'ContentRepository.custom_license'
+        db.add_column(u'cms_contentrepository', 'custom_license',
+                      self.gf('django.db.models.fields.TextField')(null=True, blank=True),
+                      keep_default=False)
+
+        # Deleting field 'ContentRepository.license'
+        db.delete_column(u'cms_contentrepository', 'license')
+
+        # Deleting field 'ContentRepository.custom_license_name'
+        db.delete_column(u'cms_contentrepository', 'custom_license_name')
+
+        # Deleting field 'ContentRepository.custom_license_text'
+        db.delete_column(u'cms_contentrepository', 'custom_license_text')
 
 
     models = {
@@ -66,8 +96,10 @@ class Migration(SchemaMigration):
         },
         u'cms.contentrepository': {
             'Meta': {'object_name': 'ContentRepository'},
+            'custom_license_name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'custom_license_text': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'license': ('django.db.models.fields.CharField', [], {'default': "'BY-NC-ND-4.0'", 'max_length': '255'})
+            'license': ('django.db.models.fields.CharField', [], {'default': "'BY-NC-ND-4.0'", 'max_length': '255', 'null': 'True', 'blank': 'True'})
         },
         u'cms.localisation': {
             'Meta': {'object_name': 'Localisation'},
@@ -76,7 +108,7 @@ class Migration(SchemaMigration):
             'language_code': ('django.db.models.fields.CharField', [], {'max_length': '3'})
         },
         u'cms.post': {
-            'Meta': {'ordering': "('-created_at',)", 'object_name': 'Post'},
+            'Meta': {'ordering': "('position', '-created_at')", 'object_name': 'Post'},
             'content': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'created_at': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
@@ -85,9 +117,9 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'last_author': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'post_last_author'", 'null': 'True', 'to': u"orm['auth.User']"}),
             'localisation': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['cms.Localisation']", 'null': 'True', 'blank': 'True'}),
-            'position': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
             'modified_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'db_index': 'True', 'blank': 'True'}),
             'owner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']", 'null': 'True', 'blank': 'True'}),
+            'position': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
             'primary_category': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'primary_modelbase_set'", 'null': 'True', 'to': u"orm['cms.Category']"}),
             'related_posts': ('sortedm2m.fields.SortedManyToManyField', [], {'related_name': "'related_posts_rel_+'", 'blank': 'True', 'to': u"orm['cms.Post']"}),
             'slug': ('django.db.models.fields.SlugField', [], {'max_length': '255'}),
