@@ -237,9 +237,9 @@ class ContentRepositoryAdmin(admin.ModelAdmin):
 class PublishingTargetAdmin(admin.ModelAdmin):
     readonly_fields = ('url', 'name')
 
-    def has_change_permission(self, *args, **kwargs):
-        ensure_has_default_target = PublishingTarget.get_default_target()
-        return True
+    def has_add_permission(self, *args, **kwargs):
+        _ = PublishingTarget.get_default_target()
+        return False
 
 
 @admin.site.register_view('github/', 'Github Configuration')
