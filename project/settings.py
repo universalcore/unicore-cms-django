@@ -245,6 +245,8 @@ CKEDITOR_CONFIGS = {
     }
 }
 
+GRAPPELLI_ADMIN_TITLE = 'Universal Core'
+
 GIT_REPO_URL = None
 GIT_REPO_PATH = abspath('cmsrepo')
 DEFAULT_TARGET_NAME = 'Default Target'
