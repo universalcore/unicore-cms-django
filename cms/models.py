@@ -40,24 +40,24 @@ CONTENT_REPO_LICENSE_PATH = os.path.join(
 
 CUSTOM_REPO_LICENSE_TYPE = '_custom'
 CONTENT_REPO_LICENSES = (
-    (CUSTOM_REPO_LICENSE_TYPE, 'Custom license.'),
+    (CUSTOM_REPO_LICENSE_TYPE, 'Custom license'),
     ('CC-BY-4.0',
-        'Creative Commons Attribution 4.0 International License.'),
+        'Creative Commons Attribution 4.0 International License'),
     ('CC-BY-NC-4.0',
         'Creative Commons Attribution-NonCommercial 4.0 '
-        'International License.'),
+        'International License'),
     ('CC-BY-NC-ND-4.0',
         'Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 '
-        'International License.'),
+        'International License'),
     ('CC-BY-NC-SA-4.0',
         'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 '
-        'International License.'),
+        'International License'),
     ('CC-BY-ND-4.0',
         'Creative Commons Attribution-NoDerivatives 4.0 '
-        'International License.'),
+        'International License'),
     ('CC-BY-SA-4.0',
         'Creative Commons Attribution-ShareAlike 4.0 '
-        'International License.'),
+        'International License'),
 )
 
 DEFAULT_REPO_LICENSE = 'BY-NC-ND-4.0'
