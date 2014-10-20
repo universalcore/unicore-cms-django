@@ -131,87 +131,94 @@ class PostTestCase(BaseCmsTestCase):
             self.assertEquals(git_c.title, 'new title')
 
     def test_page_with_source(self):
-        c = Category(
-            title='guides',
-            slug='guides')
-        c.save()
-        c = Category.objects.get(pk=c.pk)
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+            c = Category(
+                title='guides',
+                slug='guides')
+            c.save()
+            c = Category.objects.get(pk=c.pk)
 
-        p = Post(
-            title='sample title',
-            description='description',
-            subtitle='subtitle',
-            content='sample content',
-            localisation=Localisation._for('eng_UK'))
-        p.save()
-        p = Post.objects.get(pk=p.pk)
+            p = Post(
+                title='sample title',
+                description='description',
+                subtitle='subtitle',
+                content='sample content',
+                localisation=Localisation._for('eng_UK'))
+            p.save()
+            p = Post.objects.get(pk=p.pk)
 
-        p2 = Post(
-            title='sample title',
-            description='description',
-            subtitle='subtitle',
-            content='sample content',
-            localisation=Localisation._for('eng_US'))
-        p2.primary_category = c
-        p2.source = p
-        p2.save()
-        p2 = Post.objects.get(pk=p2.pk)
+            p2 = Post(
+                title='sample title',
+                description='description',
+                subtitle='subtitle',
+                content='sample content',
+                localisation=Localisation._for('eng_US'))
+            p2.primary_category = c
+            p2.source = p
+            p2.save()
+            p2 = Post.objects.get(pk=p2.pk)
 
-        git_p2 = GitPage.get(p2.uuid)
-        self.assertEquals(git_p2.language, 'eng_US')
-        self.assertEquals(git_p2.source.language, 'eng_UK')
+            [git_p2] = self.workspace.S(eg_models.Page).filter(uuid=p2.uuid)
+            [git_p2_source] = self.workspace.S(eg_models.Page).filter(
+                uuid=p2.source.uuid)
+            self.assertEquals(git_p2.language, 'eng_US')
+            self.assertEquals(git_p2_source.language, 'eng_UK')
 
-        p2.source = None
-        p2.primary_category = None
-        p2.save()
+            p2.source = None
+            p2.primary_category = None
+            p2.save()
 
-        git_p2 = GitPage.get(p2.uuid)
-        self.assertEquals(git_p2.source, None)
-        self.assertEquals(git_p2.primary_category, None)
+            [git_p2] = self.workspace.S(eg_models.Page).filter(uuid=p2.uuid)
+            self.assertEquals(git_p2.source, None)
+            self.assertEquals(git_p2.primary_category, None)
 
     def test_page_featured_in_category(self):
-        p = Post(
-            title='sample title',
-            description='description',
-            subtitle='subtitle',
-            content='sample content',
-            localisation=Localisation._for('eng_UK'),
-            featured_in_category=True)
-        p.save()
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+            p = Post(
+                title='sample title',
+                description='description',
+                subtitle='subtitle',
+                content='sample content',
+                localisation=Localisation._for('eng_UK'),
+                featured_in_category=True)
+            p.save()
 
-        p = Post.objects.get(pk=p.pk)
-        git_p = GitPage.get(p.uuid)
-        self.assertTrue(git_p.featured_in_category)
+            p = Post.objects.get(pk=p.pk)
+            [git_p] = self.workspace.S(eg_models.Page).filter(uuid=p.uuid)
+            self.assertTrue(git_p.featured_in_category)
 
     def test_page_get_featured(self):
-        post = Post(
-            title='sample title',
-            description='description',
-            subtitle='subtitle',
-            content='sample content',
-            localisation=Localisation._for('eng_UK'))
-        post.save()
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+            post = Post(
+                title='sample title',
+                description='description',
+                subtitle='subtitle',
+                content='sample content',
+                localisation=Localisation._for('eng_UK'))
+            post.save()
 
-        featured_post = Post(
-            title='featured sample title',
-            description='featured description',
-            subtitle='featured subtitle',
-            content='featured sample content',
-            localisation=Localisation._for('eng_UK'),
-            featured=True)
-        featured_post.save()
+            featured_post = Post(
+                title='featured sample title',
+                description='featured description',
+                subtitle='featured subtitle',
+                content='featured sample content',
+                localisation=Localisation._for('eng_UK'),
+                featured=True)
+            featured_post.save()
 
-        post = Post.objects.get(pk=post.pk)
-        git_post = GitPage.get(post.uuid)
+            post = Post.objects.get(pk=post.pk)
+            [git_post] = self.workspace.S(
+                eg_models.Page).filter(uuid=post.uuid)
 
-        featured_post = Post.objects.get(pk=featured_post.pk)
-        featured_git_post = GitPage.get(featured_post.uuid)
+            featured_post = Post.objects.get(pk=featured_post.pk)
+            [featured_git_post] = self.workspace.S(
+                eg_models.Page).filter(uuid=featured_post.uuid)
 
-        self.assertEqual(post.featured, False)
-        self.assertEquals(git_post.featured, False)
+            self.assertEqual(post.featured, False)
+            self.assertEquals(git_post.featured, False)
 
-        self.assertEqual(featured_post.featured, True)
-        self.assertEquals(featured_git_post.featured, True)
+            self.assertEqual(featured_post.featured, True)
+            self.assertEquals(featured_git_post.featured, True)
 
     def test_category_with_source(self):
         with self.settings(GIT_REPO_PATH=self.workspace.working_dir):

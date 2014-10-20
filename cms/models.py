@@ -409,7 +409,7 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
             if instance.primary_category
             else None),
         "source": (
-            instance.source
+            instance.source.uuid
             if instance.source
             else None),
     }
