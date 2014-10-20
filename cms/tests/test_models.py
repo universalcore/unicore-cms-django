@@ -3,6 +3,7 @@ import os
 from cms.tests.base import BaseCmsTestCase
 from cms.models import ContentRepository, CUSTOM_REPO_LICENSE_TYPE
 from django.conf import settings
+from django import forms
 from cms.git import workspace
 
 
@@ -34,3 +35,18 @@ class TestContentRepository(BaseCmsTestCase):
         repo.save()
         self.assertEqual(repo.get_license_text(), 'Bar')
         self.assertEqual(unicode(repo), 'Foo (Custom license.)')
+
+    def test_validation(self):
+        self.assertRaises(
+            forms.ValidationError,
+            ContentRepository(license=CUSTOM_REPO_LICENSE_TYPE).full_clean)
+        self.assertRaises(
+            forms.ValidationError,
+            ContentRepository(
+                license=CUSTOM_REPO_LICENSE_TYPE,
+                custom_license_name='Foo').full_clean)
+        self.assertRaises(
+            forms.ValidationError,
+            ContentRepository(
+                license=CUSTOM_REPO_LICENSE_TYPE,
+                custom_license_text='Bar').full_clean)

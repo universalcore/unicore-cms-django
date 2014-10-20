@@ -115,11 +115,15 @@ class ContentRepository(models.Model):
         return self.get_license_display()
 
     def clean(self):
+        print repr(self.license)
+        print repr(self.custom_license_text)
+        print repr(self.custom_license_name)
         if (self.license == CUSTOM_REPO_LICENSE_TYPE
                 and not all([self.custom_license_text,
                              self.custom_license_name])):
             raise ValidationError(
                 'You must specify a license name & text for a custom license.')
+        print 'not raised'
 
 
 class Localisation(models.Model):
