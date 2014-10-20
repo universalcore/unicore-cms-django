@@ -383,7 +383,6 @@ def auto_save_content_repository_to_git(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Post)
 def auto_save_post_to_git(sender, instance, created, **kwargs):
-
     data = {
         "title": instance.title,
         "subtitle": instance.subtitle,
@@ -401,7 +400,10 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         "position": instance.position,
         "linked_pages": [related_post.uuid
                          for related_post in instance.related_posts.all()],
-        "primary_category": instance.primary_category,
+        "primary_category": (
+            instance.primary_category.uuid
+            if instance.primary_category
+            else None),
         "source": instance.source,
     }
 
@@ -424,6 +426,9 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         workspace.save(updated, 'Page updated: %s' % instance.title)
         workspace.refresh_index()
     except ValueError:
+        data.update({
+            'uuid': instance.uuid,
+        })
         page = eg_models.Page(data)
         workspace.save(page, 'Page created: %s' % instance.title)
         workspace.refresh_index()

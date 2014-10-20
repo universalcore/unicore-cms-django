@@ -9,8 +9,10 @@ from unicore.content import models as eg_models
 
 class PostTestCase(BaseCmsTestCase):
 
+    def setUp(self):
+        self.workspace = self.mk_workspace()
+
     def test_create_post(self):
-        workspace = self.mk_workspace()
         p = Post(
             title='sample title',
             description='description',
@@ -20,14 +22,14 @@ class PostTestCase(BaseCmsTestCase):
         p.save()
         self.assertEquals(p.featured_in_category, False)
         self.assertEquals(Post.objects.all().count(), 1)
-        self.assertEquals(workspace.S(eg_models.Page).count(), 1)
+        self.assertEquals(self.workspace.S(eg_models.Page).count(), 1)
 
         p = Post.objects.get(pk=p.pk)
         p.title = 'changed title'
         p.save()
 
-        self.assertEquals(workspace.S(eg_models.Page).count(), 1)
-        [eg_page] = workspace.S(eg_models.Page).everything()
+        self.assertEquals(self.workspace.S(eg_models.Page).count(), 1)
+        [eg_page] = self.workspace.S(eg_models.Page).everything()
         self.assertEquals(eg_page.title, 'changed title')
         self.assertEquals(eg_page.uuid, p.uuid)
         self.assertEquals(eg_page.subtitle, 'subtitle')
@@ -39,7 +41,7 @@ class PostTestCase(BaseCmsTestCase):
 
         p.delete()
         self.assertEquals(Post.objects.all().count(), 0)
-        self.assertEquals(workspace.S(eg_models.Page).count(), 0)
+        self.assertEquals(self.workspace.S(eg_models.Page).count(), 0)
 
     def test_create_category(self):
         c = Category(
@@ -48,21 +50,21 @@ class PostTestCase(BaseCmsTestCase):
             slug='sample-title')
         c.save()
         self.assertEquals(Category.objects.all().count(), 1)
-        self.assertEquals(len(list(GitCategory.all())), 1)
+        self.assertEquals(self.workspace.S(eg_models.Category).count(), 1)
 
         c = Category.objects.get(pk=c.pk)
         c.title = 'changed title'
         c.save()
 
-        self.assertEquals(len(list(GitCategory.all())), 1)
-        git_cat = GitCategory.all()[0]
+        self.assertEquals(self.workspace.S(eg_models.Category).count(), 1)
+        [git_cat] = self.workspace.S(eg_models.Category).everything()
         self.assertEquals(git_cat.title, 'changed title')
         self.assertEquals(git_cat.uuid, c.uuid)
         self.assertEquals(git_cat.subtitle, 'subtitle')
 
         c.delete()
         self.assertEquals(Category.objects.all().count(), 0)
-        self.assertEquals(len(list(GitCategory.all())), 0)
+        self.assertEquals(self.workspace.S(eg_models.Category).count(), 0)
 
     def test_page_with_primary_category(self):
         c = Category(
@@ -81,10 +83,11 @@ class PostTestCase(BaseCmsTestCase):
 
         p = Post.objects.get(pk=p.pk)
 
-        git_p = GitPage.get(p.uuid)
-        self.assertEquals(git_p.primary_category.slug, 'guides')
+        [git_p] = self.workspace.S(eg_models.Page).filter(uuid=p.uuid)
+        self.assertEquals(git_p.primary_category, c.uuid)
 
     def test_page_recreated_if_not_in_git(self):
+        print self.workspace
         p = Post(
             title='sample test title',
             description='description',
@@ -92,13 +95,18 @@ class PostTestCase(BaseCmsTestCase):
             content='sample content')
         p.save()
         p = Post.objects.get(pk=p.pk)
-        GitPage.delete(p.uuid, True)
+
+        [git_page] = self.workspace.S(eg_models.Page).filter(uuid=p.uuid)
+        print git_page.uuid
+        print git_page.get_object()
+        self.workspace.delete(git_page.get_object())
+        self.assertEquals(self.workspace.S(eg_models.Post).count(), 0)
 
         p.title = 'new title'
         p.save()
 
         p = Post.objects.get(pk=p.pk)
-        git_p = GitPage.get(p.uuid)
+        [git_p] = self.workspace.S(eg_models.Page).filter(uuid=p.uuid)
 
         self.assertEquals(git_p.title, 'new title')
 
