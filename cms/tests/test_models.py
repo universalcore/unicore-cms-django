@@ -1,15 +1,16 @@
 import os
 
 from cms.tests.base import BaseCmsTestCase
-from cms.models import ContentRepository
+from cms.models import ContentRepository, CUSTOM_REPO_LICENSE_TYPE
 from django.conf import settings
+from django import forms
 from cms.git import workspace
 
 
 class TestContentRepository(BaseCmsTestCase):
 
     def test_get_license(self):
-        repo = ContentRepository(existing_license='CC-BY-4.0')
+        repo = ContentRepository(license='CC-BY-4.0')
         text = repo.get_license_text().strip()
         self.assertTrue(
             text.startswith('Attribution 4.0 International'))
@@ -18,7 +19,7 @@ class TestContentRepository(BaseCmsTestCase):
                 'Creative Commons may be contacted at creativecommons.org.'))
 
     def test_write_license_file(self):
-        repo = ContentRepository(existing_license='CC-BY-4.0')
+        repo = ContentRepository(license='CC-BY-4.0')
         repo.save()
         file_path = os.path.join(settings.GIT_REPO_PATH, 'LICENSE')
         workspace.sync_repo_index()
@@ -27,6 +28,25 @@ class TestContentRepository(BaseCmsTestCase):
         self.assertEqual(license_text, repo.get_license_text())
 
     def test_custom_license_text(self):
-        repo = ContentRepository(custom_license='Foo')
+        repo = ContentRepository(
+            license=CUSTOM_REPO_LICENSE_TYPE,
+            custom_license_name='Foo',
+            custom_license_text='Bar')
         repo.save()
-        self.assertEqual(repo.get_license_text(), 'Foo')
+        self.assertEqual(repo.get_license_text(), 'Bar')
+        self.assertEqual(unicode(repo), 'Foo (Custom license.)')
+
+    def test_validation(self):
+        self.assertRaises(
+            forms.ValidationError,
+            ContentRepository(license=CUSTOM_REPO_LICENSE_TYPE).full_clean)
+        self.assertRaises(
+            forms.ValidationError,
+            ContentRepository(
+                license=CUSTOM_REPO_LICENSE_TYPE,
+                custom_license_name='Foo').full_clean)
+        self.assertRaises(
+            forms.ValidationError,
+            ContentRepository(
+                license=CUSTOM_REPO_LICENSE_TYPE,
+                custom_license_text='Bar').full_clean)

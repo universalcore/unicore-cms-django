@@ -100,6 +100,7 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'last_author': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'post_last_author'", 'null': 'True', 'to': u"orm['auth.User']"}),
             'localisation': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['cms.Localisation']", 'null': 'True', 'blank': 'True'}),
+            'position': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
             'modified_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'db_index': 'True', 'blank': 'True'}),
             'owner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']", 'null': 'True', 'blank': 'True'}),
             'primary_category': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'primary_modelbase_set'", 'null': 'True', 'to': u"orm['cms.Category']"}),
