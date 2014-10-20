@@ -94,7 +94,7 @@ class ContentRepository(models.Model):
         max_length=255, blank=True, null=True,
         default=lambda: ContentRepository.get_default_name())
     url = models.CharField(
-        _('Where Internet address of where this content repository lives'),
+        _('Internet address of where this content repository lives'),
         max_length=255, blank=True, null=True,
         default=lambda: ContentRepository.get_default_url())
     license = models.CharField(
