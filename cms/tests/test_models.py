@@ -13,6 +13,8 @@ from cms.admin import ContentRepositoryAdmin
 from cms.git import workspace
 
 
+@override_settings(GIT_REPO_URL='git@host.com/foo.git',
+                   DEFAULT_TARGET_NAME='The Target')
 class TestContentRepository(BaseCmsTestCase):
 
     def test_get_license(self):
@@ -57,8 +59,6 @@ class TestContentRepository(BaseCmsTestCase):
                 license=CUSTOM_REPO_LICENSE_TYPE,
                 custom_license_text='Bar').full_clean)
 
-    @override_settings(GIT_REPO_URL='git@host.com/foo.git',
-                       DEFAULT_TARGET_NAME='The Target')
     def test_setting_of_target_fields(self):
         cr = ContentRepository(license='CC-BY-4.0')
         cr.save()
