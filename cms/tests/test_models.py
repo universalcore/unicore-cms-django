@@ -33,3 +33,4 @@ class TestContentRepository(BaseCmsTestCase):
             custom_license_text='Bar')
         repo.save()
         self.assertEqual(repo.get_license_text(), 'Bar')
+        self.assertEqual(unicode(repo), 'Foo (Custom license.)')

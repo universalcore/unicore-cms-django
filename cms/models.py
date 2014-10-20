@@ -109,6 +109,9 @@ class ContentRepository(models.Model):
             return fp.read()
 
     def __unicode__(self):
+        if self.license == CUSTOM_REPO_LICENSE_TYPE:
+            return '%s (%s)' % (self.custom_license_name,
+                                self.get_license_display())
         return self.get_license_display()
 
     def clean(self):
