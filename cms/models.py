@@ -17,6 +17,8 @@ from sortedm2m.fields import SortedManyToManyField
 
 from elasticgit import EG
 
+from git import GitCommandError
+
 from unicore.content import models as eg_models
 
 
@@ -406,7 +408,10 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
             instance.primary_category.uuid
             if instance.primary_category
             else None),
-        "source": instance.source,
+        "source": (
+            instance.source
+            if instance.source
+            else None),
     }
 
     # NOTE: If newly created always give it the highest ordering position
@@ -419,8 +424,6 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
     # author = utils.get_author_from_user(instance.last_author)
 
     try:
-        print 'GIT_REPO_PATH', settings.GIT_REPO_PATH
-        print 'ELASTIC_GIT_INDEX_PREFIX', settings.ELASTIC_GIT_INDEX_PREFIX
         workspace = EG.workspace(
             settings.GIT_REPO_PATH,
             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
@@ -466,7 +469,9 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
             instance.localisation.get_code()
             if instance.localisation else None),
         "featured_in_navbar": instance.featured_in_navbar,
-        "source": instance.source,
+        "source": (
+            instance.source.uuid
+            if instance.source else None),
     }
 
     # TODO: Not yet implemented
@@ -482,12 +487,11 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         updated = original.update(data)
         workspace.save(updated, 'Category updated: %s' % instance.title)
         workspace.refresh_index()
-    except ValueError:
+    except (GitCommandError, ValueError):
         category = eg_models.Category(data)
         workspace.save(category, 'Category created: %s' % instance.title)
         workspace.refresh_index()
-        if not instance.uuid:
-            Category.objects.filter(pk=instance.pk).update(uuid=category.uuid)
+        Category.objects.filter(pk=instance.pk).update(uuid=category.uuid)
 
 
 @receiver(post_delete, sender=Category)

@@ -1,10 +1,8 @@
 from django.core.management import call_command
 
 from cms.models import Post, Category, Localisation
-from cms.git.models import GitPage, GitCategory
 from cms.tests.base import BaseCmsTestCase
 
-from elasticgit import EG
 from unicore.content import models as eg_models
 
 
@@ -115,20 +113,22 @@ class PostTestCase(BaseCmsTestCase):
             self.assertEquals(git_p.title, 'new title')
 
     def test_category_recreated_if_not_in_git(self):
-        c = Category(
-            title='sample test title',
-            slug='slug')
-        c.save()
-        c = Category.objects.get(pk=c.pk)
-        GitCategory.delete(c.uuid, True)
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+            c = Category(
+                title='sample test title',
+                slug='slug')
+            c.save()
+            c = Category.objects.get(pk=c.pk)
+            [git_c] = self.workspace.S(eg_models.Category).filter(uuid=c.uuid)
+            self.workspace.delete(git_c.get_object(),
+                                  'Deleting: %s' % (c.uuid,))
+            c.title = 'new title'
+            c.save()
 
-        c.title = 'new title'
-        c.save()
+            c = Category.objects.get(pk=c.pk)
+            [git_c] = self.workspace.S(eg_models.Category).filter(uuid=c.uuid)
 
-        c = Category.objects.get(pk=c.pk)
-        git_c = GitCategory.get(c.uuid)
-
-        self.assertEquals(git_c.title, 'new title')
+            self.assertEquals(git_c.title, 'new title')
 
     def test_page_with_source(self):
         c = Category(
@@ -214,43 +214,49 @@ class PostTestCase(BaseCmsTestCase):
         self.assertEquals(featured_git_post.featured, True)
 
     def test_category_with_source(self):
-        c = Category(
-            title='sample title',
-            subtitle='subtitle',
-            localisation=Localisation._for('afr_ZA'))
-        c.save()
-        c2 = Category(
-            title='sample title',
-            subtitle='subtitle',
-            localisation=Localisation._for('eng_UK'))
-        c2.save()
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+            c = Category(
+                title='sample title',
+                subtitle='subtitle',
+                localisation=Localisation._for('afr_ZA'))
+            c.save()
+            c2 = Category(
+                title='sample title',
+                subtitle='subtitle',
+                localisation=Localisation._for('eng_UK'))
+            c2.save()
 
-        c = Category.objects.get(pk=c.pk)
-        c2 = Category.objects.get(pk=c2.pk)
-        c2.source = c
-        c2.save()
+            c = Category.objects.get(pk=c.pk)
+            c2 = Category.objects.get(pk=c2.pk)
+            c2.source = c
+            c2.save()
 
-        git_c2 = GitCategory.get(c2.uuid)
-        self.assertEquals(git_c2.language, 'eng_UK')
-        self.assertEquals(git_c2.source.language, 'afr_ZA')
+            [git_c2] = self.workspace.S(
+                eg_models.Category).filter(uuid=c2.uuid)
+            self.assertEquals(git_c2.language, 'eng_UK')
+            [source] = self.workspace.S(
+                eg_models.Category).filter(uuid=git_c2.source)
+            self.assertEquals(source.language, 'afr_ZA')
 
-        c2.source = None
-        c2.save()
+            c2.source = None
+            c2.save()
 
-        git_c2 = GitCategory.get(c2.uuid)
-        self.assertEquals(git_c2.source, None)
+            [git_c2] = self.workspace.S(
+                eg_models.Category).filter(uuid=c2.uuid)
+            self.assertEquals(git_c2.source, None)
 
     def test_category_with_featured_in_navbar(self):
-        c = Category(
-            title='sample title',
-            subtitle='subtitle',
-            localisation=Localisation._for('afr_ZA'),
-            featured_in_navbar=True)
-        c.save()
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+            c = Category(
+                title='sample title',
+                subtitle='subtitle',
+                localisation=Localisation._for('afr_ZA'),
+                featured_in_navbar=True)
+            c.save()
 
-        c = Category.objects.get(pk=c.pk)
-        git_c = GitCategory.get(c.uuid)
-        self.assertTrue(git_c.featured_in_navbar)
+            c = Category.objects.get(pk=c.pk)
+            [git_c] = self.workspace.S(eg_models.Category).filter(uuid=c.uuid)
+            self.assertTrue(git_c.featured_in_navbar)
 
     def test_localisation_for_helper(self):
         localisations = Localisation.objects.filter(
@@ -262,36 +268,45 @@ class PostTestCase(BaseCmsTestCase):
         self.assertEquals(localisation1.pk, localisation2.pk)
 
     def test_import_from_git_command(self):
-        cat1, cat2 = self.create_categories(position=3)
-        cat1.source = cat2
-        cat1.position = 4
-        cat1.save(True, message='Added source to category.')
-        pages = self.create_pages(count=10)
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+            cat1, cat2 = self.create_categories(self.workspace, position=3)
+            self.workspace.save(cat1.update({
+                'source': cat2.uuid,
+                'position': 4,
+            }), 'Added source to category.')
 
-        for page in pages[:8]:
-            page.primary_category = cat1
-            page.save(True, message='Added category.')
+            pages = self.create_pages(self.workspace, count=10)
+            for page in pages[:8]:
+                up = page.update({
+                    'primary_category': cat1.uuid,
+                })
+                self.workspace.save(up, 'Added category.')
 
-        page0 = pages[0]
-        page0.linked_pages = [pages[1].uuid, pages[2].uuid, pages[3].uuid]
-        page0.source = pages[4]
-        page0.save(True, message='Added related fields.')
+            [page0] = self.workspace.S(
+                eg_models.Page).filter(uuid=pages[0].uuid)
+            original = page0.get_object()
+            updated = original.update({
+                'linked_pages': [page.uuid for page in pages[:3]],
+                'source': pages[4].uuid,
+            })
+            self.workspace.save(updated, 'Added related fields.')
 
-        self.assertEquals(Category.objects.all().count(), 0)
-        self.assertEquals(Post.objects.all().count(), 0)
-        call_command('import_from_git', quiet=True)
+            self.assertEquals(Category.objects.all().count(), 0)
+            self.assertEquals(Post.objects.all().count(), 0)
 
-        self.assertEquals(Category.objects.all().count(), 2)
-        self.assertEquals(Post.objects.all().count(), 10)
+            call_command('import_from_git', quiet=True)
 
-        c = Category.objects.get(uuid=cat1.uuid)
-        self.assertEquals(c.source.uuid, cat2.uuid)
-        self.assertEquals(c.position, 4)
+            self.assertEquals(Category.objects.all().count(), 2)
+            self.assertEquals(Post.objects.all().count(), 10)
 
-        p = Post.objects.get(uuid=page0.uuid)
-        self.assertEquals(p.related_posts.count(), 3)
-        self.assertEquals(p.primary_category.uuid, cat1.uuid)
-        self.assertEquals(p.source.uuid, pages[4].uuid)
+            c = Category.objects.get(uuid=cat1.uuid)
+            self.assertEquals(c.source.uuid, cat2.uuid)
+            self.assertEquals(c.position, 4)
+
+            p = Post.objects.get(uuid=page0.uuid)
+            self.assertEquals(p.related_posts.count(), 3)
+            self.assertEquals(p.primary_category.uuid, cat1.uuid)
+            self.assertEquals(p.source.uuid, pages[4].uuid)
 
     def test_localisation_get_code_helper(self):
         self.assertEqual(

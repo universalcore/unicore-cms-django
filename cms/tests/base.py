@@ -1,9 +1,12 @@
 import os
+from datetime import datetime
 
 from django.test import TestCase
 from django.conf import settings
 
 from elasticgit import EG
+
+from slugify import slugify
 
 from unicore.content.models import Page, Category
 

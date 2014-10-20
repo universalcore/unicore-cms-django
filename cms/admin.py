@@ -22,7 +22,7 @@ from django.core.exceptions import PermissionDenied
 from cms.models import (
     Post, Category, Localisation, ContentRepository, PublishingTarget)
 from cms.forms import PostForm, CategoryForm
-from cms.git import repo, workspace
+# from cms.git import repo, workspace
 from cms import tasks
 
 
