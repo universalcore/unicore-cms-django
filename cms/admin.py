@@ -19,7 +19,8 @@ from django.http import Http404, HttpResponse
 from django.utils.html import escape
 from django.core.exceptions import PermissionDenied
 
-from cms.models import Post, Category, Localisation, ContentRepository
+from cms.models import (
+    Post, Category, Localisation, ContentRepository, PublishingTarget)
 from cms.forms import PostForm, CategoryForm
 from cms.git import repo, workspace
 from cms import tasks
@@ -216,6 +217,24 @@ class LocalisationAdmin(admin.ModelAdmin):
 
 
 class ContentRepositoryAdmin(admin.ModelAdmin):
+
+    readonly_fields = ('url', 'name', 'targets')
+
+    def get_object(self, request, object_id):
+        obj = super(ContentRepositoryAdmin, self).get_object(
+            request, object_id)
+
+        if not any([obj.name, obj.url]):
+            target, _ = PublishingTarget.objects.get_or_create(
+                name='Internet.org')
+
+            url_head, url_path = settings.GIT_REPO_URL.rsplit('/', 1)
+            repo_name, _, dot_git = url_path.rpartition('.')
+
+            obj.url = settings.GIT_REPO_URL
+            obj.name = repo_name
+            obj.targets.add(target)
+        return obj
 
     def has_add_permission(self, *args, **kwargs):
         return not ContentRepository.objects.exists()

@@ -71,8 +71,6 @@ class ContentRepository(models.Model):
     # This is the entity that'll grow support for what we've been
     # calling targets, it'll store things like:
     #
-    # - url
-    # - name
     # - ssh_public_key
     # - ssh_private_key
     # - ssh_passphrase
@@ -81,6 +79,12 @@ class ContentRepository(models.Model):
         verbose_name = 'Content Repository Information'
         verbose_name_plural = 'Content Repositories Information'
 
+    name = models.CharField(
+        _('The name of the content repository'),
+        max_length=255, blank=True, null=True)
+    url = models.CharField(
+        _('Where Internet address of where this content repository lives'),
+        max_length=255, blank=True, null=True)
     license = models.CharField(
         _('The license to use with this content.'),
         max_length=255, choices=CONTENT_REPO_LICENSES,
@@ -93,6 +97,7 @@ class ContentRepository(models.Model):
     custom_license_text = models.TextField(
         _('Should you decide to go with a custom license, paste '
           'the text here.'), blank=True, null=True)
+    targets = models.ManyToManyField('PublishingTarget')
 
     def get_license_text(self):
         if self.license != CUSTOM_REPO_LICENSE_TYPE:
@@ -120,6 +125,17 @@ class ContentRepository(models.Model):
                              self.custom_license_name])):
             raise ValidationError(
                 'You must specify a license name & text for a custom license.')
+
+
+class PublishingTarget(models.Model):
+
+    name = models.CharField(
+        _('Name for the publishing target.'), max_length=255)
+    url = models.URLField(
+        _('The Internet address for this target.'))
+
+    def __unicode__(self):
+        return self.name
 
 
 class Localisation(models.Model):
