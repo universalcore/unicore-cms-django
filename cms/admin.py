@@ -228,7 +228,7 @@ class ContentRepositoryAdmin(admin.ModelAdmin):
 
         if not any([obj.name, obj.url]):
             target, _ = PublishingTarget.objects.get_or_create(
-                name='Internet.org')
+                name='Default Target')
 
             url_head, url_path = settings.GIT_REPO_URL.rsplit('/', 1)
             repo_name, _, dot_git = url_path.rpartition('.')

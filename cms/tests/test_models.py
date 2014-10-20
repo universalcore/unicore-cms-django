@@ -1,8 +1,11 @@
 import os
 
 from cms.tests.base import BaseCmsTestCase
-from cms.models import ContentRepository, CUSTOM_REPO_LICENSE_TYPE
+from cms.models import (
+    ContentRepository, PublishingTarget, CUSTOM_REPO_LICENSE_TYPE)
+from cms.admin import ContentRepositoryAdmin
 from django.conf import settings
+from django.contrib import admin
 from django import forms
 from cms.git import workspace
 
@@ -50,3 +53,18 @@ class TestContentRepository(BaseCmsTestCase):
             ContentRepository(
                 license=CUSTOM_REPO_LICENSE_TYPE,
                 custom_license_text='Bar').full_clean)
+
+    def test_setting_of_target_fields(self):
+        cr = ContentRepository(license='CC-BY-4.0')
+        cr.save()
+
+        self.assertEqual(PublishingTarget.objects.count(), 0)
+
+        repo_url = 'git@host.com/foo.git'
+        with self.settings(GIT_REPO_URL=repo_url):
+            model_admin = ContentRepositoryAdmin(ContentRepository, admin)
+            obj = model_admin.get_object(None, cr.pk)
+            self.assertEqual(obj.url, repo_url)
+            self.assertEqual(obj.name, 'foo')
+
+        self.assertEqual(PublishingTarget.objects.count(), 1)
