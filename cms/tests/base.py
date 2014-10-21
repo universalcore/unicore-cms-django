@@ -87,6 +87,11 @@ class BaseCmsTestCase(TestCase):
         workspace.refresh_index()
         return pages
 
+    def active_workspace(self, workspace):
+        return self.settings(
+            GIT_REPO_PATH=workspace.working_dir,
+            ELASTIC_GIT_INDEX_PREFIX=workspace.index_prefix)
+
 
 class OldBaseCmsTestCase(TestCase):
 

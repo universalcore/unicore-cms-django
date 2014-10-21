@@ -10,8 +10,14 @@ def workspace_changes(request):
     repo = workspace.repo
     index = repo.index
     origin = repo.remote()
+    [fetch_info] = origin.fetch()
     remote_master = origin.refs.master
     return {
         'repo_changes': len(index.diff(remote_master.commit)),
+    }
+
+
+def content_repositories(request):
+    return {
         'content_repositories': ContentRepository.objects.all(),
     }
