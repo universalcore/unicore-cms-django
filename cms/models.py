@@ -434,8 +434,6 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         page = eg_models.Page(data)
         workspace.save(page, 'Page created: %s' % instance.title)
         workspace.refresh_index()
-        print 'workspace!', workspace.working_dir
-        print 'repo!', workspace.repo
         # Always update the UUID as we've just generated a new one.
         Post.objects.filter(pk=instance.pk).update(uuid=page.uuid)
 

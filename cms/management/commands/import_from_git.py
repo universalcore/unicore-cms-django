@@ -1,11 +1,11 @@
-from contextlib import contextmanager
+import sys
+from optparse import make_option
 
 from django.core.management.base import BaseCommand
+from django.core.exceptions import ValidationError
 from django.utils.six.moves import input
 from django.db.models.signals import post_save, post_delete
 from django.conf import settings
-
-from optparse import make_option
 
 from cms.models import (
     Post, Category, Localisation, auto_save_post_to_git,
@@ -31,6 +31,8 @@ class Command(BaseCommand):
             help='imports the data using default arguments'),
     )
 
+    input_func = input
+
     def disconnect_signals(self):
         post_save.disconnect(auto_save_post_to_git, sender=Post)
         post_delete.disconnect(auto_delete_post_to_git, sender=Post)
@@ -45,25 +47,29 @@ class Command(BaseCommand):
         post_save.connect(auto_save_category_to_git, sender=Category)
         post_delete.connect(auto_delete_category_to_git, sender=Category)
 
+    def emit(self, message):
+        if not self.quiet:
+            self.stdout.write(message)
+
     def handle(self, *args, **options):
         self.disconnect_signals()
-        quiet = options.get('quiet')
+        self.quiet = options.get('quiet')
         workspace = EG.workspace(
             settings.GIT_REPO_PATH,
             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
 
-        if not quiet:
+        if not self.quiet:
             must_delete = self.get_input_data(
                 'Do you want to delete existing data? Y/n: ', 'y')
         else:
             must_delete = 'y'
 
         if must_delete.lower() == 'y':
-            print 'deleting existing content..'
+            self.emit('deleting existing content..')
             Post.objects.all().delete()
             Category.objects.all().delete()
 
-        print 'creating categories..'
+        self.emit('creating categories..')
         categories = workspace.S(eg_models.Category).everything()
 
         for instance in categories:
@@ -110,10 +116,10 @@ class Command(BaseCommand):
                     primary_category=primary_category,
                     uuid=instance.uuid
                 )
-            except Exception, e:
-                print 'An error occured with: %s(%s)' % (
-                    instance.title, instance.uuid)
-                print e
+            except ValidationError, e:  # pragma: no cover
+                self.stderr.write('An error occured with: %s(%s)' % (
+                    instance.title, instance.uuid))
+                self.stderr.write(e)
 
         # Manually refresh stuff because the command disables signals
         workspace.refresh_index()
@@ -130,11 +136,11 @@ class Command(BaseCommand):
                 p.related_posts.add(*list(
                     Post.objects.filter(uuid__in=instance.linked_pages)))
                 p.save()
-        print 'done.'
+        self.emit('done.')
         self.reconnect_signals()
 
     def get_input_data(self, message, default=None):
-        raw_value = input(message)
+        raw_value = self.input_func(message)
         if default and raw_value == '':
             raw_value = default
 

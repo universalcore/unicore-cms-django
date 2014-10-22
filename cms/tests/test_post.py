@@ -1,5 +1,3 @@
-from django.core.management import call_command
-
 from cms.models import Post, Category, Localisation
 from cms.tests.base import BaseCmsTestCase
 
@@ -273,47 +271,6 @@ class PostTestCase(BaseCmsTestCase):
         localisation2 = Localisation._for('eng_UK')
         self.assertEqual(localisations.count(), 1)
         self.assertEquals(localisation1.pk, localisation2.pk)
-
-    def test_import_from_git_command(self):
-        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
-            cat1, cat2 = self.create_categories(self.workspace, position=3)
-            self.workspace.save(cat1.update({
-                'source': cat2.uuid,
-                'position': 4,
-            }), 'Added source to category.')
-
-            pages = self.create_pages(self.workspace, count=10)
-            for page in pages[:8]:
-                up = page.update({
-                    'primary_category': cat1.uuid,
-                })
-                self.workspace.save(up, 'Added category.')
-
-            [page0] = self.workspace.S(
-                eg_models.Page).filter(uuid=pages[0].uuid)
-            original = page0.get_object()
-            updated = original.update({
-                'linked_pages': [page.uuid for page in pages[:3]],
-                'source': pages[4].uuid,
-            })
-            self.workspace.save(updated, 'Added related fields.')
-
-            self.assertEquals(Category.objects.all().count(), 0)
-            self.assertEquals(Post.objects.all().count(), 0)
-
-            call_command('import_from_git', quiet=True)
-
-            self.assertEquals(Category.objects.all().count(), 2)
-            self.assertEquals(Post.objects.all().count(), 10)
-
-            c = Category.objects.get(uuid=cat1.uuid)
-            self.assertEquals(c.source.uuid, cat2.uuid)
-            self.assertEquals(c.position, 4)
-
-            p = Post.objects.get(uuid=page0.uuid)
-            self.assertEquals(p.related_posts.count(), 3)
-            self.assertEquals(p.primary_category.uuid, cat1.uuid)
-            self.assertEquals(p.source.uuid, pages[4].uuid)
 
     def test_localisation_get_code_helper(self):
         self.assertEqual(
