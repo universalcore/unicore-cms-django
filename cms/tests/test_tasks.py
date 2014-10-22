@@ -24,7 +24,7 @@ class TaskTest(BaseCmsTestCase):
         #       needs to itself be checked out with a different branch,
         #       one cannot pushed to branches that are currently checked out.
         remote_repo = self.remote_workspace.repo
-        remote_repo.git.checkout('head', b='temp')
+        remote_repo.git.checkout('HEAD', b='temp')
 
         with self.active_workspace(self.local_workspace):
             origin = self.local_workspace.repo.create_remote(
