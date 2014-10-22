@@ -60,7 +60,7 @@ CONTENT_REPO_LICENSES = (
         'International License'),
 )
 
-DEFAULT_REPO_LICENSE = 'BY-NC-ND-4.0'
+DEFAULT_REPO_LICENSE = 'CC-BY-NC-ND-4.0'
 
 
 class ContentRepository(models.Model):

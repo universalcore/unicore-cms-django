@@ -1,1 +1,2 @@
-LIBGIT2=$VIRTUAL_ENV DJANGO_SETTINGS_MODULE=test_settings py.test --verbose --cov ./cms cms $1
+coverage run `which py.test` --ds=test_settings --verbose cms $1
+coverage report
