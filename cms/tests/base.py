@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from uuid import uuid4
 
 from django.test import TestCase
 from django.conf import settings
@@ -40,9 +40,7 @@ class BaseCmsTestCase(TestCase):
 
         return workspace
 
-    def create_categories(
-            self, workspace, count=2, locale='eng_UK', **kwargs):
-        categories = []
+    def create_category_data_iter(self, count=2, locale='eng_UK', **kwargs):
         for i in range(count):
             data = {}
             data.update({
@@ -53,7 +51,13 @@ class BaseCmsTestCase(TestCase):
             data.update({
                 'slug': slugify(data['title'])
             })
+            yield data, i
 
+    def create_categories(
+            self, workspace, count=2, locale='eng_UK', **kwargs):
+        categories = []
+        for data, i in self.create_category_data_iter(
+                count=2, locale=locale, **kwargs):
             category = Category(data)
             workspace.save(
                 category, u'Added category %s.' % (i,))
@@ -62,24 +66,25 @@ class BaseCmsTestCase(TestCase):
         workspace.refresh_index()
         return categories
 
-    def create_pages(
-            self, workspace, count=2, timestamp_cb=None, locale='eng_UK',
-            **kwargs):
-        timestamp_cb = (
-            timestamp_cb or (lambda i: datetime.utcnow().isoformat()))
-        pages = []
+    def create_page_data_iter(self, count=2, locale='eng_UK', **kwargs):
         for i in range(count):
             data = {}
             data.update({
                 'title': u'Test Page %s' % (i,),
                 'content': u'this is sample content for pg %s' % (i,),
-                'modified_at': timestamp_cb(i),
                 'language': locale
             })
             data.update(kwargs)
             data.update({
                 'slug': slugify(data['title'])
             })
+            yield data, i
+
+    def create_pages(
+            self, workspace, count=2, locale='eng_UK', **kwargs):
+        pages = []
+        for data, i in self.create_page_data_iter(
+                count=count, locale=locale, **kwargs):
             page = Page(data)
             workspace.save(page, message=u'Added page %s.' % (i,))
             pages.append(page)

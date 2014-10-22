@@ -125,7 +125,7 @@ class ContentRepository(models.Model):
         with open(file_path) as fp:
             return fp.read()
 
-    def __unicode__(self):
+    def __unicode__(self):  # pragma: no cover
         if self.license == CUSTOM_REPO_LICENSE_TYPE:
             return '%s (%s)' % (self.custom_license_name,
                                 self.get_license_display())
@@ -152,7 +152,7 @@ class PublishingTarget(models.Model):
             name=settings.DEFAULT_TARGET_NAME)
         return target
 
-    def __unicode__(self):
+    def __unicode__(self):  # pragma: no cover
         return self.name
 
 
@@ -178,7 +178,7 @@ class Localisation(models.Model):
     def get_code(self):
         return u'%s_%s' % (self.language_code, self.country_code)
 
-    def __unicode__(self):
+    def __unicode__(self):  # pragma: no cover
         """
         FIXME: this is probably a bad idea
         """
@@ -242,7 +242,7 @@ class Category(models.Model):
         verbose_name = 'category'
         verbose_name_plural = 'categories'
 
-    def __unicode__(self):
+    def __unicode__(self):  # pragma: no cover
         if self.localisation:
             return '%s (%s)' % (self.title, self.localisation)
         else:
@@ -365,7 +365,7 @@ class Post(models.Model):
 
         super(Post, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __unicode__(self):  # pragma: no cover
         if self.subtitle:
             return '%s - %s' % (self.title, self.subtitle)
         else:
@@ -374,9 +374,6 @@ class Post(models.Model):
 
 @receiver(post_save, sender=ContentRepository)
 def auto_save_content_repository_to_git(sender, instance, created, **kwargs):
-    if not instance.license:
-        return
-
     workspace = EG.workspace(settings.GIT_REPO_PATH,
                              index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
     workspace.sm.store_data(
@@ -444,13 +441,10 @@ def auto_delete_post_to_git(sender, instance, **kwargs):
     # author = utils.get_author_from_user(instance.last_author)
     workspace = EG.workspace(settings.GIT_REPO_PATH,
                              index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
-    try:
-        [page] = workspace.S(eg_models.Page).filter(uuid=instance.uuid)
-        workspace.delete(
-            page.get_object(), 'Page deleted: %s' % (instance.title,))
-        workspace.refresh_index()
-    except ValueError:
-        pass
+    [page] = workspace.S(eg_models.Page).filter(uuid=instance.uuid)
+    workspace.delete(
+        page.get_object(), 'Page deleted: %s' % (instance.title,))
+    workspace.refresh_index()
 
 
 @receiver(post_save, sender=Category)
@@ -496,10 +490,7 @@ def auto_delete_category_to_git(sender, instance, **kwargs):
     # author = utils.get_author_from_user(instance.last_author)
     workspace = EG.workspace(settings.GIT_REPO_PATH,
                              index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
-    try:
-        [category] = workspace.S(eg_models.Category).filter(uuid=instance.uuid)
-        original = category.get_object()
-        workspace.delete(original, 'Category deleted: %s' % instance.title)
-        workspace.refresh_index()
-    except ValueError:
-        pass
+    [category] = workspace.S(eg_models.Category).filter(uuid=instance.uuid)
+    original = category.get_object()
+    workspace.delete(original, 'Category deleted: %s' % instance.title)
+    workspace.refresh_index()
