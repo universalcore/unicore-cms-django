@@ -7,4 +7,7 @@ def push_to_git(repo_path, index_prefix):
     if workspace.repo.remotes:
         repo = workspace.repo
         remote = repo.remote()
-        remote.push()
+        remote.fetch()
+        remote_master = remote.refs.master
+        [pi] = remote.push(remote_master.remote_head)
+        print pi.summary

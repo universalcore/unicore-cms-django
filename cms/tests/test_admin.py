@@ -1,14 +1,17 @@
 from django.contrib import admin
 from django.test.client import RequestFactory
 from django.contrib.auth.models import User
-from django.conf import settings
+from django.core.urlresolvers import reverse
 
 from cms.tests.base import BaseCmsTestCase
 from cms.admin import (
-    PostAdmin, CategoryAdmin, ContentRepositoryAdmin,
+    PostAdmin, CategoryAdmin, ContentRepositoryAdmin, PublishingTargetAdmin,
     CategoriesListFilter,
-    PostSourceListFilter, CategorySourceListFilter)
+    PostSourceListFilter, CategorySourceListFilter,
+    push_to_github)
 from cms.models import Post, Category, ContentRepository, PublishingTarget
+
+from unicore.content import models as eg_models
 
 
 class BaseAdminTestCase(BaseCmsTestCase):
@@ -185,14 +188,49 @@ class TestContentRepositoryAdmin(BaseAdminTestCase):
         self.assertFalse(repo_admin.has_add_permission())
 
 
-class PublishingTargetAdmin(BaseAdminTestCase):
-    def test_get_object_side_effects(self):
-        """
-        NOTE: What we're testing here is that for any Publishing Target
-              activity in the admin the default target should always be
-              created
-        """
+class TestPublishingTargetAdmin(BaseAdminTestCase):
+
+    def test_has_add_permission(self):
+        target_admin = PublishingTargetAdmin(PublishingTarget, admin)
         self.assertFalse(PublishingTarget.objects.exists())
-        default_target = PublishingTarget.get_default_target()
-        self.assertEqual(default_target.name, settings.DEFAULT_TARGET_NAME)
-        self.assertTrue(PublishingTarget.objects.exists())
+        self.assertFalse(target_admin.has_add_permission())
+        [target] = PublishingTarget.objects.all()
+        self.assertEqual(target, PublishingTarget.get_default_target())
+
+
+class TestCustomAdminViews(BaseAdminTestCase):
+
+    def setUp(self):
+        self.local_workspace = self.mk_workspace()
+        self.remote_workspace = self.mk_workspace(
+            name='%s_remote' % (self.id().lower(),),
+            index_prefix='%s_remote' % (self.local_workspace.index_prefix,))
+        self.create_pages(self.remote_workspace)
+        local_repo = self.local_workspace.repo
+        local_repo.create_remote('origin', self.remote_workspace.working_dir)
+        self.local_workspace.fast_forward(
+            branch_name='master', remote_name='origin')
+
+    def test_push_to_github(self):
+        # NOTE: In order to push to the remote workspace's master branch it
+        #       needs to itself be checked out with a different branch,
+        #       one cannot pushed to branches that are currently checked out.
+        remote_repo = self.remote_workspace.repo
+        remote_repo.git.checkout('HEAD', b='temp')
+
+        with self.active_workspace(self.local_workspace):
+            request = RequestFactory().get('/')
+            # make some changes locally
+            self.setUpWorkspace()
+            response = push_to_github(request)
+            self.assertEqual(response['Location'], reverse('admin:index'))
+
+        # NOTE: switching back to master on the remote because the changes
+        #       should have been pushed and we are checking for their
+        #       existence
+
+        remote_repo.heads.master.checkout()
+        self.remote_workspace.reindex(eg_models.Page)
+        self.remote_workspace.refresh_index()
+        self.assertEqual(
+            self.remote_workspace.S(eg_models.Page).count(), 5)

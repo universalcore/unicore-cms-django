@@ -237,7 +237,7 @@ class PublishingTargetAdmin(admin.ModelAdmin):
     readonly_fields = ('url', 'name')
 
     def has_add_permission(self, *args, **kwargs):
-        _ = PublishingTarget.get_default_target()
+        PublishingTarget.get_default_target()
         return False
 
 
@@ -264,20 +264,12 @@ def my_view(request, *args, **kwargs):
 
 @admin.site.register_view('github/push/', 'Push to github')
 def push_to_github(request, *args, **kwargs):
-    if hasattr(settings, 'SSH_PUBKEY_PATH') and hasattr(
-            settings, 'SSH_PRIVKEY_PATH'):
-        workspace.sync_repo_index()
-        tasks.push_to_git.delay(
-            settings.GIT_REPO_PATH,
-            settings.SSH_PUBKEY_PATH,
-            settings.SSH_PRIVKEY_PATH,
-            settings.SSH_PASSPHRASE)
-
+    tasks.push_to_git.delay(settings.GIT_REPO_PATH,
+                            settings.ELASTIC_GIT_INDEX_PREFIX)
     if request.is_ajax():
         return HttpResponse(
             json.dumps({'success': True}),
             mimetype='application/json')
-
     return redirect(reverse('admin:index'))
 
 

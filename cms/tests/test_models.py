@@ -79,3 +79,12 @@ class TestContentRepository(BaseCmsTestCase):
         self.assertEqual(PublishingTarget.objects.count(), 1)
         [target] = obj.targets.all()
         self.assertEqual(target.name, 'The Target')
+
+
+class TestPublishingTarget(BaseCmsTestCase):
+
+    def test_get_default_target(self):
+        self.assertFalse(PublishingTarget.objects.exists())
+        default_target = PublishingTarget.get_default_target()
+        self.assertEqual(default_target.name, settings.DEFAULT_TARGET_NAME)
+        self.assertTrue(PublishingTarget.objects.exists())
