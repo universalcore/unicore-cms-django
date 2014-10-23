@@ -21,8 +21,9 @@ from django.core.exceptions import PermissionDenied
 from cms.models import (
     Post, Category, Localisation, ContentRepository, PublishingTarget)
 from cms.forms import PostForm, CategoryForm
-
 from cms import tasks
+
+from elasticgit import EG
 
 
 class CategoriesListFilter(SimpleListFilter):
@@ -249,12 +250,12 @@ def my_view(request, *args, **kwargs):
 
     context = {
         'github_url': settings.GIT_REPO_URL,
-        'repo': settings.GIT_REPO_PATH,
+        'repo': workspace.repo,
         'commits': [
             {
                 'message': c.message,
                 'author': c.author.name,
-                'commit_time': datetime.fromtimestamp(c.commit_time)
+                'commit_time': datetime.fromtimestamp(c.committed_date)
             }
             for c in commits
         ]

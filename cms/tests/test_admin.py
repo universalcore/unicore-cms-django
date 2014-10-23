@@ -1,3 +1,5 @@
+import json
+
 from django.contrib import admin
 from django.test.client import RequestFactory
 from django.contrib.auth.models import User
@@ -8,7 +10,7 @@ from cms.admin import (
     PostAdmin, CategoryAdmin, ContentRepositoryAdmin, PublishingTargetAdmin,
     CategoriesListFilter,
     PostSourceListFilter, CategorySourceListFilter,
-    push_to_github)
+    push_to_github, my_view)
 from cms.models import Post, Category, ContentRepository, PublishingTarget
 
 from unicore.content import models as eg_models
@@ -211,7 +213,7 @@ class TestCustomAdminViews(BaseAdminTestCase):
         self.local_workspace.fast_forward(
             branch_name='master', remote_name='origin')
 
-    def test_push_to_github(self):
+    def do_push_to_github(self, request):
         # NOTE: In order to push to the remote workspace's master branch it
         #       needs to itself be checked out with a different branch,
         #       one cannot pushed to branches that are currently checked out.
@@ -219,11 +221,9 @@ class TestCustomAdminViews(BaseAdminTestCase):
         remote_repo.git.checkout('HEAD', b='temp')
 
         with self.active_workspace(self.local_workspace):
-            request = RequestFactory().get('/')
             # make some changes locally
             self.setUpWorkspace()
             response = push_to_github(request)
-            self.assertEqual(response['Location'], reverse('admin:index'))
 
         # NOTE: switching back to master on the remote because the changes
         #       should have been pushed and we are checking for their
@@ -234,3 +234,25 @@ class TestCustomAdminViews(BaseAdminTestCase):
         self.remote_workspace.refresh_index()
         self.assertEqual(
             self.remote_workspace.S(eg_models.Page).count(), 5)
+        return response
+
+    def test_push_to_github(self):
+        request = RequestFactory().get('/')
+        response = self.do_push_to_github(request)
+        self.assertEqual(response['Location'], reverse('admin:index'))
+
+    def test_push_to_github_ajax(self):
+        request = RequestFactory().get(
+            '/', HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response = self.do_push_to_github(request)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(json.loads(response.content), {
+            'success': True
+        })
+
+    def test_view_github_configuration(self):
+        with self.active_workspace(self.local_workspace):
+            request = RequestFactory().get('/')
+            response = my_view(request)
+            for commit in self.local_workspace.repo.iter_commits():
+                self.assertContains(response, commit.message)

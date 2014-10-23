@@ -9,5 +9,4 @@ def push_to_git(repo_path, index_prefix):
         remote = repo.remote()
         remote.fetch()
         remote_master = remote.refs.master
-        [pi] = remote.push(remote_master.remote_head)
-        print pi.summary
+        remote.push(remote_master.remote_head)
