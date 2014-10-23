@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+{% load i18n grp_tags %}
+
+{% block admin_title %}<h1 id="grp-admin-title">Universal Core</h1>{% endblock %}
+
+{% block title %}{{ title }} | {% trans 'Django site admin' %}{% endblock %}
+
+{% block branding %}
+    <h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header }}</a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+
+{% block messages %}
+    {{ block.super }}
+    {% if repo_changes %}
+        <ul id="git_changes" class="grp-messagelist">
+            <!-- NOTE: no message|capfirst by purpose, because it does not work in some languages -->
+                <li class="grp-{{ message.tags }}">
+                    You have {{ repo_changes }} outstanding change{{ repo_changes|pluralize }}.
+                    <a id="push_to_git" href="{% url 'admin:index' %}github/push/">Publish now</a>
+                </li>
+        </ul>
+
+        <script type="text/javascript">
+        (function($) {
+            $(document).ready(function() {
+                $("#push_to_git").click(function(e){
+                    e.preventDefault();
+                    $.get($(this).attr('href')).then(function(){
+                        $('#git_changes').hide();
+                    });
+                });
+            });
+        })(grp.jQuery);
+        </script>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,29 @@
+buildscript: scripts/build
+postinstall: scripts/postinstall.sh
+pip:
+ - Django<1.7
+ - gunicorn
+ - South
+ - python-memcached
+ - raven
+ - nose
+ - django-nose
+ - django-haystack
+ - django-celery
+ - psycopg2
+ - redis
+ - django-debug-toolbar
+ - pep8
+ - pyflakes
+ - django-grappelli<2.6.1
+ - django-adminplus
+ - praekelt-python-gitmodel>=0.1.2
+ - unicore-gitmodels
+dependencies:
+ - nginx
+ - postgresql-server-dev-all
+ - libpq-dev
+ - postgresql
+ - redis-server
+ - libssh2-1-dev
+ - cmake

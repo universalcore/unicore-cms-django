@@ -1,0 +1,1 @@
+LIBGIT2=$VIRTUAL_ENV DJANGO_SETTINGS_MODULE=test_settings py.test --verbose --cov ./cms cms $1

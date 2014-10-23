@@ -1,0 +1,45 @@
+{% extends "admin/base_site.html" %}
+ {% load i18n admin_urls admin_static admin_modify %}
+
+{% block extrahead %}
+{{ block.super }}
+<script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}" />
+{% endblock %}
+
+{% block breadcrumbs %}
+<ul>
+<li><a href="{% url 'admin:index' %}">{% trans 'Home' %}</a></li>
+<li>Github Configuration</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Github Configuration</h1>
+    <div>
+    <form>
+    <fieldset class="module aligned ">
+        <div class="form-row"><strong>Github URL</strong> <p>{{github_url}}</p></div>
+        <div class="form-row"><strong>Current branch</strong> <p>{{repo.head.shorthand}}</p></div>
+        <div class="form-row"><strong>Current path</strong> <p>{{repo.path}}</p></div>
+    </fieldset>
+    </form>
+    </div>
+    <h1>Latest changes</h1>
+    <div>
+    <form>
+    <fieldset class="module aligned ">
+        {% for commit in commits %}
+        <div class="form-row">{{commit.message}} ({{commit.author}}) {{commit.commit_time}}</p></div>
+        {% endfor %}
+    </fieldset>
+    </form>
+    </div>
+</div>
+{% endblock%}
+{% block sidebar %}{% endblock %}
