@@ -33,7 +33,6 @@ class TaskTest(BaseCmsTestCase):
             origin.fetch()
             remote_master = origin.refs.master
             branch.set_tracking_branch(remote_master)
-            branch.tracking_branch()
 
             self.local_workspace.fast_forward()
             self.local_workspace.reindex(Page)
