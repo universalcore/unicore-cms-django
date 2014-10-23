@@ -222,7 +222,7 @@ class ContentRepositoryAdmin(admin.ModelAdmin):
     def get_object(self, request, object_id):
         obj = super(ContentRepositoryAdmin, self).get_object(
             request, object_id)
-        if obj is None:
+        if obj is None:  # pragma: no cover
             return
 
         if not obj.targets.exists():

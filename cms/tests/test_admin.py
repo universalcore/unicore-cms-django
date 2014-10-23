@@ -1,13 +1,14 @@
 from django.contrib import admin
 from django.test.client import RequestFactory
 from django.contrib.auth.models import User
+from django.conf import settings
 
 from cms.tests.base import BaseCmsTestCase
 from cms.admin import (
-    PostAdmin, CategoryAdmin,
+    PostAdmin, CategoryAdmin, ContentRepositoryAdmin,
     CategoriesListFilter,
     PostSourceListFilter, CategorySourceListFilter)
-from cms.models import Post, Category
+from cms.models import Post, Category, ContentRepository, PublishingTarget
 
 
 class BaseAdminTestCase(BaseCmsTestCase):
@@ -158,3 +159,40 @@ class TestCategoryAdmin(BaseAdminTestCase):
         category_admin.save_model(request, self.category1, None, None)
         saved_category = Category.objects.get(pk=self.category1.pk)
         self.assertEqual(saved_category.last_author, user)
+
+
+class TestContentRepositoryAdmin(BaseAdminTestCase):
+
+    def test_get_object_side_effects(self):
+        """
+        NOTE: What we're testing here is that for any content repository
+              we're always adding the default target if the Admin
+              receives a `content repository` object to display
+        """
+        request = RequestFactory().get('/')
+
+        repo_admin = ContentRepositoryAdmin(ContentRepository, admin)
+        content_repo = ContentRepository.objects.create(name='the repo')
+        self.assertFalse(content_repo.targets.exists())
+        repo_admin.get_object(request, content_repo.pk)
+        [target] = content_repo.targets.all()
+        self.assertEqual(target, PublishingTarget.get_default_target())
+
+    def test_has_add_permission(self):
+        repo_admin = ContentRepositoryAdmin(ContentRepository, admin)
+        self.assertTrue(repo_admin.has_add_permission())
+        ContentRepository.objects.create(name='the repo')
+        self.assertFalse(repo_admin.has_add_permission())
+
+
+class PublishingTargetAdmin(BaseAdminTestCase):
+    def test_get_object_side_effects(self):
+        """
+        NOTE: What we're testing here is that for any Publishing Target
+              activity in the admin the default target should always be
+              created
+        """
+        self.assertFalse(PublishingTarget.objects.exists())
+        default_target = PublishingTarget.get_default_target()
+        self.assertEqual(default_target.name, settings.DEFAULT_TARGET_NAME)
+        self.assertTrue(PublishingTarget.objects.exists())
