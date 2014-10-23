@@ -1,16 +1,26 @@
+from django.contrib import admin
+from django.test.client import RequestFactory
+from django.contrib.auth.models import User
+
 from cms.tests.base import BaseCmsTestCase
 from cms.admin import (
-    PostAdmin, CategoriesListFilter, PostSourceListFilter)
+    PostAdmin, CategoryAdmin,
+    CategoriesListFilter,
+    PostSourceListFilter, CategorySourceListFilter)
 from cms.models import Post, Category
 
 
-class BaseAdminListFilterTestCase(BaseCmsTestCase):
+class BaseAdminTestCase(BaseCmsTestCase):
 
     def setUp(self):
+        self.setUpWorkspace()
+
+    def setUpWorkspace(self):
         self.workspace = self.mk_workspace()
         with self.active_workspace(self.workspace):
             self.category1 = Category.objects.create(title='category 1')
-            self.category2 = Category.objects.create(title='category 2')
+            self.category2 = Category.objects.create(title='category 2',
+                                                     source=self.category1)
             self.category3 = Category.objects.create(title='category 3')
 
             self.post1 = Post.objects.create(title='post 1')
@@ -21,7 +31,7 @@ class BaseAdminListFilterTestCase(BaseCmsTestCase):
                                              primary_category=self.category2)
 
 
-class TestCategoriesListFilter(BaseAdminListFilterTestCase):
+class TestCategoriesListFilter(BaseAdminTestCase):
 
     def test_filter_knowncategory(self):
         filter = CategoriesListFilter(None, {
@@ -53,7 +63,7 @@ class TestCategoriesListFilter(BaseAdminListFilterTestCase):
         ], list(filter.lookups(None, PostAdmin)))
 
 
-class TestPostSourceListFilter(BaseAdminListFilterTestCase):
+class TestPostSourceListFilter(BaseAdminTestCase):
 
     def test_filter_source_slug(self):
         filter = PostSourceListFilter(None, {
@@ -83,6 +93,68 @@ class TestPostSourceListFilter(BaseAdminListFilterTestCase):
         ], list(filter.lookups(None, PostAdmin)))
 
 
-class TestCategorySourceListFilter(BaseAdminListFilterTestCase):
+class TestCategorySourceListFilter(BaseAdminTestCase):
 
-    pass
+    def test_filter_source_slug(self):
+        filter = CategorySourceListFilter(None, {
+            'source_slug': self.category1.slug,
+        }, Category, CategoryAdmin)
+        [category2] = filter.queryset(None, Category.objects.all())
+        self.assertEqual(category2, self.category2)
+
+    def test_filter_unknown_source(self):
+        filter = CategorySourceListFilter(None, {
+            'source_slug': 'foo',
+        }, Category, CategoryAdmin)
+        qs = filter.queryset(None, Category.objects.all())
+        self.assertFalse(qs.exists())
+
+    def test_filter_empty_source(self):
+        filter = CategorySourceListFilter(None, {
+            'source_slug': self.category2.slug,
+        }, Category, CategoryAdmin)
+        qs = filter.queryset(None, Category.objects.all())
+        self.assertFalse(qs.exists())
+
+    def test_lookups(self):
+        filter = CategorySourceListFilter(None, {}, Category, CategoryAdmin)
+        self.assertEqual([
+            ('category-1', 'category 1'),
+        ], list(filter.lookups(None, CategoryAdmin)))
+
+
+class TestPostAdmin(BaseAdminTestCase):
+
+    def test_derivatives(self):
+        post_admin = PostAdmin(Post, admin)
+        self.assertEqual(post_admin._derivatives(self.post1), 1)
+        self.assertEqual(post_admin._derivatives(self.post2), 0)
+
+    def test_save_model(self):
+        user = User.objects.create_user('foo', 'bar')
+        request = RequestFactory().get('/')
+        request.user = user
+
+        post_admin = PostAdmin(Post, admin)
+        post_admin.save_model(request, self.post1, None, None)
+        saved_post = Post.objects.get(pk=self.post1.pk)
+        self.assertEqual(saved_post.owner, user)
+        self.assertEqual(saved_post.last_author, user)
+
+
+class TestCategoryAdmin(BaseAdminTestCase):
+
+    def test_derivatives(self):
+        category_admin = CategoryAdmin(Category, admin)
+        self.assertEqual(category_admin._derivatives(self.category1), 1)
+        self.assertEqual(category_admin._derivatives(self.category2), 0)
+
+    def test_save_model(self):
+        user = User.objects.create_user('foo', 'bar')
+        request = RequestFactory().get('/')
+        request.user = user
+
+        category_admin = CategoryAdmin(Category, admin)
+        category_admin.save_model(request, self.category1, None, None)
+        saved_category = Category.objects.get(pk=self.category1.pk)
+        self.assertEqual(saved_category.last_author, user)

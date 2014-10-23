@@ -145,7 +145,7 @@ class PostAdmin(TranslatableModelAdmin):
     )
 
     def _derivatives(self, post):
-        return len(post.post_set.all())
+        return post.post_set.count()
     _derivatives.short_description = 'Derivatives'
     _derivatives.allow_tags = True
 
@@ -192,7 +192,7 @@ class CategoryAdmin(TranslatableModelAdmin):
     inlines = (PostInline, )
 
     def _derivatives(self, category):
-        return len(category.category_set.all())
+        return category.category_set.count()
     _derivatives.short_description = 'Derivatives'
     _derivatives.allow_tags = True
 
