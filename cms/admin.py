@@ -1,5 +1,4 @@
 import json
-import pygit2
 from datetime import datetime
 
 # ensure celery autodiscovery runs
@@ -22,8 +21,9 @@ from django.core.exceptions import PermissionDenied
 from cms.models import (
     Post, Category, Localisation, ContentRepository, PublishingTarget)
 from cms.forms import PostForm, CategoryForm
-from cms.git import repo, workspace
 from cms import tasks
+
+from elasticgit import EG
 
 
 class CategoriesListFilter(SimpleListFilter):
@@ -146,7 +146,7 @@ class PostAdmin(TranslatableModelAdmin):
     )
 
     def _derivatives(self, post):
-        return len(post.post_set.all())
+        return post.post_set.count()
     _derivatives.short_description = 'Derivatives'
     _derivatives.allow_tags = True
 
@@ -193,7 +193,7 @@ class CategoryAdmin(TranslatableModelAdmin):
     inlines = (PostInline, )
 
     def _derivatives(self, category):
-        return len(category.category_set.all())
+        return category.category_set.count()
     _derivatives.short_description = 'Derivatives'
     _derivatives.allow_tags = True
 
@@ -223,7 +223,7 @@ class ContentRepositoryAdmin(admin.ModelAdmin):
     def get_object(self, request, object_id):
         obj = super(ContentRepositoryAdmin, self).get_object(
             request, object_id)
-        if obj is None:
+        if obj is None:  # pragma: no cover
             return
 
         if not obj.targets.exists():
@@ -238,28 +238,26 @@ class PublishingTargetAdmin(admin.ModelAdmin):
     readonly_fields = ('url', 'name')
 
     def has_add_permission(self, *args, **kwargs):
-        _ = PublishingTarget.get_default_target()
+        PublishingTarget.get_default_target()
         return False
 
 
 @admin.site.register_view('github/', 'Github Configuration')
 def my_view(request, *args, **kwargs):
-    branch = repo.lookup_branch(repo.head.shorthand)
-    last = repo[branch.target]
-    commits = []
-    for commit in repo.walk(last.id, pygit2.GIT_SORT_TIME):
-        commits.append(commit)
+    workspace = EG.workspace(settings.GIT_REPO_PATH,
+                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
+    commits = workspace.repo.iter_commits(max_count=10)
 
     context = {
         'github_url': settings.GIT_REPO_URL,
-        'repo': repo,
+        'repo': workspace.repo,
         'commits': [
             {
                 'message': c.message,
                 'author': c.author.name,
-                'commit_time': datetime.fromtimestamp(c.commit_time)
+                'commit_time': datetime.fromtimestamp(c.committed_date)
             }
-            for c in commits[:10]
+            for c in commits
         ]
     }
     return render(request, 'cms/admin/github.html', context)
@@ -267,20 +265,12 @@ def my_view(request, *args, **kwargs):
 
 @admin.site.register_view('github/push/', 'Push to github')
 def push_to_github(request, *args, **kwargs):
-    if hasattr(settings, 'SSH_PUBKEY_PATH') and hasattr(
-            settings, 'SSH_PRIVKEY_PATH'):
-        workspace.sync_repo_index()
-        tasks.push_to_git.delay(
-            settings.GIT_REPO_PATH,
-            settings.SSH_PUBKEY_PATH,
-            settings.SSH_PRIVKEY_PATH,
-            settings.SSH_PASSPHRASE)
-
+    tasks.push_to_git.delay(settings.GIT_REPO_PATH,
+                            settings.ELASTIC_GIT_INDEX_PREFIX)
     if request.is_ajax():
         return HttpResponse(
             json.dumps({'success': True}),
             mimetype='application/json')
-
     return redirect(reverse('admin:index'))
 
 
