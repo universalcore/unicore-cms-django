@@ -1,23 +1,23 @@
-import pygit2
+from django.conf import settings
+from elasticgit import EG
 
-from cms.git import repo
-from gitmodel.utils import repo_helper
 from cms.models import ContentRepository
 
 
 def workspace_changes(request):
-    branch_name = repo.head.shorthand
-    remote_name = repo_helper.get_remote_branch(repo, branch_name)
-    if remote_name is None:
-        return []
-
-    if not branch_name is None:
-        local_branch = repo.lookup_branch(branch_name)
-    else:
-        local_branch = repo.head
-
-    branch = repo.lookup_branch(remote_name, pygit2.GIT_BRANCH_REMOTE)
+    workspace = EG.workspace(settings.GIT_REPO_PATH,
+                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
+    repo = workspace.repo
+    index = repo.index
+    origin = repo.remote()
+    [fetch_info] = origin.fetch()
+    remote_master = origin.refs.master
     return {
-        'repo_changes': len(repo.diff(local_branch.name, branch.name)),
+        'repo_changes': len(index.diff(remote_master.commit)),
+    }
+
+
+def content_repositories(request):
+    return {
         'content_repositories': ContentRepository.objects.all(),
     }

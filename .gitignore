@@ -39,3 +39,5 @@ logs/*.log
 *.db
 project/local_settings.py
 cmsrepo
+/project/cmsrepo_test/
+/htmlcov/
