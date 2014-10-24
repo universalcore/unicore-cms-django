@@ -1,6 +1,11 @@
 # Django settings for skeleton project.
 
 import os
+import pwd
+
+# NOTE: crazy monkey patching because of bugs in GitPython
+os.getlogin = lambda: pwd.getpwuid(os.getuid())[0]
+
 import djcelery
 
 djcelery.setup_loader()
