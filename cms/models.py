@@ -343,7 +343,9 @@ class Post(models.Model):
             'If checked this post will be displayed in the category\'s '
             'list of featured posts on the homepage.'))
 
-    related_posts = SortedManyToManyField('self', blank=True)
+    related_posts = SortedManyToManyField(
+        'self', blank=True, symmetrical=False,
+        related_name='related_posts_set')
 
     localisation = models.ForeignKey(
         Localisation, blank=True, null=True)
