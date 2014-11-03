@@ -7,7 +7,8 @@ from django.test.utils import override_settings
 
 from cms.tests.base import BaseCmsTestCase
 from cms.models import (
-    ContentRepository, PublishingTarget, CUSTOM_REPO_LICENSE_TYPE)
+    ContentRepository, PublishingTarget, CUSTOM_REPO_LICENSE_TYPE,
+    Post)
 from cms.admin import ContentRepositoryAdmin
 
 
@@ -79,6 +80,14 @@ class TestContentRepository(BaseCmsTestCase):
         self.assertEqual(PublishingTarget.objects.count(), 1)
         [target] = obj.targets.all()
         self.assertEqual(target.name, 'The Target')
+
+    def test_linked_pages_asymmetry(self):
+        post1 = Post.objects.create(title='post 1')
+        post2 = Post.objects.create(title='post 2')
+        post2.related_posts.add(post1)
+        post2.save()
+        self.assertEqual(post2.related_posts.count(), 1)
+        self.assertEqual(post1.related_posts.count(), 0)
 
 
 class TestPublishingTarget(BaseCmsTestCase):
