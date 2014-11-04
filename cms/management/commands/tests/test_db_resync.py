@@ -4,8 +4,6 @@ from cms.tests.base import BaseCmsTestCase
 from cms.management.commands import db_resync
 from cms.models import Category, Post
 
-from unicore.content import models as eg_models
-
 
 class TestDBResync(BaseCmsTestCase):
 
