@@ -4,6 +4,8 @@ from django.core.management.base import BaseCommand
 from elasticgit import EG
 from elasticgit.utils import fqcn
 
+from elasticsearch.exceptions import NotFoundError
+
 from cms import models as django_models
 from unicore.content import models as eg_models
 
@@ -16,6 +18,7 @@ class Command(BaseCommand):
         self.workspace = EG.workspace(
             settings.GIT_REPO_PATH,
             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
+        self.index_manager = self.workspace.im
         self.storage_manager = self.workspace.sm
 
         model_pairs = [
@@ -33,8 +36,12 @@ class Command(BaseCommand):
 
         for git_model in self.storage_manager.iterate(eg_model_class):
             if git_model.uuid not in uuids:
-                self.workspace.delete(
+                self.storage_manager.delete(
                     git_model, 'This has been deleted in the CMS')
+                try:
+                    self.index_manager.unindex(git_model)
+                except NotFoundError:
+                    pass
                 self.stdout.write(
                     'Deleted %s: %s.\n' % (
                         fqcn(eg_model_class), git_model.uuid,))

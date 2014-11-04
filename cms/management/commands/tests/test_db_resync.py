@@ -4,6 +4,8 @@ from cms.tests.base import BaseCmsTestCase
 from cms.management.commands import db_resync
 from cms.models import Category, Post
 
+from unicore.content import models as eg_models
+
 
 class TestDBResync(BaseCmsTestCase):
 
@@ -54,3 +56,22 @@ class TestDBResync(BaseCmsTestCase):
                 'Kept unicore.content.models.Category: %s.' % (
                     django_cat1.uuid,),
             ]))
+
+    def test_resync_with_incomplete_index(self):
+
+        [data] = self.create_page_data_iter(count=1)
+        page_data, counter = data
+        page = eg_models.Page(page_data)
+        self.workspace.sm.store(page, 'Saving without indexing')
+
+        self.workspace.refresh_index()
+        self.assertEqual(
+            self.workspace.S(eg_models.Page).count(), 0)
+
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+            # run the command
+            self.command.handle()
+            output = self.command.stdout.getvalue()
+            self.assertEqual(
+                output.strip(),
+                'Deleted unicore.content.models.Page: %s.' % (page.uuid,))
