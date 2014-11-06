@@ -23,5 +23,5 @@ pytest-django
 pytest-cov
 pytest-xdist
 elastic-git==0.2.6
-unicore-cms==1.0.4
+unicore-cms==1.0.8
 python-slugify==0.1.0
