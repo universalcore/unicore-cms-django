@@ -235,7 +235,7 @@ class Category(models.Model):
             'If checked this category will be displayed on the top'
             'navigation bar. It will always appear on the homepage.'))
     position = models.PositiveIntegerField(
-        _('Position in Ordering'), null=True)
+        _('Position in Ordering'), default=0)
 
     class Meta:
         ordering = ('position', 'title',)
@@ -354,7 +354,7 @@ class Post(models.Model):
         blank=True,
         null=True)
     position = models.PositiveIntegerField(
-        _('Position in Ordering'), null=True, blank=True, default=0)
+        _('Position in Ordering'), default=0)
 
     def save(self, *args, **kwargs):
         # use django slugify filter to slugify
