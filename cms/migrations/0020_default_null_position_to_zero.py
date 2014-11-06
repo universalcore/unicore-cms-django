@@ -9,14 +9,14 @@ class Migration(DataMigration):
 
     def forwards(self, orm):
         Category = orm['cms.Category']
-        Page = orm['cms.Page']
+        Post = orm['cms.Post']
 
         for c in Category.objects.all():
             if c.position is None:
                 c = 0
                 c.save()
 
-        for p in Page.objects.all():
+        for p in Post.objects.all():
             if p.position is None:
                 p = 0
                 p.save()
