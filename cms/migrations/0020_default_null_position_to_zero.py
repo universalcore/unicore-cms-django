@@ -13,12 +13,12 @@ class Migration(DataMigration):
 
         for c in Category.objects.all():
             if c.position is None:
-                c = 0
+                c.position = 0
                 c.save()
 
         for p in Post.objects.all():
             if p.position is None:
-                p = 0
+                p.position = 0
                 p.save()
 
     def backwards(self, orm):
