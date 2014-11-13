@@ -80,7 +80,7 @@ class Command(BaseCommand):
                 localisation=Localisation._for(instance.language),
                 featured_in_navbar=instance.featured_in_navbar or False,
                 uuid=instance.uuid,
-                position=instance.position,
+                position=instance.position or 0,
             )
 
         # second pass to add related fields
@@ -114,7 +114,8 @@ class Command(BaseCommand):
                         instance.featured or False),
                     localisation=Localisation._for(instance.language),
                     primary_category=primary_category,
-                    uuid=instance.uuid
+                    uuid=instance.uuid,
+                    position=instance.position or 0
                 )
             except ValidationError, e:  # pragma: no cover
                 self.stderr.write('An error occured with: %s(%s)' % (
