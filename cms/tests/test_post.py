@@ -374,6 +374,11 @@ class PostTestCase(BaseCmsTestCase):
             'http://localhost:8888/'
             'J1ZrJaChK4mv90JF9fNutNcYJ1U=/oooooo32chars_random_idooooooooo')
 
+        [eg_page] = self.workspace.S(eg_models.Page).filter(uuid=p.uuid)
+        self.assertEquals(eg_page.title, 'New page')
+        self.assertEquals(eg_page.image, 'oooooo32chars_random_idooooooooo')
+        self.assertEquals(eg_page.image_host, 'http://localhost:8888')
+
         MockPostClass.assert_called_with(
             "%s/image" % settings.THUMBOR_RW_SERVER,
             data=content.file.read(),
