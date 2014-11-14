@@ -11,6 +11,8 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
 
+from django_thumborstorage.storages import ThumborStorage
+
 from sortedm2m.fields import SortedManyToManyField
 
 from elasticgit import EG
@@ -361,6 +363,23 @@ class Post(models.Model):
         null=True)
     position = models.PositiveIntegerField(
         _('Position in Ordering'), default=0)
+
+    def upload_path(self, filename):
+        return 'posts/%s' % filename
+
+    image = models.ImageField(
+        upload_to=upload_path,
+        storage=ThumborStorage(),
+        height_field='image_height',
+        width_field='image_width',
+        blank=True, null=True)
+    image_height = models.IntegerField(blank=True, null=True)
+    image_width = models.IntegerField(blank=True, null=True)
+
+    def image_uuid(self):
+        if self.image:
+            return self.image.storage.key(self.image.name)
+        return None
 
     def save(self, *args, **kwargs):
         # use django slugify filter to slugify
