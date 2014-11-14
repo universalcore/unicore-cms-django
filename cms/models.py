@@ -434,6 +434,8 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
             instance.source.uuid
             if instance.source
             else None),
+        "image": instance.image_uuid(),
+        "image_host": settings.THUMBOR_SERVER,
     }
 
     # NOTE: If newly created always give it the highest ordering position
