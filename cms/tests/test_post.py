@@ -1,7 +1,37 @@
+import os
+import mock
+
+from PIL import Image
+Image.init()
+
 from cms.models import Post, Category, Localisation
 from cms.tests.base import BaseCmsTestCase
 
 from unicore.content import models as eg_models
+
+from django.core.files.images import ImageFile
+from django.conf import settings
+
+
+CURRENT_DIR = os.path.abspath(os.path.split(__file__)[0])
+IMAGE_DIR = os.path.join(CURRENT_DIR, "images")
+
+
+class MockedGetResponse:
+    status_code = 200
+
+    def __init__(self, url):
+        """Retrieve the file on the filesytem according to the name. """
+        basename = os.path.basename(url)
+        filename = os.path.join(IMAGE_DIR, basename)
+        if not os.path.exists(filename):
+            self.status_code = 404
+        else:
+            self.content = open(filename, "r").read()
+
+
+class MockedPostResponse:
+    headers = {}
 
 
 class PostTestCase(BaseCmsTestCase):
@@ -308,3 +338,48 @@ class PostTestCase(BaseCmsTestCase):
         self.assertEquals(Post.objects.all()[0].position, 0)
         self.assertEquals(Post.objects.all()[1].title, 'New page')
         self.assertEquals(Post.objects.all()[1].position, 1)
+
+    def test_post_image(self):
+        def mocked_thumbor_post_response(url, data, headers):
+            response = MockedPostResponse()
+            response.headers["location"] = (
+                "/image/oooooo32chars_random_idooooooooo/%s" % headers["Slug"])
+            return response
+
+        def mocked_thumbor_get_response(url):
+            response = MockedGetResponse(url)
+            return response
+
+        post_mock = mock.patch('django_thumborstorage.storages.requests.post')
+        MockPostClass = post_mock.start()
+        MockPostClass.side_effect = mocked_thumbor_post_response
+
+        get_mock = mock.patch('django_thumborstorage.storages.requests.get')
+        MockGetClass = get_mock.start()
+        MockGetClass.side_effect = mocked_thumbor_get_response
+
+        p = Post.objects.create(
+            title=u'New page',
+            content=u'New page sample content',
+            localisation=Localisation._for('afr_ZA'),
+        )
+        content = ImageFile(open(os.path.join(IMAGE_DIR, 'gnu.png')))
+        p.image.save('gnu.png', content)
+        p.save()
+        p = Post.objects.get(pk=p.id)
+
+        self.assertEqual(p.image_uuid(), 'oooooo32chars_random_idooooooooo')
+        self.assertEqual(
+            p.image.url,
+            'http://localhost:8888/'
+            'J1ZrJaChK4mv90JF9fNutNcYJ1U=/oooooo32chars_random_idooooooooo')
+
+        [eg_page] = self.workspace.S(eg_models.Page).filter(uuid=p.uuid)
+        self.assertEquals(eg_page.title, 'New page')
+        self.assertEquals(eg_page.image, 'oooooo32chars_random_idooooooooo')
+        self.assertEquals(eg_page.image_host, 'http://localhost:8888')
+
+        MockPostClass.assert_called_with(
+            "%s/image" % settings.THUMBOR_RW_SERVER,
+            data=content.file.read(),
+            headers={"Content-Type": "image/png", "Slug": 'posts/gnu.png'})

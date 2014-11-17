@@ -263,6 +263,11 @@ SSH_PUBKEY_PATH = None
 SSH_PRIVKEY_PATH = None
 SSH_PASSPHRASE = ''
 
+
+THUMBOR_SERVER = 'http://localhost:8888'
+THUMBOR_SECURITY_KEY = 'MY_SECURE_KEY'
+THUMBOR_RW_SERVER = 'http://localhost:8888'
+
 try:
     from local_settings import *
 except ImportError:
