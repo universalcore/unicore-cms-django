@@ -508,6 +508,8 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         "source": (
             instance.source.uuid
             if instance.source else None),
+        "image": instance.image_uuid(),
+        "image_host": settings.THUMBOR_SERVER,
     }
 
     # TODO: Not yet implemented
