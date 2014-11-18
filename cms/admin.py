@@ -121,7 +121,7 @@ class PostAdmin(TranslatableModelAdmin):
 
     list_display = (
         'title', 'subtitle', 'primary_category', 'created_at', 'localisation',
-        'source', '_derivatives', 'uuid', 'featured_in_category', 'featured')
+        'source', '_derivatives', 'featured_in_category', 'featured')
 
     list_filter = (
         'featured_in_category', 'featured', 'created_at', 'localisation',
@@ -130,7 +130,7 @@ class PostAdmin(TranslatableModelAdmin):
     prepopulated_fields = {"slug": ("title",)}
     search_fields = ('title', 'description', 'content')
     raw_id_fields = ('owner', 'source')
-    readonly_fields = ('image_width', 'image_height')
+    readonly_fields = ('image_width', 'image_height', 'uuid')
     fieldsets = (
         (None, {'fields': (
             'title', 'slug', 'subtitle', 'description', 'content', )}),
@@ -144,7 +144,7 @@ class PostAdmin(TranslatableModelAdmin):
             'related_posts',
         )}),
         ('Meta', {
-            'fields': ('owner', 'created_at', 'source'),
+            'fields': ('owner', 'created_at', 'source', 'uuid'),
             'classes': ('grp-collapse grp-closed',)})
     )
 
@@ -182,15 +182,17 @@ class CategoryAdmin(TranslatableModelAdmin):
     list_filter = ('localisation', CategorySourceListFilter)
     list_display = (
         'title', 'subtitle', 'localisation', 'featured_in_navbar', 'source',
-        '_derivatives', 'uuid',)
+        '_derivatives')
 
     raw_id_fields = ('source', )
+    readonly_fields = ('image_width', 'image_height', 'uuid')
     prepopulated_fields = {"slug": ("title",)}
     fieldsets = (
         (None, {'fields': ('title', 'slug', 'subtitle')}),
+        (None, {'fields': ('image', 'image_width', 'image_height', )}),
         (None, {'fields': ('localisation', 'featured_in_navbar',)}),
         ('Meta', {
-            'fields': ('source', ),
+            'fields': ('source', 'uuid'),
             'classes': ('grp-collapse grp-closed', )})
     )
     inlines = (PostInline, )
