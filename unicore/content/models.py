@@ -50,4 +50,6 @@ class Category(models.Model):
     position = models.IntegerField("""position""")
     featured_in_navbar = models.BooleanField("""featured_in_navbar""")
     slug = models.TextField("""slug""")
+    image = models.TextField("""image""")
+    image_host = models.TextField("""image_host""")
     uuid = models.UUIDField("""uuid""", fallbacks=[models.SingleFieldFallback('id'),])

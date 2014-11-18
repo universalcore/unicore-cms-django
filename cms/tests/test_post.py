@@ -383,3 +383,50 @@ class PostTestCase(BaseCmsTestCase):
             "%s/image" % settings.THUMBOR_RW_SERVER,
             data=content.file.read(),
             headers={"Content-Type": "image/png", "Slug": 'posts/gnu.png'})
+
+    def test_category_image(self):
+        def mocked_thumbor_post_response(url, data, headers):
+            response = MockedPostResponse()
+            response.headers["location"] = (
+                "/image/oooooo32chars_random_idooooooooo/%s" % headers["Slug"])
+            return response
+
+        def mocked_thumbor_get_response(url):
+            response = MockedGetResponse(url)
+            return response
+
+        post_mock = mock.patch('django_thumborstorage.storages.requests.post')
+        MockPostClass = post_mock.start()
+        MockPostClass.side_effect = mocked_thumbor_post_response
+
+        get_mock = mock.patch('django_thumborstorage.storages.requests.get')
+        MockGetClass = get_mock.start()
+        MockGetClass.side_effect = mocked_thumbor_get_response
+
+        c = Category.objects.create(
+            title=u'New Category',
+            localisation=Localisation._for('afr_ZA'),
+        )
+        content = ImageFile(open(os.path.join(IMAGE_DIR, 'gnu.png')))
+        c.image.save('gnu.png', content)
+        c.save()
+        c = Category.objects.get(pk=c.id)
+
+        self.assertEqual(c.image_uuid(), 'oooooo32chars_random_idooooooooo')
+        self.assertEqual(
+            c.image.url,
+            'http://localhost:8888/'
+            'J1ZrJaChK4mv90JF9fNutNcYJ1U=/oooooo32chars_random_idooooooooo')
+
+        [eg_category] = self.workspace.S(
+            eg_models.Category).filter(uuid=c.uuid)
+        self.assertEquals(eg_category.title, 'New Category')
+        self.assertEquals(
+            eg_category.image, 'oooooo32chars_random_idooooooooo')
+        self.assertEquals(eg_category.image_host, 'http://localhost:8888')
+
+        MockPostClass.assert_called_with(
+            "%s/image" % settings.THUMBOR_RW_SERVER,
+            data=content.file.read(),
+            headers={
+                "Content-Type": "image/png", "Slug": 'categories/gnu.png'})

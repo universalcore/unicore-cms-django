@@ -245,6 +245,23 @@ class Category(models.Model):
     position = models.PositiveIntegerField(
         _('Position in Ordering'), default=0)
 
+    def upload_path(self, filename):
+        return 'categories/%s' % filename
+
+    image = models.ImageField(
+        upload_to=upload_path,
+        storage=ThumborStorage(),
+        height_field='image_height',
+        width_field='image_width',
+        blank=True, null=True)
+    image_height = models.IntegerField(blank=True, null=True)
+    image_width = models.IntegerField(blank=True, null=True)
+
+    def image_uuid(self):
+        if self.image:
+            return self.image.storage.key(self.image.name)
+        return None
+
     class Meta:
         ordering = ('position', 'title',)
         verbose_name = 'category'
@@ -491,6 +508,8 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         "source": (
             instance.source.uuid
             if instance.source else None),
+        "image": instance.image_uuid(),
+        "image_host": settings.THUMBOR_SERVER,
     }
 
     # TODO: Not yet implemented
