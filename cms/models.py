@@ -28,7 +28,7 @@ SWH_KE = 'swh_KE'  # Swahili
 THA_TH = 'tha_TH'  # Thai
 IND_ID = 'ind_ID'  # Bahasa
 SPA_ES = 'spa_ES'  # Spanish
-FRA_FR = 'fra_FR'  # French
+FRE_FR = 'fre_FR'  # French
 POR_PT = 'por_PT'  # Portuguese
 HIN_IN = 'hin_IN'  # Hindi
 mar_IN = 'mar_IN'  # Marathi
@@ -40,7 +40,7 @@ LANGUAGE_CHOICES = (
     (THA_TH, 'Thai (Thailand)'),
     (IND_ID, 'Bahasa (Indonesia)'),
     (SPA_ES, 'Spanish (Spain)'),
-    (FRA_FR, 'French (France)'),
+    (FRE_FR, 'French (France)'),
     (POR_PT, 'Portuguese (Portugal)'),
     (HIN_IN, 'Hindi (India)'),
     (mar_IN, 'Marathi (India)'),
