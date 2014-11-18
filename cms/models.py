@@ -31,7 +31,7 @@ SPA_ES = 'spa_ES'  # Spanish
 FRE_FR = 'fre_FR'  # French
 POR_PT = 'por_PT'  # Portuguese
 HIN_IN = 'hin_IN'  # Hindi
-mar_IN = 'mar_IN'  # Marathi
+MAR_IN = 'mar_IN'  # Marathi
 
 LANGUAGE_CHOICES = (
     (ENG_UK, 'English (United Kingdom)'),
@@ -43,7 +43,7 @@ LANGUAGE_CHOICES = (
     (FRE_FR, 'French (France)'),
     (POR_PT, 'Portuguese (Portugal)'),
     (HIN_IN, 'Hindi (India)'),
-    (mar_IN, 'Marathi (India)'),
+    (MAR_IN, 'Marathi (India)'),
 )
 
 
