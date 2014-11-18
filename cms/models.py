@@ -22,14 +22,16 @@ from git import GitCommandError
 from unicore.content import models as eg_models
 
 
-ENG_UK = 'eng_UK'
+ENG_UK = 'eng_UK'  # English
 SWH_TZ = 'swh_TZ'  # Swahili
 SWH_KE = 'swh_KE'  # Swahili
 THA_TH = 'tha_TH'  # Thai
 IND_ID = 'ind_ID'  # Bahasa
 SPA_ES = 'spa_ES'  # Spanish
-FRA_FR = 'fra_FR'  # French
+FRE_FR = 'fre_FR'  # French
 POR_PT = 'por_PT'  # Portuguese
+HIN_IN = 'hin_IN'  # Hindi
+MAR_IN = 'mar_IN'  # Marathi
 
 LANGUAGE_CHOICES = (
     (ENG_UK, 'English (United Kingdom)'),
@@ -38,8 +40,10 @@ LANGUAGE_CHOICES = (
     (THA_TH, 'Thai (Thailand)'),
     (IND_ID, 'Bahasa (Indonesia)'),
     (SPA_ES, 'Spanish (Spain)'),
-    (FRA_FR, 'French (France)'),
+    (FRE_FR, 'French (France)'),
     (POR_PT, 'Portuguese (Portugal)'),
+    (HIN_IN, 'Hindi (India)'),
+    (MAR_IN, 'Marathi (India)'),
 )
 
 
