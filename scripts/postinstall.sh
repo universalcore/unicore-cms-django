@@ -6,6 +6,7 @@ $pip install -r "${INSTALLDIR}/${REPO}/requirements.txt"
 
 for s in $settings
 do
+    echo "migrating $s"
     DJANGO_SETTINGS_MODULE="project.$(basename $s .py)" $manage syncdb --noinput --no-initial-data --migrate
     DJANGO_SETTINGS_MODULE="project.$(basename $s .py)" $manage collectstatic --noinput
 done
