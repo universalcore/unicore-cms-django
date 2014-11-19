@@ -38,3 +38,4 @@ class Command(BaseCommand):
 
         tasks.push_to_git.delay(
             settings.GIT_REPO_PATH, settings.ELASTIC_GIT_INDEX_PREFIX)
+        self.stdout.write('done.')
