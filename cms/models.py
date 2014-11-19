@@ -20,32 +20,7 @@ from elasticgit import EG
 from git import GitCommandError
 
 from unicore.content import models as eg_models
-
-
-ENG_UK = 'eng_UK'  # English
-SWH_TZ = 'swh_TZ'  # Swahili
-SWH_KE = 'swh_KE'  # Swahili
-THA_TH = 'tha_TH'  # Thai
-IND_ID = 'ind_ID'  # Bahasa
-SPA_ES = 'spa_ES'  # Spanish
-FRE_FR = 'fre_FR'  # French
-POR_PT = 'por_PT'  # Portuguese
-HIN_IN = 'hin_IN'  # Hindi
-MAR_IN = 'mar_IN'  # Marathi
-
-LANGUAGE_CHOICES = (
-    (ENG_UK, 'English (United Kingdom)'),
-    (SWH_TZ, 'Swahili (Tanzania)'),
-    (SWH_KE, 'Swahili (Kenya)'),
-    (THA_TH, 'Thai (Thailand)'),
-    (IND_ID, 'Bahasa (Indonesia)'),
-    (SPA_ES, 'Spanish (Spain)'),
-    (FRE_FR, 'French (France)'),
-    (POR_PT, 'Portuguese (Portugal)'),
-    (HIN_IN, 'Hindi (India)'),
-    (MAR_IN, 'Marathi (India)'),
-)
-
+from cms import constants
 
 CONTENT_REPO_LICENSE_PATH = os.path.join(
     settings.PROJECT_ROOT, '..', 'licenses')
@@ -191,11 +166,9 @@ class Localisation(models.Model):
         return u'%s_%s' % (self.language_code, self.country_code)
 
     def __unicode__(self):  # pragma: no cover
-        """
-        FIXME: this is probably a bad idea
-        """
-        language = self.get_code()
-        return unicode(dict(LANGUAGE_CHOICES).get(language, language))
+        language = constants.LANGUAGES.get(self.language_code)
+        country = constants.COUNTRIES.get(self.country_code)
+        return u'%s (%s)' % (language, country)
 
 
 class Category(models.Model):
