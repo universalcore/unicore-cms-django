@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# halt on any error
-set -e
-
 settings="project/*_settings.py"
 
 for s in $settings
