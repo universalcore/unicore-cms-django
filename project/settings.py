@@ -164,6 +164,8 @@ INSTALLED_APPS = (
     'debug_toolbar',
     'sortedm2m',
     'pagedown',
+    'taggit',
+    'taggit_live',
 
     # sample apps to explain usage
     'cms',
@@ -231,6 +233,10 @@ SOUTH_TESTS_MIGRATE = False  # Do not run the migrations for our tests.
                              # for the tests and as such nothing needs to be
                              # migrated.
 
+SOUTH_MIGRATION_MODULES = {
+    'taggit': 'taggit.south_migrations',
+}
+
 # Sentry configuration
 RAVEN_CONFIG = {
     # DevOps will supply you with this.
@@ -256,7 +262,7 @@ GRAPPELLI_ADMIN_TITLE = 'Universal Core'
 GIT_REPO_URL = None
 GIT_REPO_PATH = abspath('cmsrepo')
 DEFAULT_TARGET_NAME = 'Default Target'
-ELASTIC_GIT_INDEX_PREFIX = 'elastic-git'
+ELASTIC_GIT_INDEX_PREFIX = None
 
 # used when pushing to Github
 SSH_PUBKEY_PATH = None

@@ -23,6 +23,8 @@ from cms.models import (
 from cms.forms import PostForm, CategoryForm
 from cms import tasks
 
+from taggit_live.forms import LiveTagField
+
 from elasticgit import EG
 
 
@@ -133,7 +135,7 @@ class PostAdmin(TranslatableModelAdmin):
     readonly_fields = ('image_width', 'image_height', 'uuid')
     fieldsets = (
         (None, {'fields': (
-            'title', 'slug', 'subtitle', 'description', 'content', )}),
+            'title', 'slug', 'subtitle', 'description', 'content', 'tags')}),
         (None, {'fields': (
             'image', 'image_width', 'image_height', )}),
         (None, {'fields': (
@@ -147,6 +149,18 @@ class PostAdmin(TranslatableModelAdmin):
             'fields': ('owner', 'created_at', 'source', 'uuid'),
             'classes': ('grp-collapse grp-closed',)})
     )
+
+    class Media:
+        css = {
+            'all': (
+                '/media/css/jquery-ui.min.css',
+                '/media/css/jquery-ui.structure.min.css',
+                '/media/css/jquery-ui.theme.min.css',
+            )
+        }
+        js = (
+            '/media/js/jquery-ui.min.js',
+        )
 
     def _derivatives(self, post):
         return post.post_set.count()
@@ -292,3 +306,6 @@ admin.site.unregister(CrontabSchedule)
 admin.site.unregister(PeriodicTask)
 
 admin.site.register(Localisation, LocalisationAdmin)
+
+# make pyflakes happy about the import
+celery_admin

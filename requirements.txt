@@ -28,3 +28,4 @@ python-slugify==0.1.0
 django-thumborstorage
 thumbor
 libthumbor
+django-taggit==0.12.2

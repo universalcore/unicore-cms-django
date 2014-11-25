@@ -13,6 +13,8 @@ from django.core.exceptions import ValidationError
 
 from django_thumborstorage.storages import ThumborStorage
 
+from taggit.managers import TaggableManager
+
 from sortedm2m.fields import SortedManyToManyField
 
 from elasticgit import EG
@@ -68,6 +70,9 @@ class ContentRepository(models.Model):
 
     @classmethod
     def get_default_name(cls):
+        if settings.GIT_REPO_URL is None:
+            return None
+
         url_head, url_path = settings.GIT_REPO_URL.rsplit('/', 1)
         repo_name, _, dot_git = url_path.rpartition('.')
         return repo_name
@@ -369,6 +374,8 @@ class Post(models.Model):
         blank=True, null=True)
     image_height = models.IntegerField(blank=True, null=True)
     image_width = models.IntegerField(blank=True, null=True)
+
+    tags = TaggableManager()
 
     def image_uuid(self):
         if self.image:
