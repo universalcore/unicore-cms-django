@@ -29,3 +29,4 @@ django-thumborstorage
 thumbor
 libthumbor
 django-taggit==0.12.2
+django-taggit-live==0.0.6
