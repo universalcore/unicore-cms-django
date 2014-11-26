@@ -27,3 +27,6 @@ class LocalisationTestCase(BaseCmsTestCase):
 
         [eg_local] = self.workspace.S(eg_models.Localisation).everything()
         self.assertEquals(eg_local.locale, 'spa_ES')
+
+        l.delete()
+        self.assertEquals(self.workspace.S(eg_models.Localisation).count(), 0)
