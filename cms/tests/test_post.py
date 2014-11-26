@@ -452,3 +452,23 @@ class PostTestCase(BaseCmsTestCase):
             data=content.file.read(),
             headers={
                 "Content-Type": "image/png", "Slug": 'categories/gnu.png'})
+
+    def test_post_tagging(self):
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
+            p = Post.objects.create(
+                title=u'New page',
+                content=u'New page sample content',
+                localisation=Localisation._for('afr_ZA'))
+
+            # NOTE: reload the to get the newly assigned UUID in the signal
+            #       handler with an `.update()` set operation
+            reloaded_p = Post.objects.get(pk=p.pk)
+            reloaded_p.author_tags.add('foo', 'bar', 'baz')
+            reloaded_p.save()
+
+            pages = self.workspace.S(eg_models.Page)
+            [post] = pages.filter(uuid=reloaded_p.uuid)
+            self.assertEquals(
+                set(post.author_tags),
+                set(['foo', 'bar', 'baz']))

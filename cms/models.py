@@ -437,7 +437,7 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
             else None),
         "image": instance.image_uuid(),
         "image_host": settings.THUMBOR_SERVER,
-        "author_tags": instance.author_tags.names(),
+        "author_tags": [tag.name for tag in instance.author_tags.all()],
     }
 
     # NOTE: If newly created always give it the highest ordering position
