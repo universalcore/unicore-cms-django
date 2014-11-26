@@ -222,11 +222,8 @@ class Category(models.Model):
     position = models.PositiveIntegerField(
         _('Position in Ordering'), default=0)
 
-    def upload_path(self, filename):
-        return 'categories/%s' % filename
-
     image = models.ImageField(
-        upload_to=upload_path,
+        upload_to=lambda _, filename: 'categories/%s' % filename,
         storage=ThumborStorage(),
         height_field='image_height',
         width_field='image_width',
@@ -358,11 +355,8 @@ class Post(models.Model):
     position = models.PositiveIntegerField(
         _('Position in Ordering'), default=0)
 
-    def upload_path(self, filename):
-        return 'posts/%s' % filename
-
     image = models.ImageField(
-        upload_to=upload_path,
+        upload_to=lambda _, filename: 'posts/%s' % filename,
         storage=ThumborStorage(),
         height_field='image_height',
         width_field='image_width',
