@@ -124,8 +124,13 @@ class PostAdmin(TranslatableModelAdmin):
         'source', '_derivatives', 'featured_in_category', 'featured')
 
     list_filter = (
-        'featured_in_category', 'featured', 'created_at', 'localisation',
-        CategoriesListFilter, PostSourceListFilter
+        'featured_in_category',
+        'featured',
+        'created_at',
+        'localisation',
+        'author_tags',
+        CategoriesListFilter,
+        PostSourceListFilter,
     )
     prepopulated_fields = {"slug": ("title",)}
     search_fields = ('title', 'description', 'content')
