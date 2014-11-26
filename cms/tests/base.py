@@ -33,7 +33,6 @@ class BaseCmsTestCase(TestCase):
             index_prefix or
             settings.ELASTIC_GIT_INDEX_PREFIX or
             self.mk_index_prefix())
-        print 'index_prefix', index_prefix
         auto_destroy = auto_destroy or self.destroy
         workspace = EG.workspace(os.path.join(working_dir, name), es={
             'urls': [url],

@@ -11,7 +11,6 @@ class TestDBResync(BaseCmsTestCase):
 
     def setUp(self):
         self.workspace = self.mk_workspace()
-        print 'index prefix!!', self.workspace.index_prefix
         self.command = db_resync.Command()
         self.command.stdout = StringIO()
 
