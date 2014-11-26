@@ -155,6 +155,20 @@ class Localisation(models.Model):
             'See http://www.loc.gov/standards/iso639-2/php/code_list.php '
             'for reference.'))
 
+    image = models.ImageField(
+        upload_to=lambda _, filename: 'locales/%s' % filename,
+        storage=ThumborStorage(),
+        height_field='image_height',
+        width_field='image_width',
+        blank=True, null=True)
+    image_height = models.IntegerField(blank=True, null=True)
+    image_width = models.IntegerField(blank=True, null=True)
+
+    def image_uuid(self):
+        if self.image:
+            return self.image.storage.key(self.image.name)
+        return None
+
     @classmethod
     def _for(cls, language):
         language_code, _, country_code = language.partition('_')
@@ -520,6 +534,8 @@ def auto_save_localisation_to_git(sender, instance, created, **kwargs):
 
     data = {
         "locale": instance.get_code(),
+        "image": instance.image_uuid(),
+        "image_host": settings.THUMBOR_SERVER,
     }
 
     # TODO: Not yet implemented
