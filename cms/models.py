@@ -542,8 +542,7 @@ def auto_save_localisation_to_git(sender, instance, created, **kwargs):
         updated = original.update(data)
         workspace.save(updated, 'Localisation updated: %s' % str(instance))
         workspace.refresh_index()
-    except (GitCommandError, ValueError), e:
-        print 'we got an error ', e
+    except (GitCommandError, ValueError):
         localisation = eg_models.Localisation(data)
         workspace.save(
             localisation, 'Localisation created: %s' % str(instance))
