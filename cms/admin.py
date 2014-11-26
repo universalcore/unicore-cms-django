@@ -135,7 +135,8 @@ class PostAdmin(TranslatableModelAdmin):
     prepopulated_fields = {"slug": ("title",)}
     search_fields = ('title', 'description', 'content')
     raw_id_fields = ('owner', 'source')
-    readonly_fields = ('image_width', 'image_height', 'uuid')
+    # readonly_fields = ('image_width', 'image_height', 'uuid')
+    readonly_fields = ('uuid', )
     fieldsets = (
         (None, {
             'fields': (
@@ -146,8 +147,8 @@ class PostAdmin(TranslatableModelAdmin):
                 'content',
                 'author_tags',
             )}),
-        (None, {'fields': (
-            'image', 'image_width', 'image_height', )}),
+        #(None, {'fields': (
+        #    'image', 'image_width', 'image_height', )}),
         (None, {'fields': (
             'primary_category',
             'localisation',
@@ -209,11 +210,13 @@ class CategoryAdmin(TranslatableModelAdmin):
         '_derivatives')
 
     raw_id_fields = ('source', )
-    readonly_fields = ('image_width', 'image_height', 'uuid')
+    # readonly_fields = ('image_width', 'image_height', 'uuid')
+    readonly_fields = ('uuid', )
     prepopulated_fields = {"slug": ("title",)}
     fieldsets = (
         (None, {'fields': ('title', 'slug', 'subtitle')}),
-        (None, {'fields': ('image', 'image_width', 'image_height', )}),
+        # Disabling image uploads for now
+        # (None, {'fields': ('image', 'image_width', 'image_height', )}),
         (None, {'fields': ('localisation', 'featured_in_navbar',)}),
         ('Meta', {
             'fields': ('source', 'uuid'),
@@ -243,6 +246,11 @@ class CategoryInline(admin.StackedInline):
 
 class LocalisationAdmin(admin.ModelAdmin):
     inlines = (CategoryInline,)
+
+    fieldsets = (
+        (None, {'fields': ('language_code', 'country_code')}),
+        ('Header Image', {'fields': ('image',)}),
+    )
 
 
 class ContentRepositoryAdmin(admin.ModelAdmin):

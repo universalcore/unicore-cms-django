@@ -54,3 +54,10 @@ class Category(models.Model):
     image = models.TextField("""image""")
     image_host = models.TextField("""image_host""")
     uuid = models.UUIDField("""uuid""", fallbacks=[models.SingleFieldFallback('id'),])
+
+
+class Localisation(models.Model):
+
+    locale = models.TextField("""locale""")
+    image = models.TextField("""image""")
+    image_host = models.TextField("""image_host""")
