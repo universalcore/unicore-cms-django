@@ -540,12 +540,12 @@ def auto_save_localisation_to_git(sender, instance, created, **kwargs):
             eg_models.Localisation).filter(locale=instance.get_code())
         original = localisation.get_object()
         updated = original.update(data)
-        workspace.save(updated, 'Localisation updated: %s' % str(instance))
+        workspace.save(updated, 'Localisation updated: %s' % unicode(instance))
         workspace.refresh_index()
     except (GitCommandError, ValueError):
         localisation = eg_models.Localisation(data)
         workspace.save(
-            localisation, 'Localisation created: %s' % str(instance))
+            localisation, 'Localisation created: %s' % unicode(instance))
         workspace.refresh_index()
 
 
@@ -556,5 +556,5 @@ def auto_delete_localisation_to_git(sender, instance, **kwargs):
     [localisation] = workspace.S(
         eg_models.Localisation).filter(locale=instance.get_code())
     original = localisation.get_object()
-    workspace.delete(original, 'Localisation deleted: %s' % str(instance))
+    workspace.delete(original, 'Localisation deleted: %s' % unicode(instance))
     workspace.refresh_index()
