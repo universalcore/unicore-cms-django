@@ -534,8 +534,6 @@ def auto_save_localisation_to_git(sender, instance, created, **kwargs):
     workspace = EG.workspace(settings.GIT_REPO_PATH,
                              index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
     try:
-        # FIXME: This can fail if we ever store a value with None
-        #        as the uuid.
         [localisation] = workspace.S(
             eg_models.Localisation).filter(locale=instance.get_code())
         original = localisation.get_object()
