@@ -537,18 +537,17 @@ def auto_save_localisation_to_git(sender, instance, created, **kwargs):
         # FIXME: This can fail if we ever store a value with None
         #        as the uuid.
         [localisation] = workspace.S(
-            eg_models.Localisation).filter(uuid=instance.uuid)
+            eg_models.Localisation).filter(locale=instance.get_code())
         original = localisation.get_object()
         updated = original.update(data)
-        workspace.save(updated, 'Localisation updated: %s' % instance.locale)
+        workspace.save(updated, 'Localisation updated: %s' % str(instance))
         workspace.refresh_index()
-    except (GitCommandError, ValueError):
+    except (GitCommandError, ValueError), e:
+        print 'we got an error ', e
         localisation = eg_models.Localisation(data)
         workspace.save(
-            localisation, 'Localisation created: %s' % instance.locale)
+            localisation, 'Localisation created: %s' % str(instance))
         workspace.refresh_index()
-        Localisation.objects.filter(
-            pk=instance.pk).update(uuid=localisation.uuid)
 
 
 @receiver(post_delete, sender=Localisation)
@@ -558,7 +557,7 @@ def auto_delete_localisation_to_git(sender, instance, **kwargs):
     workspace = EG.workspace(settings.GIT_REPO_PATH,
                              index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
     [localisation] = workspace.S(
-        eg_models.Localisation).filter(uuid=instance.uuid)
+        eg_models.Localisation).filter(locale=instance.get_code())
     original = localisation.get_object()
-    workspace.delete(original, 'Localisation deleted: %s' % instance.locale)
+    workspace.delete(original, 'Localisation deleted: %s' % str(instance))
     workspace.refresh_index()
