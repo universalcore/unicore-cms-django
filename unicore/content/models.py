@@ -58,3 +58,5 @@ class Category(models.Model):
 class Localisation(models.Model):
 
     locale = models.TextField("""locale""")
+    image = models.TextField("""image""")
+    image_host = models.TextField("""image_host""")

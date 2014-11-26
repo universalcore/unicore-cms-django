@@ -6,6 +6,14 @@
     {
       "type": "string",
       "name": "locale"
+    },
+    {
+      "type": "string",
+      "name": "image"
+    },
+    {
+      "type": "string",
+      "name": "image_host"
     }
   ]
 }
