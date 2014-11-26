@@ -460,8 +460,6 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Post)
 def auto_delete_post_to_git(sender, instance, **kwargs):
-    # TODO: Allow author information to be set in EG.
-    # author = utils.get_author_from_user(instance.last_author)
     workspace = EG.workspace(settings.GIT_REPO_PATH,
                              index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
     [page] = workspace.S(eg_models.Page).filter(uuid=instance.uuid)
@@ -489,9 +487,6 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         "image_host": settings.THUMBOR_SERVER,
     }
 
-    # TODO: Not yet implemented
-    # author = utils.get_author_from_user(instance.last_author)
-
     workspace = EG.workspace(settings.GIT_REPO_PATH,
                              index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
     try:
@@ -511,8 +506,6 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Category)
 def auto_delete_category_to_git(sender, instance, **kwargs):
-    # TODO: Not yet implemented
-    # author = utils.get_author_from_user(instance.last_author)
     workspace = EG.workspace(settings.GIT_REPO_PATH,
                              index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
     [category] = workspace.S(eg_models.Category).filter(uuid=instance.uuid)
@@ -527,9 +520,6 @@ def auto_save_localisation_to_git(sender, instance, created, **kwargs):
     data = {
         "locale": instance.get_code(),
     }
-
-    # TODO: Not yet implemented
-    # author = utils.get_author_from_user(instance.last_author)
 
     workspace = EG.workspace(settings.GIT_REPO_PATH,
                              index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
@@ -551,8 +541,6 @@ def auto_save_localisation_to_git(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Localisation)
 def auto_delete_localisation_to_git(sender, instance, **kwargs):
-    # TODO: Not yet implemented
-    # author = utils.get_author_from_user(instance.last_author)
     workspace = EG.workspace(settings.GIT_REPO_PATH,
                              index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
     [localisation] = workspace.S(
