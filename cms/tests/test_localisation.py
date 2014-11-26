@@ -48,18 +48,22 @@ class LocalisationTestCase(BaseCmsTestCase):
         })
 
     def test_create_localisation(self):
-        l = Localisation._for('spa_ES')
-        l.save()
-        self.assertEquals(l.language_code, 'spa')
-        self.assertEquals(l.country_code, 'ES')
-        self.assertEquals(Localisation.objects.all().count(), 1)
-        self.assertEquals(self.workspace.S(eg_models.Localisation).count(), 1)
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
+            l = Localisation._for('spa_ES')
+            l.save()
+            self.assertEquals(l.language_code, 'spa')
+            self.assertEquals(l.country_code, 'ES')
+            self.assertEquals(Localisation.objects.all().count(), 1)
+            self.assertEquals(
+                self.workspace.S(eg_models.Localisation).count(), 1)
 
-        [eg_local] = self.workspace.S(eg_models.Localisation).everything()
-        self.assertEquals(eg_local.locale, 'spa_ES')
+            [eg_local] = self.workspace.S(eg_models.Localisation).everything()
+            self.assertEquals(eg_local.locale, 'spa_ES')
 
-        l.delete()
-        self.assertEquals(self.workspace.S(eg_models.Localisation).count(), 0)
+            l.delete()
+            self.assertEquals(
+                self.workspace.S(eg_models.Localisation).count(), 0)
 
     def test_post_image(self):
         def mocked_thumbor_post_response(url, data, headers):
@@ -80,10 +84,12 @@ class LocalisationTestCase(BaseCmsTestCase):
         MockGetClass = get_mock.start()
         MockGetClass.side_effect = mocked_thumbor_get_response
 
-        l = Localisation._for('spa_ES')
-        content = ImageFile(open(os.path.join(IMAGE_DIR, 'gnu.png')))
-        l.image.save('gnu.png', content)
-        l.save()
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
+            l = Localisation._for('spa_ES')
+            content = ImageFile(open(os.path.join(IMAGE_DIR, 'gnu.png')))
+            l.image.save('gnu.png', content)
+            l.save()
 
         self.assertEqual(l.image_uuid(), 'oooooo32chars_random_idooooooooo')
         self.assertEqual(

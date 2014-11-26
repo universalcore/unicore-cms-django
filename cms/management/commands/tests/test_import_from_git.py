@@ -27,6 +27,7 @@ class TestImportFromGit(BaseCmsTestCase):
             for page in pages[:8]:
                 up = page.update({
                     'primary_category': cat1.uuid,
+                    'author_tags': ['foo', 'bar', 'baz'],
                 })
                 self.workspace.save(up, 'Added category.')
 
@@ -55,6 +56,9 @@ class TestImportFromGit(BaseCmsTestCase):
             self.assertEquals(p.related_posts.count(), 3)
             self.assertEquals(p.primary_category.uuid, cat1.uuid)
             self.assertEquals(p.source.uuid, pages[4].uuid)
+            self.assertEquals(
+                set(p.author_tags.names()),
+                set(['foo', 'bar', 'baz']))
 
     def test_get_input_data(self):
 
