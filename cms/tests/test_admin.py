@@ -137,15 +137,17 @@ class TestPostAdmin(BaseAdminTestCase):
         self.assertEqual(post_admin._derivatives(self.post2), 0)
 
     def test_save_model(self):
-        user = User.objects.create_user('foo', 'bar')
-        request = RequestFactory().get('/')
-        request.user = user
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
+            user = User.objects.create_user('foo', 'bar')
+            request = RequestFactory().get('/')
+            request.user = user
 
-        post_admin = PostAdmin(Post, admin)
-        post_admin.save_model(request, self.post1, None, None)
-        saved_post = Post.objects.get(pk=self.post1.pk)
-        self.assertEqual(saved_post.owner, user)
-        self.assertEqual(saved_post.last_author, user)
+            post_admin = PostAdmin(Post, admin)
+            post_admin.save_model(request, self.post1, None, None)
+            saved_post = Post.objects.get(pk=self.post1.pk)
+            self.assertEqual(saved_post.owner, user)
+            self.assertEqual(saved_post.last_author, user)
 
 
 class TestCategoryAdmin(BaseAdminTestCase):
@@ -156,14 +158,16 @@ class TestCategoryAdmin(BaseAdminTestCase):
         self.assertEqual(category_admin._derivatives(self.category2), 0)
 
     def test_save_model(self):
-        user = User.objects.create_user('foo', 'bar')
-        request = RequestFactory().get('/')
-        request.user = user
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
+            user = User.objects.create_user('foo', 'bar')
+            request = RequestFactory().get('/')
+            request.user = user
 
-        category_admin = CategoryAdmin(Category, admin)
-        category_admin.save_model(request, self.category1, None, None)
-        saved_category = Category.objects.get(pk=self.category1.pk)
-        self.assertEqual(saved_category.last_author, user)
+            category_admin = CategoryAdmin(Category, admin)
+            category_admin.save_model(request, self.category1, None, None)
+            saved_category = Category.objects.get(pk=self.category1.pk)
+            self.assertEqual(saved_category.last_author, user)
 
 
 class TestContentRepositoryAdmin(BaseAdminTestCase):

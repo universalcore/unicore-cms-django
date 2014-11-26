@@ -11,6 +11,7 @@ class TestDBResync(BaseCmsTestCase):
 
     def setUp(self):
         self.workspace = self.mk_workspace()
+        print 'index prefix!!', self.workspace.index_prefix
         self.command = db_resync.Command()
         self.command.stdout = StringIO()
 
@@ -18,7 +19,8 @@ class TestDBResync(BaseCmsTestCase):
         category1, category2 = self.create_categories(self.workspace)
         page1, page2 = self.create_pages(self.workspace)
 
-        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
             # run the command
             self.command.handle()
             output = self.command.stdout.getvalue()
@@ -38,7 +40,8 @@ class TestDBResync(BaseCmsTestCase):
 
     def test_resync_full_db(self):
 
-        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
             # write & reload to get UUID written by signal handler
             django_cat1 = Category.objects.create(title='foo')
             django_cat1 = Category.objects.get(pk=django_cat1.pk)
@@ -68,7 +71,8 @@ class TestDBResync(BaseCmsTestCase):
         self.assertEqual(
             self.workspace.S(eg_models.Page).count(), 0)
 
-        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
             # run the command
             self.command.handle()
             output = self.command.stdout.getvalue()

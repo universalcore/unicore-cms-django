@@ -29,14 +29,16 @@ class TestFixIncorrectLocales(BaseCmsTestCase):
         })
 
     def create_django_categories(self, locale='eng_GB', count=2):
-        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
             for i in range(count):
                 Category.objects.create(
                     title=u'Test category %s' % (i,),
                     localisation=Localisation._for(locale))
 
     def create_django_posts(self, locale='eng_GB', count=2):
-        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
             for i in range(count):
                 Post.objects.create(
                     title=u'Test category %s' % (i,),
@@ -44,7 +46,8 @@ class TestFixIncorrectLocales(BaseCmsTestCase):
                     localisation=Localisation._for(locale))
 
     def test_command(self):
-        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
             self.create_django_categories(locale='eng_UK', count=3)
             self.create_django_categories(locale='swh_TZ', count=3)
             self.create_django_categories(locale='swh_KE', count=3)

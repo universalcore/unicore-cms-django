@@ -375,7 +375,7 @@ class Post(models.Model):
     image_height = models.IntegerField(blank=True, null=True)
     image_width = models.IntegerField(blank=True, null=True)
 
-    tags = TaggableManager()
+    author_tags = TaggableManager()
 
     def image_uuid(self):
         if self.image:
@@ -437,6 +437,7 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
             else None),
         "image": instance.image_uuid(),
         "image_host": settings.THUMBOR_SERVER,
+        "author_tags": instance.author_tags.names(),
     }
 
     # NOTE: If newly created always give it the highest ordering position

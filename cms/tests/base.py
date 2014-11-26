@@ -15,6 +15,12 @@ class BaseCmsTestCase(TestCase):
 
     destroy = 'KEEP_REPO' not in os.environ
 
+    def mk_index_prefix(self):
+        long_name = self.id().split('.')
+        class_name, test_name = long_name[-2], long_name[-1]
+        index_prefix = '%s-%s' % (class_name, test_name)
+        return index_prefix.lower()
+
     def mk_workspace(self, working_dir='.test_repos/',
                      name=None,
                      url='https://localhost',
@@ -26,7 +32,8 @@ class BaseCmsTestCase(TestCase):
         index_prefix = (
             index_prefix or
             settings.ELASTIC_GIT_INDEX_PREFIX or
-            name.lower().replace('.', '-'))
+            self.mk_index_prefix())
+        print 'index_prefix', index_prefix
         auto_destroy = auto_destroy or self.destroy
         workspace = EG.workspace(os.path.join(working_dir, name), es={
             'urls': [url],

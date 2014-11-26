@@ -23,8 +23,6 @@ from cms.models import (
 from cms.forms import PostForm, CategoryForm
 from cms import tasks
 
-from taggit_live.forms import LiveTagField
-
 from elasticgit import EG
 
 
@@ -134,8 +132,15 @@ class PostAdmin(TranslatableModelAdmin):
     raw_id_fields = ('owner', 'source')
     readonly_fields = ('image_width', 'image_height', 'uuid')
     fieldsets = (
-        (None, {'fields': (
-            'title', 'slug', 'subtitle', 'description', 'content', 'tags')}),
+        (None, {
+            'fields': (
+                'title',
+                'slug',
+                'subtitle',
+                'description',
+                'content',
+                'author_tags',
+            )}),
         (None, {'fields': (
             'image', 'image_width', 'image_height', )}),
         (None, {'fields': (

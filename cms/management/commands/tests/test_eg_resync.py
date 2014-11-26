@@ -12,7 +12,8 @@ class TestEGResync(BaseCmsTestCase):
         self.command.stdout = StringIO()
 
     def test_resync(self):
-        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
             self.create_categories(self.workspace, count=2)
             self.create_pages(self.workspace, count=2)
             # run the command
