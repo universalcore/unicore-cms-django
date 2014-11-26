@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "namespace": "unicore.content.models",
+  "name": "Localisation",
+  "fields": [
+    {
+      "type": "string",
+      "name": "locale"
+    }
+  ]
+}
