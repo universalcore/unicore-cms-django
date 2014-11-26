@@ -224,6 +224,11 @@ class CategoryInline(admin.StackedInline):
 class LocalisationAdmin(admin.ModelAdmin):
     inlines = (CategoryInline,)
 
+    fieldsets = (
+        (None, {'fields': ('language_code', 'country_code')}),
+        ('Header Image', {'fields': ('image',)}),
+    )
+
 
 class ContentRepositoryAdmin(admin.ModelAdmin):
 
