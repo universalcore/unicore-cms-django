@@ -2,7 +2,7 @@ from StringIO import StringIO
 
 from django.core.management import call_command
 
-from cms.models import Post, Category
+from cms.models import Post, Category, Localisation
 from cms.tests.base import BaseCmsTestCase
 from cms.management.commands import import_from_git
 
@@ -16,6 +16,11 @@ class TestImportFromGit(BaseCmsTestCase):
 
     def test_command(self):
         with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+            lang1 = eg_models.Localisation({'locale': 'spa_ES'})
+            lang2 = eg_models.Localisation({'locale': 'fra_FR'})
+            self.workspace.save(lang1, 'Added spanish language')
+            self.workspace.save(lang2, 'Added french language')
+
             cat1, cat2 = self.create_categories(self.workspace, position=3)
             self.workspace.save(cat1.update({
                 'source': cat2.uuid,
@@ -55,6 +60,8 @@ class TestImportFromGit(BaseCmsTestCase):
             self.assertEquals(p.primary_category.uuid, cat1.uuid)
             self.assertEquals(p.source.uuid, pages[4].uuid)
 
+            self.assertEquals(Localisation.objects.all().count(), 3)
+
     def test_get_input_data(self):
 
         self.captured_message = None
@@ -73,6 +80,7 @@ class TestImportFromGit(BaseCmsTestCase):
             'Do you want to delete existing data? Y/n: ')
         self.assertEquals(command.stdout.getvalue(), (
             'deleting existing content..'
+            'creating localisations..'
             'creating categories..'
             'done.'))
 
@@ -94,6 +102,7 @@ class TestImportFromGit(BaseCmsTestCase):
             'Do you want to delete existing data? Y/n: ')
         self.assertEquals(command.stdout.getvalue(), (
             'deleting existing content..'
+            'creating localisations..'
             'creating categories..'
             'done.'))
 
