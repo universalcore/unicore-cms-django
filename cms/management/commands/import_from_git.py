@@ -1,4 +1,3 @@
-import sys
 from optparse import make_option
 
 from django.core.management.base import BaseCommand
@@ -10,7 +9,8 @@ from django.conf import settings
 from cms.models import (
     Post, Category, Localisation, auto_save_post_to_git,
     auto_save_category_to_git, auto_delete_post_to_git,
-    auto_delete_category_to_git)
+    auto_delete_category_to_git, auto_save_localisation_to_git,
+    auto_delete_localisation_to_git)
 
 from elasticgit import EG
 
@@ -40,12 +40,22 @@ class Command(BaseCommand):
         post_save.disconnect(auto_save_category_to_git, sender=Category)
         post_delete.disconnect(auto_delete_category_to_git, sender=Category)
 
+        post_save.disconnect(
+            auto_save_localisation_to_git, sender=Localisation)
+        post_delete.disconnect(
+            auto_delete_localisation_to_git, sender=Localisation)
+
     def reconnect_signals(self):
         post_save.connect(auto_save_post_to_git, sender=Post)
         post_delete.connect(auto_delete_post_to_git, sender=Post)
 
         post_save.connect(auto_save_category_to_git, sender=Category)
         post_delete.connect(auto_delete_category_to_git, sender=Category)
+
+        post_save.connect(
+            auto_save_localisation_to_git, sender=Localisation)
+        post_delete.connect(
+            auto_delete_localisation_to_git, sender=Localisation)
 
     def emit(self, message):
         if not self.quiet:
@@ -66,8 +76,14 @@ class Command(BaseCommand):
 
         if must_delete.lower() == 'y':
             self.emit('deleting existing content..')
+            Localisation.objects.all().delete()
             Post.objects.all().delete()
             Category.objects.all().delete()
+
+        self.emit('creating localisations..')
+        localisations = workspace.S(eg_models.Localisation).everything()
+        for l in localisations:
+            Localisation._for(l.locale)
 
         self.emit('creating categories..')
         categories = workspace.S(eg_models.Category).everything()
