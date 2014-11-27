@@ -100,7 +100,7 @@ class Command(BaseCommand):
                 primary_category = Category.objects.get(
                     uuid=instance.primary_category)
             try:
-                Post.objects.create(
+                p = Post.objects.create(
                     title=instance.title,
                     subtitle=instance.subtitle,
                     slug=instance.slug,
@@ -117,6 +117,8 @@ class Command(BaseCommand):
                     uuid=instance.uuid,
                     position=instance.position or 0
                 )
+                # add the tags
+                p.author_tags.add(*instance.author_tags)
             except ValidationError, e:  # pragma: no cover
                 self.stderr.write('An error occured with: %s(%s)' % (
                     instance.title, instance.uuid))

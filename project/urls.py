@@ -11,5 +11,6 @@ urlpatterns = patterns(
     '',
     url(r'^admin/', RedirectView.as_view(url='/')),
     url(r'^grappelli/', include('grappelli.urls')),
+    url(r'', include('taggit_live.urls')),
     url(r'^', include(admin.site.urls)),
 )

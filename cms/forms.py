@@ -2,9 +2,12 @@ from pagedown.widgets import AdminPagedownWidget
 from django import forms
 from cms.models import Post, Category
 
+from taggit_live.forms import LiveTagField
+
 
 class PostForm(forms.ModelForm):
     content = forms.CharField(widget=AdminPagedownWidget())
+    author_tags = LiveTagField()
 
     def __init__(self, *args, **kwargs):
         super(PostForm, self).__init__(*args, **kwargs)

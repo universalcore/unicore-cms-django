@@ -15,7 +15,8 @@ class TestImportFromGit(BaseCmsTestCase):
         self.workspace = self.mk_workspace()
 
     def test_command(self):
-        with self.settings(GIT_REPO_PATH=self.workspace.working_dir):
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
             cat1, cat2 = self.create_categories(self.workspace, position=3)
             self.workspace.save(cat1.update({
                 'source': cat2.uuid,
@@ -26,6 +27,7 @@ class TestImportFromGit(BaseCmsTestCase):
             for page in pages[:8]:
                 up = page.update({
                     'primary_category': cat1.uuid,
+                    'author_tags': ['foo', 'bar', 'baz'],
                 })
                 self.workspace.save(up, 'Added category.')
 
@@ -54,6 +56,9 @@ class TestImportFromGit(BaseCmsTestCase):
             self.assertEquals(p.related_posts.count(), 3)
             self.assertEquals(p.primary_category.uuid, cat1.uuid)
             self.assertEquals(p.source.uuid, pages[4].uuid)
+            self.assertEquals(
+                set(p.author_tags.names()),
+                set(['foo', 'bar', 'baz']))
 
     def test_get_input_data(self):
 
@@ -63,10 +68,12 @@ class TestImportFromGit(BaseCmsTestCase):
             self.captured_message = message
             return 'y'
 
-        command = import_from_git.Command()
-        command.stdout = StringIO()
-        command.input_func = patched_input_func
-        command.handle(quiet=False)
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
+            command = import_from_git.Command()
+            command.stdout = StringIO()
+            command.input_func = patched_input_func
+            command.handle(quiet=False)
 
         self.assertEquals(
             self.captured_message,
@@ -84,10 +91,12 @@ class TestImportFromGit(BaseCmsTestCase):
             self.captured_message = message
             return ''
 
-        command = import_from_git.Command()
-        command.stdout = StringIO()
-        command.input_func = patched_input_func
-        command.handle(quiet=False)
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
+            command = import_from_git.Command()
+            command.stdout = StringIO()
+            command.input_func = patched_input_func
+            command.handle(quiet=False)
 
         self.assertEquals(
             self.captured_message,
@@ -98,7 +107,9 @@ class TestImportFromGit(BaseCmsTestCase):
             'done.'))
 
     def test_get_input_data_with_quiet_set(self):
-        command = import_from_git.Command()
-        command.stdout = StringIO()
-        command.handle(quiet=True)
-        self.assertEquals(command.stdout.getvalue(), '')
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
+            command = import_from_git.Command()
+            command.stdout = StringIO()
+            command.handle(quiet=True)
+            self.assertEquals(command.stdout.getvalue(), '')

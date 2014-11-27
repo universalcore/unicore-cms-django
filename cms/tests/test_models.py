@@ -82,12 +82,14 @@ class TestContentRepository(BaseCmsTestCase):
         self.assertEqual(target.name, 'The Target')
 
     def test_linked_pages_asymmetry(self):
-        post1 = Post.objects.create(title='post 1')
-        post2 = Post.objects.create(title='post 2')
-        post2.related_posts.add(post1)
-        post2.save()
-        self.assertEqual(post2.related_posts.count(), 1)
-        self.assertEqual(post1.related_posts.count(), 0)
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
+            post1 = Post.objects.create(title='post 1')
+            post2 = Post.objects.create(title='post 2')
+            post2.related_posts.add(post1)
+            post2.save()
+            self.assertEqual(post2.related_posts.count(), 1)
+            self.assertEqual(post1.related_posts.count(), 0)
 
 
 class TestPublishingTarget(BaseCmsTestCase):

@@ -124,8 +124,13 @@ class PostAdmin(TranslatableModelAdmin):
         'source', '_derivatives', 'featured_in_category', 'featured')
 
     list_filter = (
-        'featured_in_category', 'featured', 'created_at', 'localisation',
-        CategoriesListFilter, PostSourceListFilter
+        'featured_in_category',
+        'featured',
+        'created_at',
+        'localisation',
+        'author_tags',
+        CategoriesListFilter,
+        PostSourceListFilter,
     )
     prepopulated_fields = {"slug": ("title",)}
     search_fields = ('title', 'description', 'content')
@@ -133,10 +138,16 @@ class PostAdmin(TranslatableModelAdmin):
     # readonly_fields = ('image_width', 'image_height', 'uuid')
     readonly_fields = ('uuid', )
     fieldsets = (
-        (None, {'fields': (
-            'title', 'slug', 'subtitle', 'description', 'content', )}),
-        # Disabling image uploads for now
-        # (None, {'fields': (
+        (None, {
+            'fields': (
+                'title',
+                'slug',
+                'subtitle',
+                'description',
+                'content',
+                'author_tags',
+            )}),
+        #(None, {'fields': (
         #    'image', 'image_width', 'image_height', )}),
         (None, {'fields': (
             'primary_category',
@@ -149,6 +160,18 @@ class PostAdmin(TranslatableModelAdmin):
             'fields': ('owner', 'created_at', 'source', 'uuid'),
             'classes': ('grp-collapse grp-closed',)})
     )
+
+    class Media:
+        css = {
+            'all': (
+                '/media/css/jquery-ui.min.css',
+                '/media/css/jquery-ui.structure.min.css',
+                '/media/css/jquery-ui.theme.min.css',
+            )
+        }
+        js = (
+            '/media/js/jquery-ui.min.js',
+        )
 
     def _derivatives(self, post):
         return post.post_set.count()
@@ -301,3 +324,6 @@ admin.site.unregister(CrontabSchedule)
 admin.site.unregister(PeriodicTask)
 
 admin.site.register(Localisation, LocalisationAdmin)
+
+# make pyflakes happy about the import
+celery_admin
