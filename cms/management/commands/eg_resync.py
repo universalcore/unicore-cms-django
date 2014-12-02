@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from elasticgit import EG
 from elasticgit.utils import fqcn
 
-from unicore.content.models import Page, Category
+from unicore.content.models import Page, Category, Localisation
 
 
 class Command(BaseCommand):
@@ -16,7 +16,7 @@ class Command(BaseCommand):
             settings.GIT_REPO_PATH,
             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
 
-        for model_class in [Page, Category]:
+        for model_class in [Page, Category, Localisation]:
             self.sync_model(model_class)
 
     def sync_model(self, model_class):
