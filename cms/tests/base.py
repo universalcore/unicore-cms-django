@@ -1,5 +1,4 @@
 import os
-from uuid import uuid4
 
 from django.test import TestCase
 from django.conf import settings
@@ -8,7 +7,7 @@ from elasticgit import EG
 
 from slugify import slugify
 
-from unicore.content.models import Page, Category
+from unicore.content.models import Page, Category, Localisation
 
 
 class BaseCmsTestCase(TestCase):
@@ -102,3 +101,11 @@ class BaseCmsTestCase(TestCase):
         return self.settings(
             GIT_REPO_PATH=workspace.working_dir,
             ELASTIC_GIT_INDEX_PREFIX=workspace.index_prefix)
+
+    def create_localisation(self, workspace, locale='eng_UK', **kwargs):
+        data = {'locale': locale}
+        data.update(kwargs)
+        loc = Localisation(data)
+        workspace.save(loc, u'Added localisation %s.' % (locale,))
+        workspace.refresh_index()
+        return loc
