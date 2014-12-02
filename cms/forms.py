@@ -7,7 +7,7 @@ from taggit_live.forms import LiveTagField
 
 class PostForm(forms.ModelForm):
     content = forms.CharField(widget=AdminPagedownWidget())
-    author_tags = LiveTagField()
+    author_tags = LiveTagField(required=False)
 
     def __init__(self, *args, **kwargs):
         super(PostForm, self).__init__(*args, **kwargs)
