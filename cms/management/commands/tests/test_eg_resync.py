@@ -16,10 +16,13 @@ class TestEGResync(BaseCmsTestCase):
                            ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
             self.create_categories(self.workspace, count=2)
             self.create_pages(self.workspace, count=2)
+            self.create_localisation(self.workspace)
             # run the command
             self.command.handle()
             self.assertEquals(
                 self.command.stdout.getvalue(),
                 ('unicore.content.models.Page: 2 updated, 0 removed.\n'
-                 'unicore.content.models.Category: 2 updated, 0 removed.\n')
+                 'unicore.content.models.Category: 2 updated, 0 removed.\n'
+                 'unicore.content.models.Localisation: '
+                 '1 updated, 0 removed.\n')
             )
