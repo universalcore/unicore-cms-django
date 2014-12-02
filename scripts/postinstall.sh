@@ -4,6 +4,8 @@ settings="${INSTALLDIR}/${REPO}/project/*_settings.py"
 
 $pip install -r "${INSTALLDIR}/${REPO}/requirements.txt"
 
+cd "${INSTALLDIR}/${REPO}/"
+
 for s in $settings
 do
     echo "migrating $s"
