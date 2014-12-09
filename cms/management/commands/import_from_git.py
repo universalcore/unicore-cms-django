@@ -16,8 +16,6 @@ from elasticgit import EG
 
 from unicore.content import models as eg_models
 
-from html2text import html2text
-
 
 class Command(BaseCommand):
     help = 'import all the current content from a github repository'
@@ -121,7 +119,7 @@ class Command(BaseCommand):
                     subtitle=instance.subtitle,
                     slug=instance.slug,
                     description=instance.description,
-                    content=html2text(instance.content),
+                    content=instance.content,
                     created_at=instance.created_at,
                     modified_at=instance.modified_at,
                     featured_in_category=(
