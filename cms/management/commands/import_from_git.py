@@ -87,11 +87,13 @@ class Command(BaseCommand):
         categories = workspace.S(eg_models.Category).everything()
 
         for instance in categories:
+            localisation = Localisation._for(
+                instance.language) if instance.language else None
             Category.objects.create(
                 slug=instance.slug,
                 title=instance.title,
                 subtitle=instance.subtitle,
-                localisation=Localisation._for(instance.language),
+                localisation=localisation,
                 featured_in_navbar=instance.featured_in_navbar or False,
                 uuid=instance.uuid,
                 position=instance.position or 0,
@@ -114,6 +116,8 @@ class Command(BaseCommand):
                 primary_category = Category.objects.get(
                     uuid=instance.primary_category)
             try:
+                localisation = Localisation._for(
+                    instance.language) if instance.language else None
                 p = Post.objects.create(
                     title=instance.title,
                     subtitle=instance.subtitle,
@@ -126,7 +130,7 @@ class Command(BaseCommand):
                         instance.featured_in_category or False),
                     featured=(
                         instance.featured or False),
-                    localisation=Localisation._for(instance.language),
+                    localisation=localisation,
                     primary_category=primary_category,
                     uuid=instance.uuid,
                     position=instance.position or 0
