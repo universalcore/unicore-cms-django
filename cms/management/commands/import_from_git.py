@@ -16,8 +16,6 @@ from elasticgit import EG
 
 from unicore.content import models as eg_models
 
-from html2text import html2text
-
 
 class Command(BaseCommand):
     help = 'import all the current content from a github repository'
@@ -89,11 +87,13 @@ class Command(BaseCommand):
         categories = workspace.S(eg_models.Category).everything()
 
         for instance in categories:
+            localisation = Localisation._for(
+                instance.language) if instance.language else None
             Category.objects.create(
                 slug=instance.slug,
                 title=instance.title,
                 subtitle=instance.subtitle,
-                localisation=Localisation._for(instance.language),
+                localisation=localisation,
                 featured_in_navbar=instance.featured_in_navbar or False,
                 uuid=instance.uuid,
                 position=instance.position or 0,
@@ -116,19 +116,21 @@ class Command(BaseCommand):
                 primary_category = Category.objects.get(
                     uuid=instance.primary_category)
             try:
+                localisation = Localisation._for(
+                    instance.language) if instance.language else None
                 p = Post.objects.create(
                     title=instance.title,
                     subtitle=instance.subtitle,
                     slug=instance.slug,
                     description=instance.description,
-                    content=html2text(instance.content),
+                    content=instance.content,
                     created_at=instance.created_at,
                     modified_at=instance.modified_at,
                     featured_in_category=(
                         instance.featured_in_category or False),
                     featured=(
                         instance.featured or False),
-                    localisation=Localisation._for(instance.language),
+                    localisation=localisation,
                     primary_category=primary_category,
                     uuid=instance.uuid,
                     position=instance.position or 0
