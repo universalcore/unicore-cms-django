@@ -13,7 +13,11 @@
     {{ block.super }}
     {% if has_add_permission %}
         {% url 'admin:cms_category_add' as add_url %}
-        <li><a href="{% add_preserved_filters add_url %}?source={{object_id}}" class="addlink">{% trans "Translate" %}</a></li>
+        {% if opts and preserved_filters %}
+            <li><a href="{% add_preserved_filters add_url %}&amp;source={{object_id}}" class="addlink">{% trans "Translate" %}</a></li>
+        {% else %}
+            <li><a href="{{ add_url }}?source={{object_id}}" class="addlink">{% trans "Translate" %}</a></li>
+        {% endif %}
     {% endif %}
 {% endblock %}
 
