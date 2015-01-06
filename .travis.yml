@@ -7,6 +7,9 @@ install:
   - "pip install coveralls coverage --use-wheel"
   - "pip install -e . --use-wheel"
 script:
+  - curl -s download.elasticsearch.org/es2unix/es > $HOME/es
+  - chmod +x $HOME/es
+  - es health -v
   - ./run_tests.sh
 after_success:
   - coveralls
