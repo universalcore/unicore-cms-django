@@ -124,7 +124,7 @@ AUTHENTICATION_BACKENDS = (
     'django_cas_ng.backends.CASBackend',
 )
 
-CAS_SERVER_URL = 'http://162722eb.ngrok.com/admin'
+CAS_SERVER_URL = ''
 
 
 TEMPLATE_CONTEXT_PROCESSORS = (
