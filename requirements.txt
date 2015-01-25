@@ -32,3 +32,4 @@ django-taggit==0.12.2
 django-taggit-live==0.0.6
 unicore.content==1.0.0
 unicore.google==0.0.1
+gitdb==0.6.4
