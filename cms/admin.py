@@ -7,16 +7,17 @@ from djcelery import admin as celery_admin
 from djcelery.models import (
     TaskState, WorkerState, PeriodicTask, IntervalSchedule, CrontabSchedule)
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
-from django.shortcuts import render, redirect
-from django.core.urlresolvers import reverse
-from django.conf import settings
 from django.contrib.admin.util import unquote
+from django.contrib.auth.decorators import login_required
 from django.contrib.admin import helpers
-from django.http import Http404, HttpResponse
-from django.utils.html import escape
 from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import reverse
+from django.http import Http404, HttpResponse
+from django.shortcuts import render, redirect
+from django.utils.html import escape
 
 from cms.models import (
     Post, Category, Localisation, ContentRepository, PublishingTarget)
@@ -24,6 +25,8 @@ from cms.forms import PostForm, CategoryForm
 from cms import tasks
 
 from elasticgit import EG
+
+admin.site.login = login_required(admin.site.login)
 
 
 class CategoriesListFilter(SimpleListFilter):
