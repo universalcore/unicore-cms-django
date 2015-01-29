@@ -10,7 +10,7 @@ class UnicoreCASBackend(CASBackend):
             return None
 
         if 'attributes' in request.session \
-            and 'has_perm' in request.session['attributes']['has_perm']\
+            and 'has_perm' in request.session['attributes']\
                 and request.session['attributes']['has_perm']:
             user.is_staff = True
             user.is_superuser = True
