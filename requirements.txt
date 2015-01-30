@@ -1,5 +1,6 @@
 Django<1.7
 South
+django-cas-ng
 gunicorn
 python-memcached
 raven==5.0.0
