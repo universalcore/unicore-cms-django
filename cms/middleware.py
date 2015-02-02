@@ -1,4 +1,5 @@
 from django.http import HttpResponseForbidden
+from django.views.defaults import permission_denied
 from django_cas_ng.middleware import CASMiddleware
 from django_cas_ng.views import login as cas_login, logout as cas_logout
 
@@ -16,9 +17,15 @@ class UnicoreCASMiddleware(CASMiddleware):
             if request.user.is_staff:
                 return None
             else:
-                error = ('<h1>Forbidden</h1>'
-                         '<p>You do not have access to this site.</p>')
-                return HttpResponseForbidden(error)
+                return permission_denied(request)
 
         return super(UnicoreCASMiddleware, self).process_view(
             request, view_func, view_args, view_kwargs)
+
+
+class Custom403Middleware(object):
+    """Catches 403 responses and raises 403 which allows for custom 403.html"""
+    def process_response(self, request, response):
+        if isinstance(response, HttpResponseForbidden):
+            return permission_denied(request)
+        return response
