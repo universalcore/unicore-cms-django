@@ -15,4 +15,9 @@ class UnicoreCASBackend(CASBackend):
             user.is_staff = True
             user.is_superuser = True
             user.save()
+        else:
+            user.is_staff = False
+            user.is_superuser = False
+            user.save()
+
         return user
