@@ -47,8 +47,4 @@ def test_user_no_permissions(monkeypatch, django_user_model):
     user = backend.authenticate(
         ticket='fake-ticket', service='fake-service', request=request)
 
-    assert user is not None
-    assert user.username == 'testuser'
-    assert not user.is_staff
-    assert not user.is_superuser
-    assert django_user_model.objects.filter(username='testuser').exists()
+    assert user is None
