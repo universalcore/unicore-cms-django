@@ -11,7 +11,7 @@ class UnicoreCASBackend(CASBackend):
 
         if 'attributes' in request.session \
             and 'has_perm' in request.session['attributes']\
-                and request.session['attributes']['has_perm']:
+                and request.session['attributes']['has_perm'] == 'True':
             user.is_staff = True
             user.is_superuser = True
             user.save()
@@ -19,5 +19,6 @@ class UnicoreCASBackend(CASBackend):
             user.is_staff = False
             user.is_superuser = False
             user.save()
+            return None
 
         return user
