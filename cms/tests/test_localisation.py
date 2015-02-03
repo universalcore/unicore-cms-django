@@ -7,11 +7,13 @@ Image.init()
 from django.core.files.images import ImageFile
 from django.conf import settings
 
+from cms.constants import LANGUAGES
 from cms.models import Localisation
 from cms.tests.base import BaseCmsTestCase
 
 from unicore.content import models as eg_models
 
+from pycountry import languages
 
 CURRENT_DIR = os.path.abspath(os.path.split(__file__)[0])
 IMAGE_DIR = os.path.join(CURRENT_DIR, "images")
@@ -107,3 +109,8 @@ class LocalisationTestCase(BaseCmsTestCase):
             "%s/image" % settings.THUMBOR_RW_SERVER,
             data=content.file.read(),
             headers={"Content-Type": "image/png", "Slug": 'locales/gnu.png'})
+
+    def test_all_language_codes(self):
+        for k, v in LANGUAGES.items():
+            lang = languages.get(bibliographic=k)
+            self.assertEqual(lang.bibliographic, k)
