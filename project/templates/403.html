@@ -1,0 +1,16 @@
+{% extends "admin/base_site.html" %}
+
+<!-- LOADING -->
+{% load i18n %}
+
+<!-- TITLE -->
+{% block title %}{% trans "Access Denied" %}{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+{% block messages %}{% endblock %}
+
+<!-- CONTENT -->
+{% block content %}
+    <h2>{% trans "Access Denied" %}</h2>
+    <p>{% trans "You do not have permssion to access this site." %}</p>
+    <p><a href="{% url 'admin:logout' %}?next=/">Retry</a></p>
+{% endblock %}
