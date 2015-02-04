@@ -25,3 +25,7 @@ div .wmd-wrapper{display: block;}
 div .wmd-panel {width: 100%; min-width: 0;}
 .grp-row .vLargeTextField, .grp-row textarea {width: 100%;}
 div.sortedm2m-container, div.sortedm2m-container p.selector-filter, div.sortedm2m-container p.selector-filter input{width: 100%;}
+
+#lang_dir {
+	width: 100%;
+}
