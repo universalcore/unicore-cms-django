@@ -52,6 +52,13 @@ CONTENT_REPO_LICENSES = (
 DEFAULT_REPO_LICENSE = 'CC-BY-NC-ND-4.0'
 
 
+def get_author_info(user):
+    if not user:
+        return
+
+    return (user.get_full_name(), user.email)
+
+
 class ContentRepository(models.Model):
     # NOTE:
     #       Support for this will grow with tickets focussing on
@@ -412,6 +419,8 @@ class Post(models.Model):
 def auto_save_content_repository_to_git(sender, instance, created, **kwargs):
     workspace = EG.workspace(settings.GIT_REPO_PATH,
                              index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
+    # FIXME: We don't have access to the author information here and so
+    #        we cannot set it.
     workspace.sm.store_data(
         'LICENSE', instance.get_license_text(), 'Specify license.')
 
@@ -452,11 +461,6 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
     if created:
         Post.objects.exclude(pk=instance.pk).update(position=F('position') + 1)
 
-    # TODO: Setting the author on a commit is currently not supported
-    #       by elastic-git
-    #       See: https://github.com/universalcore/elastic-git/issues/23
-    # author = utils.get_author_from_user(instance.last_author)
-
     try:
         workspace = EG.workspace(
             settings.GIT_REPO_PATH,
@@ -464,11 +468,13 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         [page] = workspace.S(eg_models.Page).filter(uuid=instance.uuid)
         original = page.get_object()
         updated = original.update(data)
-        workspace.save(updated, 'Page updated: %s' % instance.title)
+        workspace.save(updated, 'Page updated: %s' % instance.title,
+                       author=get_author_info(instance.last_author))
         workspace.refresh_index()
     except ValueError:
         page = eg_models.Page(data)
-        workspace.save(page, 'Page created: %s' % instance.title)
+        workspace.save(page, 'Page created: %s' % instance.title,
+                       author=get_author_info(instance.last_author))
         workspace.refresh_index()
         # Always update the UUID as we've just generated a new one.
         Post.objects.filter(pk=instance.pk).update(uuid=page.uuid)
@@ -479,8 +485,13 @@ def auto_delete_post_to_git(sender, instance, **kwargs):
     workspace = EG.workspace(settings.GIT_REPO_PATH,
                              index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
     [page] = workspace.S(eg_models.Page).filter(uuid=instance.uuid)
+    # FIXME: We're attributing the delete to the person who last updated
+    #        the content, which is complete incorrect.
+    #
+    #        We need a better abstraction for this.
     workspace.delete(
-        page.get_object(), 'Page deleted: %s' % (instance.title,))
+        page.get_object(), 'Page deleted: %s' % (instance.title,),
+        author=get_author_info(instance.last_author))
     workspace.refresh_index()
 
 
@@ -511,11 +522,13 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         [category] = workspace.S(eg_models.Category).filter(uuid=instance.uuid)
         original = category.get_object()
         updated = original.update(data)
-        workspace.save(updated, 'Category updated: %s' % instance.title)
+        workspace.save(updated, 'Category updated: %s' % instance.title,
+                       author=get_author_info(instance.last_author))
         workspace.refresh_index()
     except (GitCommandError, ValueError):
         category = eg_models.Category(data)
-        workspace.save(category, 'Category created: %s' % instance.title)
+        workspace.save(category, 'Category created: %s' % instance.title,
+                       author=get_author_info(instance.last_author))
         workspace.refresh_index()
         Category.objects.filter(pk=instance.pk).update(uuid=category.uuid)
 
@@ -526,7 +539,12 @@ def auto_delete_category_to_git(sender, instance, **kwargs):
                              index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
     [category] = workspace.S(eg_models.Category).filter(uuid=instance.uuid)
     original = category.get_object()
-    workspace.delete(original, 'Category deleted: %s' % instance.title)
+    # FIXME: We're attributing the delete to the person who last updated
+    #        the content, which is complete incorrect.
+    #
+    #        We need a better abstraction for this.
+    workspace.delete(original, 'Category deleted: %s' % instance.title,
+                     author=get_author_info(instance.last_author))
     workspace.refresh_index()
 
 
@@ -546,10 +564,14 @@ def auto_save_localisation_to_git(sender, instance, created, **kwargs):
             eg_models.Localisation).filter(locale=instance.get_code())
         original = localisation.get_object()
         updated = original.update(data)
+        # FIXME: We don't have access to the author information here and so
+        #        we cannot set it.
         workspace.save(updated, 'Localisation updated: %s' % unicode(instance))
         workspace.refresh_index()
     except (GitCommandError, ValueError):
         localisation = eg_models.Localisation(data)
+        # FIXME: We don't have access to the author information here and so
+        #        we cannot set it.
         workspace.save(
             localisation, 'Localisation created: %s' % unicode(instance))
         workspace.refresh_index()
@@ -562,5 +584,7 @@ def auto_delete_localisation_to_git(sender, instance, **kwargs):
     [localisation] = workspace.S(
         eg_models.Localisation).filter(locale=instance.get_code())
     original = localisation.get_object()
+    # FIXME: We don't have access to the author information here and so
+    #        we cannot set it.
     workspace.delete(original, 'Localisation deleted: %s' % unicode(instance))
     workspace.refresh_index()
