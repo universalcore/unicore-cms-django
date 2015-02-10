@@ -24,7 +24,7 @@ pytest-django
 pytest-cov
 pytest-xdist
 elastic-git==0.3.5
-unicore-cms==1.5.2
+unicore-cms==1.6.0
 python-slugify==0.1.0
 django-thumborstorage==0.91.6
 thumbor==4.6.0
