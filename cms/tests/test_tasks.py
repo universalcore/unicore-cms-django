@@ -42,7 +42,8 @@ class TaskTest(BaseCmsTestCase):
             self.assertEqual(self.local_workspace.S(Page).count(), 4)
 
             push_to_git(settings.GIT_REPO_PATH,
-                        settings.ELASTIC_GIT_INDEX_PREFIX)
+                        settings.ELASTIC_GIT_INDEX_PREFIX,
+                        settings.ELASTICSEARCH_HOST)
 
         # NOTE: switching back to master on the remote because the changes
         #       should have been pushed and we are checking for their

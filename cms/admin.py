@@ -282,7 +282,8 @@ class PublishingTargetAdmin(admin.ModelAdmin):
 @admin.site.register_view('github/', 'Github Configuration')
 def my_view(request, *args, **kwargs):
     workspace = EG.workspace(settings.GIT_REPO_PATH,
-                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
+                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
+                             es={'urls': [settings.ELASTICSEARCH_HOST]})
     commits = workspace.repo.iter_commits(max_count=10)
 
     context = {
@@ -303,7 +304,8 @@ def my_view(request, *args, **kwargs):
 @admin.site.register_view('github/push/', 'Push to github')
 def push_to_github(request, *args, **kwargs):
     tasks.push_to_git.delay(settings.GIT_REPO_PATH,
-                            settings.ELASTIC_GIT_INDEX_PREFIX)
+                            settings.ELASTIC_GIT_INDEX_PREFIX,
+                            settings.ELASTICSEARCH_HOST)
     if request.is_ajax():
         return HttpResponse(
             json.dumps({'success': True}),

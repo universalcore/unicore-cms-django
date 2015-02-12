@@ -17,7 +17,8 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         self.workspace = EG.workspace(
             settings.GIT_REPO_PATH,
-            index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
+            index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
+            es={'urls': [settings.ELASTICSEARCH_HOST]})
         self.index_manager = self.workspace.im
         self.storage_manager = self.workspace.sm
 

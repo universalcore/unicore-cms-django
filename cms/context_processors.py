@@ -6,7 +6,8 @@ from cms.models import ContentRepository
 
 def workspace_changes(request):
     workspace = EG.workspace(settings.GIT_REPO_PATH,
-                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
+                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
+                             es={'urls': [settings.ELASTICSEARCH_HOST]})
     repo = workspace.repo
     index = repo.index
     origin = repo.remote()
