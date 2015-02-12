@@ -14,7 +14,8 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         self.workspace = EG.workspace(
             settings.GIT_REPO_PATH,
-            index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
+            index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
+            es={'urls': [settings.ELASTICSEARCH_HOST]})
 
         for model_class in [Page, Category, Localisation]:
             self.sync_model(model_class)

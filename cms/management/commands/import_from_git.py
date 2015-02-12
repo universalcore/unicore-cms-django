@@ -64,7 +64,8 @@ class Command(BaseCommand):
         self.quiet = options.get('quiet')
         workspace = EG.workspace(
             settings.GIT_REPO_PATH,
-            index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
+            index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
+            es={'urls': [settings.ELASTICSEARCH_HOST]})
 
         if not self.quiet:
             must_delete = self.get_input_data(

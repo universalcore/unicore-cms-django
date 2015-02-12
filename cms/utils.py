@@ -1,9 +1,10 @@
 from elasticgit import EG
 
 
-def push_to_git(repo_path, index_prefix):
+def push_to_git(repo_path, index_prefix, es_host):
     workspace = EG.workspace(repo_path,
-                             index_prefix=index_prefix)
+                             index_prefix=index_prefix,
+                             es={'urls': [es_host]})
     if workspace.repo.remotes:
         repo = workspace.repo
         remote = repo.remote()

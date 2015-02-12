@@ -418,7 +418,8 @@ class Post(models.Model):
 @receiver(post_save, sender=ContentRepository)
 def auto_save_content_repository_to_git(sender, instance, created, **kwargs):
     workspace = EG.workspace(settings.GIT_REPO_PATH,
-                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
+                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
+                             es={'urls': [settings.ELASTICSEARCH_HOST]})
     # FIXME: We don't have access to the author information here and so
     #        we cannot set it.
     workspace.sm.store_data(
@@ -464,7 +465,8 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
     try:
         workspace = EG.workspace(
             settings.GIT_REPO_PATH,
-            index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
+            index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
+            es={'urls': [settings.ELASTICSEARCH_HOST]})
         [page] = workspace.S(eg_models.Page).filter(uuid=instance.uuid)
         original = page.get_object()
         updated = original.update(data)
@@ -483,7 +485,8 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=Post)
 def auto_delete_post_to_git(sender, instance, **kwargs):
     workspace = EG.workspace(settings.GIT_REPO_PATH,
-                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
+                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
+                             es={'urls': [settings.ELASTICSEARCH_HOST]})
     [page] = workspace.S(eg_models.Page).filter(uuid=instance.uuid)
     # FIXME: We're attributing the delete to the person who last updated
     #        the content, which is complete incorrect.
@@ -515,7 +518,8 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
     }
 
     workspace = EG.workspace(settings.GIT_REPO_PATH,
-                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
+                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
+                             es={'urls': [settings.ELASTICSEARCH_HOST]})
     try:
         # FIXME: This can fail if we ever store a value with None
         #        as the uuid.
@@ -536,7 +540,8 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=Category)
 def auto_delete_category_to_git(sender, instance, **kwargs):
     workspace = EG.workspace(settings.GIT_REPO_PATH,
-                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
+                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
+                             es={'urls': [settings.ELASTICSEARCH_HOST]})
     [category] = workspace.S(eg_models.Category).filter(uuid=instance.uuid)
     original = category.get_object()
     # FIXME: We're attributing the delete to the person who last updated
@@ -558,7 +563,8 @@ def auto_save_localisation_to_git(sender, instance, created, **kwargs):
     }
 
     workspace = EG.workspace(settings.GIT_REPO_PATH,
-                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
+                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
+                             es={'urls': [settings.ELASTICSEARCH_HOST]})
     try:
         [localisation] = workspace.S(
             eg_models.Localisation).filter(locale=instance.get_code())
@@ -580,7 +586,8 @@ def auto_save_localisation_to_git(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=Localisation)
 def auto_delete_localisation_to_git(sender, instance, **kwargs):
     workspace = EG.workspace(settings.GIT_REPO_PATH,
-                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
+                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
+                             es={'urls': [settings.ELASTICSEARCH_HOST]})
     [localisation] = workspace.S(
         eg_models.Localisation).filter(locale=instance.get_code())
     original = localisation.get_object()
