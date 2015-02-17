@@ -8,7 +8,7 @@ cd "${INSTALLDIR}/${REPO}/"
 
 for s in `find "${INSTALLDIR}"/"${REPO}"/project/ -name "*_settings.py"`
 do
-    echo "migrating $s" > /tmp/postinstall.txt
+    echo "migrating $s"
     DJANGO_SETTINGS_MODULE="project.$(basename $s .py)" $manage syncdb --noinput --no-initial-data --migrate
     DJANGO_SETTINGS_MODULE="project.$(basename $s .py)" $manage collectstatic --noinput
 done
