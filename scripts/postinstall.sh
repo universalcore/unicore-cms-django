@@ -1,7 +1,8 @@
+#!/bin/bash
+
 pip="${VENV}/bin/pip"
 manage="${VENV}/bin/python ${INSTALLDIR}/${REPO}/manage.py"
-settings="${INSTALLDIR}/${REPO}/project/*_settings.py"
-
+settings=`find "${INSTALLDIR}/${REPO}/project/" -name "*_settings.py"`
 $pip install -r "${INSTALLDIR}/${REPO}/requirements.txt"
 
 cd "${INSTALLDIR}/${REPO}/"
