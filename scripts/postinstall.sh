@@ -6,7 +6,7 @@ settings=`find "${INSTALLDIR}/${REPO}/project/" -name "*_settings.py"`
 $pip install -r "${INSTALLDIR}/${REPO}/requirements.txt"
 
 cd "${INSTALLDIR}/${REPO}/"
-
+echo "starting post install for $settings"
 for s in $settings
 do
     echo "migrating $s"
