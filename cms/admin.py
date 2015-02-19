@@ -250,6 +250,7 @@ class LocalisationAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {'fields': ('language_code', 'country_code')}),
         ('Header Image', {'fields': ('image',)}),
+        ('Logo', {'fields': ('logo_image', 'logo_text', 'logo_description')})
     )
 
 
