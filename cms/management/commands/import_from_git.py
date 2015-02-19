@@ -110,7 +110,9 @@ class Command(BaseCommand):
         # Manually refresh stuff because the command disables signals
         workspace.refresh_index()
 
+        self.emit('creating pages..')
         pages = workspace.S(eg_models.Page).everything()
+
         for instance in pages:
             primary_category = None
             if instance.primary_category:

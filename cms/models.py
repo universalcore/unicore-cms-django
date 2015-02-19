@@ -176,6 +176,9 @@ class Localisation(models.Model):
     image_height = models.IntegerField(blank=True, null=True)
     image_width = models.IntegerField(blank=True, null=True)
 
+    logo_image = models.ImageField(
+    )
+
     def image_uuid(self):
         if self.image:
             return self.image.storage.key(self.image.name)
