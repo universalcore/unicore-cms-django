@@ -91,11 +91,18 @@ class LocalisationTestCase(BaseCmsTestCase):
             l = Localisation._for('spa_ES')
             content = ImageFile(open(os.path.join(IMAGE_DIR, 'gnu.png')))
             l.image.save('gnu.png', content)
+            content.seek(0)
+            l.logo_image.save('gnu.png', content)
             l.save()
 
         self.assertEqual(l.image_uuid(), 'oooooo32chars_random_idooooooooo')
         self.assertEqual(
             l.image.url,
+            'http://localhost:8888/'
+            'J1ZrJaChK4mv90JF9fNutNcYJ1U=/oooooo32chars_random_idooooooooo')
+        self.assertEqual(l.logo_image_uuid(), 'oooooo32chars_random_idooooooooo')
+        self.assertEqual(
+            l.logo_image.url,
             'http://localhost:8888/'
             'J1ZrJaChK4mv90JF9fNutNcYJ1U=/oooooo32chars_random_idooooooooo')
 
@@ -104,6 +111,8 @@ class LocalisationTestCase(BaseCmsTestCase):
         self.assertEquals(eg_locale.locale, 'spa_ES')
         self.assertEquals(eg_locale.image, 'oooooo32chars_random_idooooooooo')
         self.assertEquals(eg_locale.image_host, 'http://localhost:8888')
+        self.assertEquals(eg_locale.logo_image, 'oooooo32chars_random_idooooooooo')
+        self.assertEquals(eg_locale.logo_image_host, 'http://localhost:8888')
 
         MockPostClass.assert_called_with(
             "%s/image" % settings.THUMBOR_RW_SERVER,

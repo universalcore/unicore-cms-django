@@ -168,7 +168,7 @@ class Localisation(models.Model):
             'for reference.'))
 
     image = models.ImageField(
-        upload_to=lambda _, filename: 'locales/%s' % filename,
+        upload_to=lambda _, filename: os.path.join('locales/', filename),
         storage=ThumborStorage(),
         height_field='image_height',
         width_field='image_width',
@@ -176,9 +176,33 @@ class Localisation(models.Model):
     image_height = models.IntegerField(blank=True, null=True)
     image_width = models.IntegerField(blank=True, null=True)
 
+    logo_image = models.ImageField(
+        upload_to=lambda _, filename: os.path.join('locales/', filename),
+        storage=ThumborStorage(),
+        height_field='logo_image_height',
+        width_field='logo_image_width',
+        blank=True, null=True)
+    logo_image_height = models.IntegerField(blank=True, null=True)
+    logo_image_width = models.IntegerField(blank=True, null=True)
+
+    logo_text = models.CharField(
+        _("logo text"), max_length=255,
+        blank=True, null=True)
+
+    logo_description = models.CharField(
+        _('logo description'), max_length=255,
+        blank=True, null=True,
+        help_text=_(
+            'A short description of the logo for accessibility purposes.'))
+
     def image_uuid(self):
         if self.image:
             return self.image.storage.key(self.image.name)
+        return None
+
+    def logo_image_uuid(self):
+        if self.logo_image:
+            return self.logo_image.storage.key(self.logo_image.name)
         return None
 
     @classmethod
@@ -249,7 +273,7 @@ class Category(models.Model):
         _('Position in Ordering'), default=0)
 
     image = models.ImageField(
-        upload_to=lambda _, filename: 'categories/%s' % filename,
+        upload_to=lambda _, filename: os.path.join('categories/', filename),
         storage=ThumborStorage(),
         height_field='image_height',
         width_field='image_width',
@@ -382,7 +406,7 @@ class Post(models.Model):
         _('Position in Ordering'), default=0)
 
     image = models.ImageField(
-        upload_to=lambda _, filename: 'posts/%s' % filename,
+        upload_to=lambda _, filename: os.path.join('posts/', filename),
         storage=ThumborStorage(),
         height_field='image_height',
         width_field='image_width',
@@ -560,6 +584,10 @@ def auto_save_localisation_to_git(sender, instance, created, **kwargs):
         "locale": instance.get_code(),
         "image": instance.image_uuid(),
         "image_host": settings.THUMBOR_SERVER,
+        "logo_image": instance.logo_image_uuid(),
+        "logo_image_host": settings.THUMBOR_SERVER,
+        "logo_text": instance.logo_text,
+        "logo_description": instance.logo_description
     }
 
     workspace = EG.workspace(settings.GIT_REPO_PATH,
