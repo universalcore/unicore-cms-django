@@ -168,7 +168,7 @@ class Localisation(models.Model):
             'for reference.'))
 
     image = models.ImageField(
-        upload_to=lambda _, filename: 'locales/%s' % filename,
+        upload_to=lambda _, filename: os.path.join('locales/', filename),
         storage=ThumborStorage(),
         height_field='image_height',
         width_field='image_width',
@@ -177,7 +177,7 @@ class Localisation(models.Model):
     image_width = models.IntegerField(blank=True, null=True)
 
     logo_image = models.ImageField(
-        upload_to=lambda _, filename: 'locales/%s' % filename,
+        upload_to=lambda _, filename: os.path.join('locales/', filename),
         storage=ThumborStorage(),
         height_field='logo_image_height',
         width_field='logo_image_width',
@@ -273,7 +273,7 @@ class Category(models.Model):
         _('Position in Ordering'), default=0)
 
     image = models.ImageField(
-        upload_to=lambda _, filename: 'categories/%s' % filename,
+        upload_to=lambda _, filename: os.path.join('categories/', filename),
         storage=ThumborStorage(),
         height_field='image_height',
         width_field='image_width',
@@ -406,7 +406,7 @@ class Post(models.Model):
         _('Position in Ordering'), default=0)
 
     image = models.ImageField(
-        upload_to=lambda _, filename: 'posts/%s' % filename,
+        upload_to=lambda _, filename: os.path.join('posts/', filename),
         storage=ThumborStorage(),
         height_field='image_height',
         width_field='image_width',
