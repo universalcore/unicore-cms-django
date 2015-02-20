@@ -89,6 +89,7 @@ class TestImportFromGit(BaseCmsTestCase):
             'deleting existing content..'
             'creating localisations..'
             'creating categories..'
+            'creating pages..'
             'done.'))
 
     def test_get_input_data_with_default(self):
@@ -113,6 +114,7 @@ class TestImportFromGit(BaseCmsTestCase):
             'deleting existing content..'
             'creating localisations..'
             'creating categories..'
+            'creating pages..'
             'done.'))
 
     def test_get_input_data_with_quiet_set(self):
