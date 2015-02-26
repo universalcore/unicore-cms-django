@@ -119,6 +119,7 @@ LANGUAGES = {
     "fao": "Faroese",
     "per": "Persian",
     "fat": "Fanti",
+    "fil": "Filipino",
     "fij": "Fijian (Fiji)",
     "fin": "Finnish",
     "fiu": "Finno-Ugrian",
