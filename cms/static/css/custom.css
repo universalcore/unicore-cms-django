@@ -1,3 +1,7 @@
+#grp-content {
+    top: 100px;
+}
+
 .grp-change-form .grp-module:not(.grp-submit-row) {
     min-width: inherit;
 }
