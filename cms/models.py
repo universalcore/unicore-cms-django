@@ -56,7 +56,8 @@ def get_author_info(user):
     if not user:
         return
 
-    return (user.get_full_name(), user.email)
+    return (user.get_full_name() or user.username,
+            user.email or settings.DEFAULT_FROM_EMAIL)
 
 
 class ContentRepository(models.Model):
@@ -485,6 +486,8 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
     # NOTE: If newly created always give it the highest ordering position
     if created:
         Post.objects.exclude(pk=instance.pk).update(position=F('position') + 1)
+
+    print 'get_author_info(instance.last_author)', get_author_info(instance.last_author)
 
     try:
         workspace = EG.workspace(
