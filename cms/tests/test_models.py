@@ -3,13 +3,35 @@ import os
 from django import forms
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth.models import User
 from django.test.utils import override_settings
 
 from cms.tests.base import BaseCmsTestCase
 from cms.models import (
     ContentRepository, PublishingTarget, CUSTOM_REPO_LICENSE_TYPE,
-    Post)
+    Post, get_author_info)
 from cms.admin import ContentRepositoryAdmin
+
+
+class TestHelpers(BaseCmsTestCase):
+
+    def test_get_author_info_none(self):
+        self.assertEqual(None, get_author_info(None))
+
+    def test_get_author_info_fallbacks(self):
+        user = User.objects.create_user('foo', None, 'bar')
+        self.assertEqual(
+            (user.username, settings.DEFAULT_FROM_EMAIL),
+            get_author_info(user))
+
+    def test_get_author_info(self):
+        user = User.objects.create_user('foo', 'foo@example.org', 'bar')
+        user.first_name = 'Foo'
+        user.last_name = 'Bar'
+        user.save()
+        self.assertEqual(
+            ('Foo Bar', 'foo@example.org'),
+            get_author_info(user))
 
 
 @override_settings(GIT_REPO_URL='git@host.com/foo.git',
