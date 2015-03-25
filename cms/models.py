@@ -56,7 +56,8 @@ def get_author_info(user):
     if not user:
         return
 
-    return (user.get_full_name(), user.email)
+    return (user.get_full_name() or user.username,
+            user.email or settings.DEFAULT_FROM_EMAIL)
 
 
 class ContentRepository(models.Model):
