@@ -487,8 +487,6 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
     if created:
         Post.objects.exclude(pk=instance.pk).update(position=F('position') + 1)
 
-    print 'get_author_info(instance.last_author)', get_author_info(instance.last_author)
-
     try:
         workspace = EG.workspace(
             settings.GIT_REPO_PATH,
