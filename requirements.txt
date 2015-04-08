@@ -29,6 +29,7 @@ python-slugify==0.1.0
 django-thumborstorage==0.91.6
 thumbor==4.6.0
 libthumbor==1.0.1
+tornado==3.2.2
 django-taggit==0.12.2
 django-taggit-live==0.0.6
 unicore.content==1.0.4
