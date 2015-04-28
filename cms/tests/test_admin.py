@@ -1,6 +1,7 @@
 import json
 
 from django.contrib import admin
+from django.conf import settings
 from django.test.client import RequestFactory
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
@@ -260,3 +261,18 @@ class TestCustomAdminViews(BaseAdminTestCase):
             response = my_view(request)
             for commit in self.local_workspace.repo.iter_commits():
                 self.assertContains(response, commit.message)
+
+
+class TestSettings(BaseAdminTestCase):
+
+    def test_cas_disabled(self):
+        self.assertTrue(settings.DISABLE_CAS)
+        self.assertFalse(
+            'cms.middleware.UnicoreCASMiddleware'
+            in settings.MIDDLEWARE_CLASSES)
+        self.assertFalse(
+            'cms.middleware.Custom403Middleware'
+            in settings.MIDDLEWARE_CLASSES)
+        self.assertFalse(
+            'cms.backends.UnicoreCASBackend'
+            in settings.AUTHENTICATION_BACKENDS)

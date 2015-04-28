@@ -19,6 +19,7 @@ def abspath(*args):
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
+DISABLE_CAS = DEBUG
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -116,13 +117,10 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'cms.middleware.UnicoreCASMiddleware',
-    'cms.middleware.Custom403Middleware',
 )
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'cms.backends.UnicoreCASBackend',
 )
 
 LOGIN_URL = '/login/'
@@ -290,3 +288,10 @@ try:
     from local_settings import *
 except ImportError:
     pass
+
+if not DISABLE_CAS:
+    MIDDLEWARE_CLASSES += (
+        'cms.middleware.UnicoreCASMiddleware',
+        'cms.middleware.Custom403Middleware',)
+
+    AUTHENTICATION_BACKENDS += ('cms.backends.UnicoreCASBackend', )
