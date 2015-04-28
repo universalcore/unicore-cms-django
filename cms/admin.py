@@ -26,7 +26,9 @@ from cms import tasks
 
 from elasticgit import EG
 
-admin.site.login = login_required(admin.site.login)
+
+if not settings.DISABLE_CAS:
+    admin.site.login = login_required(admin.site.login)
 
 
 class CategoriesListFilter(SimpleListFilter):
