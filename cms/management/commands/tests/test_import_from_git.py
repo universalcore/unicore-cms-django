@@ -1,6 +1,12 @@
+import re
+import uuid
 from StringIO import StringIO
 
 from django.core.management import call_command
+from django.core.files.base import ContentFile
+
+import mock
+import responses
 
 from cms.models import Post, Category, Localisation
 from cms.tests.base import BaseCmsTestCase
@@ -14,11 +20,46 @@ class TestImportFromGit(BaseCmsTestCase):
     def setUp(self):
         self.workspace = self.mk_workspace()
 
-    def test_command(self):
+    def mock_get_image_response(self, host, status=200, body='',
+                                content_type='image/png'):
+        responses.add(
+            responses.GET,
+            re.compile(r'%s/image/\w{32}' % host),
+            body=body,
+            status=status,
+            content_type=content_type)
+
+    def mock_get_on_redirect_image_response(self, host, status=200, body='',
+                                            content_type='image/png'):
+        responses.add(
+            responses.GET,
+            re.compile(r'%s/image/\w{32}/locales/.+' % host),
+            body=body,
+            status=status,
+            content_type=content_type)
+
+    def mock_create_image_response(self, host, status=201):
+        def callback(request):
+            return (status, {
+                'Location': '/image/%s/%s' %
+                    (uuid.uuid4().hex, request.headers['Slug'])}, '')
+
+        responses.add_callback(
+            responses.POST, '%s/image' % host, callback=callback)
+
+    @mock.patch.object(import_from_git.Command, 'set_image_field')
+    def test_command(self, mock_set_image_field):
         with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
                            ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
             lang1 = eg_models.Localisation({'locale': 'spa_ES'})
-            lang2 = eg_models.Localisation({'locale': 'fra_FR'})
+            lang2 = eg_models.Localisation({
+                'locale': 'fra_FR',
+                'image': uuid.uuid4().hex,
+                'image_host': 'http://localhost:8888',
+                'logo_image': uuid.uuid4().hex,
+                'logo_image_host': 'http://localhost:8888',
+                'logo_text': 'text foo',
+                'logo_description': 'description foo'})
             self.workspace.save(lang1, 'Added spanish language')
             self.workspace.save(lang2, 'Added french language')
 
@@ -66,6 +107,11 @@ class TestImportFromGit(BaseCmsTestCase):
                 set(['foo', 'bar', 'baz']))
 
             self.assertEquals(Localisation.objects.all().count(), 3)
+            self.assertEquals(mock_set_image_field.call_count, 4)
+            l = Localisation.objects.get(
+                language_code='fra', country_code='FR')
+            self.assertEquals(lang2.logo_text, l.logo_text)
+            self.assertEquals(lang2.logo_description, l.logo_description)
 
     def test_get_input_data(self):
 
@@ -124,3 +170,80 @@ class TestImportFromGit(BaseCmsTestCase):
             command.stdout = StringIO()
             command.handle(quiet=True)
             self.assertEquals(command.stdout.getvalue(), '')
+
+    @responses.activate
+    def test_get_thumbor_image_file(self):
+        host = 'http://localhost:8888'
+        key = uuid.uuid4().hex
+        command = import_from_git.Command()
+        self.mock_get_image_response(host=host)
+
+        file_obj, content_type = command.get_thumbor_image_file(
+            host=host, uuid=key)
+        self.assertIsInstance(file_obj, ContentFile)
+        self.assertEqual(content_type, 'image/png')
+
+        responses.reset()
+        self.mock_get_image_response(host=host, status=404)
+
+        file_obj, content_type = command.get_thumbor_image_file(
+            host=host, uuid=key)
+        self.assertIs(file_obj, None)
+        self.assertIs(file_obj, None)
+
+    @responses.activate
+    def test_set_image_field(self):
+        command = import_from_git.Command()
+        command.stdout = StringIO()
+        command.quiet = False
+        command.disconnect_signals()
+
+        host = 'http://localhost:8888'
+        # 1 x 1 bitmap image
+        body = 'BM:\x00\x00\x00\x00\x00\x00\x006\x00\x00\x00(\x00\x00\x00' \
+               '\x01\x00\x00\x00\x01\x00\x00\x00\x01\x00\x18\x00\x00\x00' \
+               '\x00\x00\x04\x00\x00\x00\x13\x0b\x00\x00\x13\x0b\x00\x00' \
+               '\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff\xff\x00'
+        content_type = 'image/x-ms-bmp'
+        self.mock_get_image_response(
+            host=host, content_type=content_type, body=body)
+        self.mock_get_on_redirect_image_response(
+            host=host, content_type=content_type, body=body)
+        self.mock_create_image_response(host=host)
+
+        eg_obj = eg_models.Localisation({
+            'locale': 'fra_FR',
+            'image': uuid.uuid4().hex,
+            'image_host': host})
+        db_obj = Localisation.objects.create(
+            language_code='fra', country_code='FR')
+
+        command.set_image_field(eg_obj, db_obj, 'image')
+        db_obj = Localisation.objects.get(
+            language_code='fra', country_code='FR')
+        self.assertEqual(command.stdout.getvalue(), '')
+        self.assertTrue(
+            re.match(r'/image/\w{32}/locales/image.bmp', db_obj.image.name))
+        self.assertEqual(db_obj.image_width, 1)
+        self.assertEqual(db_obj.image_height, 1)
+
+        responses.reset()
+        self.mock_get_image_response(host=host, status=404)
+        command.stdout = StringIO()
+
+        command.set_image_field(eg_obj, db_obj, 'image')
+        self.assertTrue(command.stdout.getvalue().startswith('WARNING: image'))
+
+        command.stdout = StringIO()
+        command.set_image_field(eg_obj, db_obj, 'logo_image')
+        self.assertFalse(db_obj.logo_image)
+
+        responses.reset()
+        self.mock_get_image_response(host=host, content_type='.bmp')
+
+        with mock.patch.object(db_obj.image, 'save') as mock_save_image:
+            command.set_image_field(eg_obj, db_obj, 'image')
+            file_name = mock_save_image.call_args[0][0]
+            self.assertTrue(file_name.endswith('.bmp'))
+
+        command.reconnect_signals()

@@ -1,5 +1,11 @@
 from optparse import make_option
+from urlparse import urljoin
+import mimetypes
 
+import requests
+from django_thumborstorage.storages import thumbor_image_url
+
+from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.core.exceptions import ValidationError
 from django.utils.six.moves import input
@@ -59,6 +65,38 @@ class Command(BaseCommand):
         if not self.quiet:
             self.stdout.write(message)
 
+    def get_thumbor_image_file(self, host, uuid):
+        url = urljoin(host, 'image/%s' % uuid)
+        response = requests.get(url)
+        if response.status_code == 200:
+            return (
+                ContentFile(response.content),
+                response.headers['Content-Type'])
+        return None, None
+
+    def set_image_field(self, eg_obj, db_obj, field_name):
+        uuid = getattr(eg_obj, field_name)
+        host = getattr(eg_obj, '%s_host' % field_name)
+        if None in (uuid, host):
+            return
+
+        file_obj, content_type = self.get_thumbor_image_file(host, uuid)
+        if file_obj is None:
+            self.emit('WARNING: image %s could not be downloaded' % uuid)
+            return
+
+        extension = mimetypes.guess_extension(content_type)
+        # NOTE: this is to handle Thumbor weirdness where it
+        # returns a file extension instead of mime type.
+        if extension is None:
+            if content_type.startswith('.'):
+                extension = content_type
+            else:
+                extension = ''
+
+        file_name = '%s%s' % (field_name, extension)
+        getattr(db_obj, field_name).save(file_name, file_obj)
+
     def handle(self, *args, **options):
         self.disconnect_signals()
         self.quiet = options.get('quiet')
@@ -82,12 +120,29 @@ class Command(BaseCommand):
         self.emit('creating localisations..')
         localisations = workspace.S(eg_models.Localisation).everything()
         for l in localisations:
-            Localisation._for(l.locale)
+            l = l.to_object()
+
+            language_code, _, country_code = l.locale.partition('_')
+            localisation, new = Localisation.objects.get_or_create(
+                language_code=language_code,
+                country_code=country_code,
+                defaults={
+                    'logo_text': l.logo_text,
+                    'logo_description': l.logo_description,
+                })
+
+            if not new:
+                continue
+
+            self.set_image_field(l, localisation, 'image')
+            self.set_image_field(l, localisation, 'logo_image')
 
         self.emit('creating categories..')
         categories = workspace.S(eg_models.Category).everything()
 
         for instance in categories:
+            instance = instance.to_object()
+
             localisation = Localisation._for(
                 instance.language) if instance.language else None
             Category.objects.create(
@@ -114,6 +169,8 @@ class Command(BaseCommand):
         pages = workspace.S(eg_models.Page).everything()
 
         for instance in pages:
+            instance = instance.to_object()
+
             primary_category = None
             if instance.primary_category:
                 primary_category = Category.objects.get(
@@ -150,6 +207,8 @@ class Command(BaseCommand):
 
         # second pass to add related fields
         for instance in pages:
+            instance = instance.to_object()
+
             if instance.source:
                 p = Post.objects.get(uuid=instance.uuid)
                 p.source = Post.objects.get(uuid=instance.source)
