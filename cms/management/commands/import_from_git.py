@@ -112,6 +112,8 @@ class Command(BaseCommand):
         self.emit('creating localisations..')
         localisations = workspace.S(eg_models.Localisation).everything()
         for l in localisations:
+            l = l.to_object()
+
             language_code, _, country_code = l.locale.partition('_')
             localisation, new = Localisation.objects.get_or_create(
                 language_code=language_code,
@@ -131,6 +133,8 @@ class Command(BaseCommand):
         categories = workspace.S(eg_models.Category).everything()
 
         for instance in categories:
+            instance = instance.to_object()
+
             localisation = Localisation._for(
                 instance.language) if instance.language else None
             Category.objects.create(
@@ -157,6 +161,8 @@ class Command(BaseCommand):
         pages = workspace.S(eg_models.Page).everything()
 
         for instance in pages:
+            instance = instance.to_object()
+
             primary_category = None
             if instance.primary_category:
                 primary_category = Category.objects.get(
@@ -193,6 +199,8 @@ class Command(BaseCommand):
 
         # second pass to add related fields
         for instance in pages:
+            instance = instance.to_object()
+
             if instance.source:
                 p = Post.objects.get(uuid=instance.uuid)
                 p.source = Post.objects.get(uuid=instance.source)
