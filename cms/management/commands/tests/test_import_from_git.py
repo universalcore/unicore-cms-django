@@ -20,15 +20,11 @@ class TestImportFromGit(BaseCmsTestCase):
     def setUp(self):
         self.workspace = self.mk_workspace()
 
-    def mock_get_image_response(self, host, use_safe_url,
-                                status=200, body='', content_type='image/png'):
-        if use_safe_url:
-            url = re.compile(r'%s/[^/]+=/\w{32}' % host)
-        else:
-            url = re.compile(r'%s/unsafe/\w{32}' % host)
-
+    def mock_get_image_response(self, host, status=200, body='',
+                                content_type='image/png'):
         responses.add(
-            responses.GET, url,
+            responses.GET,
+            re.compile(r'%s/image/\w{32}' % host),
             body=body,
             status=status,
             content_type=content_type)
@@ -180,7 +176,7 @@ class TestImportFromGit(BaseCmsTestCase):
         host = 'http://localhost:8888'
         key = uuid.uuid4().hex
         command = import_from_git.Command()
-        self.mock_get_image_response(host=host, use_safe_url=False)
+        self.mock_get_image_response(host=host)
 
         file_obj, content_type = command.get_thumbor_image_file(
             host=host, uuid=key)
@@ -188,25 +184,10 @@ class TestImportFromGit(BaseCmsTestCase):
         self.assertEqual(content_type, 'image/png')
 
         responses.reset()
-        self.mock_get_image_response(host=host, use_safe_url=True)
-
-        file_obj, content_type = command.get_thumbor_image_file(
-            host=host, uuid=key, use_safe_url=True)
-        self.assertIsInstance(file_obj, ContentFile)
-        self.assertEqual(content_type, 'image/png')
-
-        responses.reset()
-        self.mock_get_image_response(host=host, use_safe_url=False, status=404)
+        self.mock_get_image_response(host=host, status=404)
 
         file_obj, content_type = command.get_thumbor_image_file(
             host=host, uuid=key)
-        self.assertIs(file_obj, None)
-        self.assertIs(file_obj, None)
-
-        responses.reset()
-        self.mock_get_image_response(host=host, use_safe_url=True, status=404)
-        file_obj, content_type = command.get_thumbor_image_file(
-            host=host, uuid=key, use_safe_url=True)
         self.assertIs(file_obj, None)
         self.assertIs(file_obj, None)
 
@@ -225,8 +206,7 @@ class TestImportFromGit(BaseCmsTestCase):
                '\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff\xff\x00'
         content_type = 'image/x-ms-bmp'
         self.mock_get_image_response(
-            host=host, use_safe_url=False, content_type=content_type,
-            body=body)
+            host=host, content_type=content_type, body=body)
         self.mock_get_on_redirect_image_response(
             host=host, content_type=content_type, body=body)
         self.mock_create_image_response(host=host)
@@ -248,7 +228,7 @@ class TestImportFromGit(BaseCmsTestCase):
         self.assertEqual(db_obj.image_height, 1)
 
         responses.reset()
-        self.mock_get_image_response(host=host, use_safe_url=False, status=404)
+        self.mock_get_image_response(host=host, status=404)
         command.stdout = StringIO()
 
         command.set_image_field(eg_obj, db_obj, 'image')

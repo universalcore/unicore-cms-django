@@ -65,17 +65,8 @@ class Command(BaseCommand):
         if not self.quiet:
             self.stdout.write(message)
 
-    def get_thumbor_image_file(self, host, uuid, use_safe_url=False):
-        '''
-        NOTE: To download an image from the Thumbor host we
-        either need a security key for the particular host,
-        or the host must allow unsafe urls.
-        '''
-        if use_safe_url:
-            url = thumbor_image_url(uuid)
-        else:
-            url = urljoin(host, 'unsafe/%s' % uuid)
-
+    def get_thumbor_image_file(self, host, uuid):
+        url = urljoin(host, 'image/%s' % uuid)
         response = requests.get(url)
         if response.status_code == 200:
             return (
