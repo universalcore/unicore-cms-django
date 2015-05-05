@@ -238,4 +238,12 @@ class TestImportFromGit(BaseCmsTestCase):
         command.set_image_field(eg_obj, db_obj, 'logo_image')
         self.assertFalse(db_obj.logo_image)
 
+        responses.reset()
+        self.mock_get_image_response(host=host, content_type='.bmp')
+
+        with mock.patch.object(db_obj.image, 'save') as mock_save_image:
+            command.set_image_field(eg_obj, db_obj, 'image')
+            file_name = mock_save_image.call_args[0][0]
+            self.assertTrue(file_name.endswith('.bmp'))
+
         command.reconnect_signals()

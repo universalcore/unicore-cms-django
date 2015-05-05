@@ -86,6 +86,14 @@ class Command(BaseCommand):
             return
 
         extension = mimetypes.guess_extension(content_type)
+        # NOTE: this is to handle Thumbor weirdness where it
+        # returns a file extension instead of mime type.
+        if extension is None:
+            if content_type.startswith('.'):
+                extension = content_type
+            else:
+                extension = ''
+
         file_name = '%s%s' % (field_name, extension)
         getattr(db_obj, field_name).save(file_name, file_obj)
 
