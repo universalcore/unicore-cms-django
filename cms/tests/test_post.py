@@ -493,11 +493,6 @@ class PostTestCase(BaseCmsTestCase):
                 content='sample content',
                 localisation=Localisation._for('eng_UK'))
             post1.save()
-
-            post1 = Post.objects.get(pk=post1.pk)
-            [git_post1] = self.workspace.S(
-                eg_models.Page).filter(uuid=post1.uuid)
-
             post2 = Post(
                 title='featured sample title',
                 description='featured description',
@@ -506,16 +501,20 @@ class PostTestCase(BaseCmsTestCase):
                 localisation=Localisation._for('eng_UK'),
                 featured=True)
             post2.save()
+            # get uuids from DB
+            post1 = Post.objects.get(pk=post1.pk)
+            post2 = Post.objects.get(pk=post2.pk)
+
             # NOTE: `save` should not be called after `add`
+            # Test add
             post2.related_posts.add(post1)
 
-            post2 = Post.objects.get(pk=post2.pk)
             [git_post2] = self.workspace.S(
                 eg_models.Page).filter(uuid=post2.uuid)
-
             self.assertEqual(post2.related_posts.all()[0].uuid, post1.uuid)
             self.assertEquals(git_post2.linked_pages, [post1.uuid, ])
 
+            # Test remove
             post2.related_posts.remove(post1)
 
             [git_post2] = self.workspace.S(
@@ -528,3 +527,10 @@ class PostTestCase(BaseCmsTestCase):
                 eg_models.Page).filter(uuid=post2.uuid)
             self.assertEqual(post2.related_posts.all()[0].uuid, post1.uuid)
             self.assertEquals(git_post2.linked_pages, [post1.uuid, ])
+
+            # Test clear
+            post2.related_posts.clear()
+
+            [git_post2] = self.workspace.S(
+                eg_models.Page).filter(uuid=post2.uuid)
+            self.assertEqual(git_post2.linked_pages, [])
