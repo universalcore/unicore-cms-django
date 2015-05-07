@@ -2,13 +2,14 @@ import os
 import mock
 
 from PIL import Image
-Image.init()
+Image.init()  # noqa
 
 from cms.models import Post, Category, Localisation
 from cms.tests.base import BaseCmsTestCase
 
 from unicore.content import models as eg_models
 
+from django.core.urlresolvers import reverse
 from django.core.files.images import ImageFile
 from django.conf import settings
 
@@ -476,3 +477,54 @@ class PostTestCase(BaseCmsTestCase):
             self.assertEquals(
                 set(post.author_tags),
                 set(['foo', 'bar', 'baz']))
+
+    def test_related_post_saving_to_git(self):
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
+            # Django's ModelForm first calls `save`, then `save_m2m` for a
+            # model instance. This means the post_save signal receives the
+            # model instance before its ManyToManyField has been updated.
+            # The m2m_changed signal should be used to track m2m updates.
+
+            post1 = Post(
+                title='sample title',
+                description='description',
+                subtitle='subtitle',
+                content='sample content',
+                localisation=Localisation._for('eng_UK'))
+            post1.save()
+
+            post1 = Post.objects.get(pk=post1.pk)
+            [git_post1] = self.workspace.S(
+                eg_models.Page).filter(uuid=post1.uuid)
+
+            post2 = Post(
+                title='featured sample title',
+                description='featured description',
+                subtitle='featured subtitle',
+                content='featured sample content',
+                localisation=Localisation._for('eng_UK'),
+                featured=True)
+            post2.save()
+            # NOTE: `save` should not be called after `add`
+            post2.related_posts.add(post1)
+
+            post2 = Post.objects.get(pk=post2.pk)
+            [git_post2] = self.workspace.S(
+                eg_models.Page).filter(uuid=post2.uuid)
+
+            self.assertEqual(post2.related_posts.all()[0].uuid, post1.uuid)
+            self.assertEquals(git_post2.linked_pages, [post1.uuid, ])
+
+            post2.related_posts.remove(post1)
+
+            [git_post2] = self.workspace.S(
+                eg_models.Page).filter(uuid=post2.uuid)
+            self.assertEquals(git_post2.linked_pages, [])
+
+            post2.related_posts.add(post1)
+
+            [git_post2] = self.workspace.S(
+                eg_models.Page).filter(uuid=post2.uuid)
+            self.assertEqual(post2.related_posts.all()[0].uuid, post1.uuid)
+            self.assertEquals(git_post2.linked_pages, [post1.uuid, ])
