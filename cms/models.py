@@ -4,7 +4,8 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import models
 from django.db.models import F
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import (
+    post_save, post_delete, m2m_changed)
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils import timezone
@@ -449,6 +450,13 @@ def auto_save_content_repository_to_git(sender, instance, created, **kwargs):
     #        we cannot set it.
     workspace.sm.store_data(
         'LICENSE', instance.get_license_text(), 'Specify license.')
+
+
+@receiver(m2m_changed, sender=Post.related_posts.through)
+def auto_save_related_posts_to_git(sender, instance, action, **kwargs):
+    if isinstance(instance, Post) and action in (
+            'post_add', 'post_remove', 'post_clear'):
+        auto_save_post_to_git(Post, instance, created=False)
 
 
 @receiver(post_save, sender=Post)
