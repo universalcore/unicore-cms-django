@@ -1,3 +1,7 @@
+#grp-content {
+    top: 100px;
+}
+
 .grp-change-form .grp-module:not(.grp-submit-row) {
     min-width: inherit;
 }
@@ -17,4 +21,15 @@ form{
 }
 .grp-row .vTextField{
     width: 100%;
+}
+
+.wmd-preview ol li{list-style-type: decimal;}
+.wmd-preview ul li{list-style-type: disc;}
+div .wmd-wrapper{display: block;}
+div .wmd-panel {width: 100%; min-width: 0;}
+.grp-row .vLargeTextField, .grp-row textarea {width: 100%;}
+div.sortedm2m-container, div.sortedm2m-container p.selector-filter, div.sortedm2m-container p.selector-filter input{width: 100%;}
+
+#lang_dir form {
+	width: 100%;
 }

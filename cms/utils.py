@@ -1,22 +1,13 @@
-from cms.git import init_repository, get_credentials
+from elasticgit import EG
 
 
-def push_to_git(repo_path, ssh_pubkey_path, ssh_privkey_path, passphrase=None):
-    repo = init_repository(repo_path)
-    if ssh_pubkey_path and ssh_privkey_path:
-        credentials = get_credentials(
-            ssh_pubkey_path, ssh_privkey_path, passphrase)
-
-        for remote in repo.remotes:
-            remote.credentials = credentials
-            remote.push(repo.head.name)
-
-
-def get_author_from_user(user):
-    author = None
-    if user:
-        author = (
-            user.username,
-            user.email if user.email else 'author@unicore.io'
-        )
-    return author
+def push_to_git(repo_path, index_prefix, es_host):
+    workspace = EG.workspace(repo_path,
+                             index_prefix=index_prefix,
+                             es={'urls': [es_host]})
+    if workspace.repo.remotes:
+        repo = workspace.repo
+        remote = repo.remote()
+        remote.fetch()
+        remote_master = remote.refs.master
+        remote.push(remote_master.remote_head)

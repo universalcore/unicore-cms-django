@@ -11,7 +11,7 @@ with open(os.path.join(here, 'requirements.txt')) as f:
 
 setup(
     name='unicore-cms-django',
-    version='0.0.1',
+    version='1.0.0',
     description=(
         'Throw away CMS for generating Universal Core content repos.'),
     long_description=README,

@@ -1,1 +1,7 @@
-LIBGIT2=$VIRTUAL_ENV DJANGO_SETTINGS_MODULE=test_settings coverage run --source=cms manage.py test cms -s
+#!/bin/bash
+
+set -e
+
+coverage erase
+coverage run `which py.test` --ds=test_settings --verbose cms "$@"
+coverage report

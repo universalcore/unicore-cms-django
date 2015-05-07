@@ -1,11 +1,16 @@
 language: python
+services:
+  - elasticsearch
 python:
   - "2.7"
 install:
-  - ./utils/install_libgit2.sh
+  - "pip install --upgrade pip"
   - "pip install coveralls coverage --use-wheel"
   - "pip install -e . --use-wheel"
 script:
-  - LIBGIT2=$VIRTUAL_ENV DJANGO_SETTINGS_MODULE=test_settings coverage run --source=cms manage.py test cms
+  - curl -s download.elasticsearch.org/es2unix/es > $HOME/es
+  - chmod +x $HOME/es
+  - $HOME/es health -v
+  - ./run_tests.sh
 after_success:
   - coveralls

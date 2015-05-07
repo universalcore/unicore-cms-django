@@ -1,6 +1,11 @@
 # Django settings for skeleton project.
 
 import os
+import pwd
+
+# NOTE: crazy monkey patching because of bugs in GitPython
+os.getlogin = lambda: pwd.getpwuid(os.getuid())[0]
+
 import djcelery
 
 djcelery.setup_loader()
@@ -14,6 +19,7 @@ def abspath(*args):
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
+DISABLE_CAS = DEBUG
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -105,14 +111,22 @@ TEMPLATE_LOADERS = (
 )
 
 MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    # Uncomment the next line for simple clickjacking protection:
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+LOGIN_URL = '/login/'
+CAS_SERVER_URL = ''
+CAS_VERSION = '3'
+
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     "django.contrib.auth.context_processors.auth",
@@ -124,6 +138,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.contrib.messages.context_processors.messages",
     "django.core.context_processors.request",
     "cms.context_processors.workspace_changes",
+    "cms.context_processors.content_repositories",
 )
 
 ROOT_URLCONF = 'project.urls'
@@ -158,6 +173,8 @@ INSTALLED_APPS = (
     'debug_toolbar',
     'sortedm2m',
     'pagedown',
+    'taggit',
+    'taggit_live',
 
     # sample apps to explain usage
     'cms',
@@ -225,6 +242,10 @@ SOUTH_TESTS_MIGRATE = False  # Do not run the migrations for our tests.
                              # for the tests and as such nothing needs to be
                              # migrated.
 
+SOUTH_MIGRATION_MODULES = {
+    'taggit': 'taggit.south_migrations',
+}
+
 # Sentry configuration
 RAVEN_CONFIG = {
     # DevOps will supply you with this.
@@ -245,15 +266,32 @@ CKEDITOR_CONFIGS = {
     }
 }
 
+GRAPPELLI_ADMIN_TITLE = 'Universal Core'
+
 GIT_REPO_URL = None
 GIT_REPO_PATH = abspath('cmsrepo')
+DEFAULT_TARGET_NAME = 'Default Target'
+ELASTIC_GIT_INDEX_PREFIX = None
+ELASTICSEARCH_HOST = 'http://localhost:9200'
 
 # used when pushing to Github
 SSH_PUBKEY_PATH = None
 SSH_PRIVKEY_PATH = None
 SSH_PASSPHRASE = ''
 
+
+THUMBOR_SERVER = 'http://localhost:8888'
+THUMBOR_SECURITY_KEY = 'MY_SECURE_KEY'
+THUMBOR_RW_SERVER = 'http://localhost:8888'
+
 try:
     from local_settings import *
 except ImportError:
     pass
+
+if not DISABLE_CAS:
+    MIDDLEWARE_CLASSES += (
+        'cms.middleware.UnicoreCASMiddleware',
+        'cms.middleware.Custom403Middleware',)
+
+    AUTHENTICATION_BACKENDS += ('cms.backends.UnicoreCASBackend', )

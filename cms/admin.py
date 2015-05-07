@@ -1,5 +1,4 @@
 import json
-import pygit2
 from datetime import datetime
 
 # ensure celery autodiscovery runs
@@ -8,21 +7,28 @@ from djcelery import admin as celery_admin
 from djcelery.models import (
     TaskState, WorkerState, PeriodicTask, IntervalSchedule, CrontabSchedule)
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
-from django.shortcuts import render, redirect
-from django.core.urlresolvers import reverse
-from django.conf import settings
 from django.contrib.admin.util import unquote
+from django.contrib.auth.decorators import login_required
 from django.contrib.admin import helpers
-from django.http import Http404, HttpResponse
-from django.utils.html import escape
 from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import reverse
+from django.http import Http404, HttpResponse
+from django.shortcuts import render, redirect
+from django.utils.html import escape
 
-from cms.models import Post, Category, Localisation
+from cms.models import (
+    Post, Category, Localisation, ContentRepository, PublishingTarget)
 from cms.forms import PostForm, CategoryForm
-from cms.git import repo, workspace
 from cms import tasks
+
+from elasticgit import EG
+
+
+if not settings.DISABLE_CAS:
+    admin.site.login = login_required(admin.site.login)
 
 
 class CategoriesListFilter(SimpleListFilter):
@@ -120,18 +126,33 @@ class PostAdmin(TranslatableModelAdmin):
 
     list_display = (
         'title', 'subtitle', 'primary_category', 'created_at', 'localisation',
-        'source', '_derivatives', 'uuid', 'featured_in_category', 'featured')
+        'source', '_derivatives', 'featured_in_category', 'featured')
 
     list_filter = (
-        'featured_in_category', 'featured', 'created_at', 'localisation',
-        CategoriesListFilter, PostSourceListFilter
+        'featured_in_category',
+        'featured',
+        'created_at',
+        'localisation',
+        'author_tags',
+        CategoriesListFilter,
+        PostSourceListFilter,
     )
     prepopulated_fields = {"slug": ("title",)}
     search_fields = ('title', 'description', 'content')
     raw_id_fields = ('owner', 'source')
+    readonly_fields = ('image_width', 'image_height', 'uuid')
     fieldsets = (
+        (None, {
+            'fields': (
+                'title',
+                'slug',
+                'subtitle',
+                'description',
+                'content',
+                'author_tags',
+            )}),
         (None, {'fields': (
-            'title', 'slug', 'subtitle', 'description', 'content', )}),
+            'image', 'image_width', 'image_height', )}),
         (None, {'fields': (
             'primary_category',
             'localisation',
@@ -140,12 +161,24 @@ class PostAdmin(TranslatableModelAdmin):
             'related_posts',
         )}),
         ('Meta', {
-            'fields': ('owner', 'created_at', 'source'),
+            'fields': ('owner', 'created_at', 'source', 'uuid'),
             'classes': ('grp-collapse grp-closed',)})
     )
 
+    class Media:
+        css = {
+            'all': (
+                '/media/css/jquery-ui.min.css',
+                '/media/css/jquery-ui.structure.min.css',
+                '/media/css/jquery-ui.theme.min.css',
+            )
+        }
+        js = (
+            '/media/js/jquery-ui.min.js',
+        )
+
     def _derivatives(self, post):
-        return len(post.post_set.all())
+        return post.post_set.count()
     _derivatives.short_description = 'Derivatives'
     _derivatives.allow_tags = True
 
@@ -178,21 +211,23 @@ class CategoryAdmin(TranslatableModelAdmin):
     list_filter = ('localisation', CategorySourceListFilter)
     list_display = (
         'title', 'subtitle', 'localisation', 'featured_in_navbar', 'source',
-        '_derivatives', 'uuid',)
+        '_derivatives')
 
     raw_id_fields = ('source', )
+    readonly_fields = ('image_width', 'image_height', 'uuid')
     prepopulated_fields = {"slug": ("title",)}
     fieldsets = (
         (None, {'fields': ('title', 'slug', 'subtitle')}),
+        (None, {'fields': ('image', 'image_width', 'image_height', )}),
         (None, {'fields': ('localisation', 'featured_in_navbar',)}),
         ('Meta', {
-            'fields': ('source', ),
+            'fields': ('source', 'uuid'),
             'classes': ('grp-collapse grp-closed', )})
     )
     inlines = (PostInline, )
 
     def _derivatives(self, category):
-        return len(category.category_set.all())
+        return category.category_set.count()
     _derivatives.short_description = 'Derivatives'
     _derivatives.allow_tags = True
 
@@ -214,25 +249,56 @@ class CategoryInline(admin.StackedInline):
 class LocalisationAdmin(admin.ModelAdmin):
     inlines = (CategoryInline,)
 
+    fieldsets = (
+        (None, {'fields': ('language_code', 'country_code')}),
+        ('Header Image', {'fields': ('image',)}),
+        ('Logo', {'fields': ('logo_image', 'logo_text', 'logo_description')})
+    )
+
+
+class ContentRepositoryAdmin(admin.ModelAdmin):
+
+    readonly_fields = ('url', 'name', 'targets')
+
+    def get_object(self, request, object_id):
+        obj = super(ContentRepositoryAdmin, self).get_object(
+            request, object_id)
+        if obj is None:  # pragma: no cover
+            return
+
+        if not obj.targets.exists():
+            obj.targets.add(PublishingTarget.get_default_target())
+        return obj
+
+    def has_add_permission(self, *args, **kwargs):
+        return not ContentRepository.objects.exists()
+
+
+class PublishingTargetAdmin(admin.ModelAdmin):
+    readonly_fields = ('url', 'name')
+
+    def has_add_permission(self, *args, **kwargs):
+        PublishingTarget.get_default_target()
+        return False
+
 
 @admin.site.register_view('github/', 'Github Configuration')
 def my_view(request, *args, **kwargs):
-    branch = repo.lookup_branch(repo.head.shorthand)
-    last = repo[branch.target]
-    commits = []
-    for commit in repo.walk(last.id, pygit2.GIT_SORT_TIME):
-        commits.append(commit)
+    workspace = EG.workspace(settings.GIT_REPO_PATH,
+                             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
+                             es={'urls': [settings.ELASTICSEARCH_HOST]})
+    commits = workspace.repo.iter_commits(max_count=10)
 
     context = {
         'github_url': settings.GIT_REPO_URL,
-        'repo': repo,
+        'repo': workspace.repo,
         'commits': [
             {
                 'message': c.message,
                 'author': c.author.name,
-                'commit_time': datetime.fromtimestamp(c.commit_time)
+                'commit_time': datetime.fromtimestamp(c.committed_date)
             }
-            for c in commits[:10]
+            for c in commits
         ]
     }
     return render(request, 'cms/admin/github.html', context)
@@ -240,25 +306,20 @@ def my_view(request, *args, **kwargs):
 
 @admin.site.register_view('github/push/', 'Push to github')
 def push_to_github(request, *args, **kwargs):
-    if hasattr(settings, 'SSH_PUBKEY_PATH') and hasattr(
-            settings, 'SSH_PRIVKEY_PATH'):
-        workspace.sync_repo_index()
-        tasks.push_to_git.delay(
-            settings.GIT_REPO_PATH,
-            settings.SSH_PUBKEY_PATH,
-            settings.SSH_PRIVKEY_PATH,
-            settings.SSH_PASSPHRASE)
-
+    tasks.push_to_git.delay(settings.GIT_REPO_PATH,
+                            settings.ELASTIC_GIT_INDEX_PREFIX,
+                            settings.ELASTICSEARCH_HOST)
     if request.is_ajax():
         return HttpResponse(
             json.dumps({'success': True}),
             mimetype='application/json')
-
     return redirect(reverse('admin:index'))
 
 
 admin.site.register(Post, PostAdmin)
 admin.site.register(Category, CategoryAdmin)
+admin.site.register(ContentRepository, ContentRepositoryAdmin)
+admin.site.register(PublishingTarget, PublishingTargetAdmin)
 
 # remove celery from admin
 admin.site.unregister(TaskState)
@@ -268,3 +329,6 @@ admin.site.unregister(CrontabSchedule)
 admin.site.unregister(PeriodicTask)
 
 admin.site.register(Localisation, LocalisationAdmin)
+
+# make pyflakes happy about the import
+celery_admin

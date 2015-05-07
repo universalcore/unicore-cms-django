@@ -1,5 +1,12 @@
 {% extends "admin/base.html" %}
-{% load i18n grp_tags %}
+{% load i18n grp_tags admin_static %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    <link href="{% static "css/custom.css" %}?v=20150302" rel="stylesheet" type="text/css" media="screen" />
+{% endblock %}
+
+{% block admin_title %}<h1 id="grp-admin-title">Universal Core</h1>{% endblock %}
 
 {% block title %}{{ title }} | {% trans 'Django site admin' %}{% endblock %}
 

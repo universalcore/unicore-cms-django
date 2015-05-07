@@ -1,6 +1,6 @@
 {% extends "admin/change_form.html" %}
 {% load admin_static i18n admin_modify admin_urls grp_tags %}
-
+{% load admin_urls %}
 
 {% block stylesheets %}
 {{ block.super }}
@@ -13,13 +13,23 @@
     {{ block.super }}
     {% if has_add_permission %}
         {% url 'admin:cms_post_add' as add_url %}
-        <li><a href="{% add_preserved_filters add_url %}?source={{object_id}}" class="addlink">{% trans "Translate" %}</a></li>
+        {% if opts and preserved_filters %}
+            <li><a href="{% add_preserved_filters add_url %}&amp;source={{object_id}}" class="addlink">{% trans "Translate" %}</a></li>
+        {% else %}
+            <li><a href="{{ add_url }}?source={{object_id}}" class="addlink">{% trans "Translate" %}</a></li>
+        {% endif %}
     {% endif %}
 {% endblock %}
 
 
 <!-- CONTENT -->
 {% block content %}
+    <div id="lang_dir">
+    <form>
+        <input type="radio" name="language_direction" id="lang_LTR" value="LTR" >LTR
+        <input type="radio" name="language_direction" id="lang_RTL" value="RTL" >RTL
+    </form>
+    </div>
     <div class="translation-form">
     {{ block.super }}
     </div>
@@ -42,12 +52,52 @@
 
             <!-- Fieldsets -->
             {% block field_sets %}
+            <script type="text/javascript" charset="utf-8">
+            (function($) {
+                $(document).ready(function() {
+                    var LTR_radio = document.getElementById("lang_LTR");
+                    LTR_radio.checked = true; //default is LTR
+                    LTR_radio.onclick = function() {
+                        $("#id_title").attr("dir", "ltr");
+                        $("#id_slug").attr("dir", "ltr");
+                        $("#id_subtitle").attr("dir", "ltr");
+                        $("#id_description").attr("dir", "ltr");
+                        $("#id_content").attr("dir", "ltr");
+                        $("#id_author_tags").attr("dir", "ltr");
+                    };
+                    $('#lang_RTL').click(function() {                    
+                        $("#id_title").attr("dir", "rtl");
+                        $("#id_slug").attr("dir", "rtl");
+                        $("#id_subtitle").attr("dir", "rtl");
+                        $("#id_description").attr("dir", "rtl");
+                        $("#id_content").attr("dir", "rtl");
+                        $("#id_author_tags").attr("dir", "rtl");
+                        //related-posts filter does not have an ID
+                    });
+                    
+                });
+                
+            })(grp.jQuery);
+        </script>
                 {% for fieldset in adminform %}
                     {% include "admin/includes/fieldset.html" %}
                 {% endfor %}
             {% endblock %}
 
-            {% block after_field_sets %}{% endblock %}
+            {% block after_field_sets %}
+            {% if not content_repositories.empty %}
+                {% for content_repo in content_repositories %}
+                    {% if not content_repo.targets.empty %}
+                        This content will be published under the
+                        <a href="{% url 'admin:cms_contentrepository_change' content_repo.pk %}">{{content_repo.get_license_display}}</a>
+                        to the following publishing targets:
+                        {% for target in content_repo.targets.all %}
+                            <a href="{% url 'admin:cms_publishingtarget_change' target.pk %}">{{ target.name }}</a>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            {% endblock %}
 
             <!-- Inlines -->
             {% block inline_field_sets %}
@@ -69,6 +119,7 @@
                     $('.source-form #id_primary_category').parent().html('<div class="c-2"><input type="text" disabled="disabled" value="{{sourceform.form.instance.primary_category|default_if_none:""}}"/></div>');
                     $('.source-form #id_language').parent().html('<div class="c-2"><input type="text" disabled="disabled"value="{{sourceform.form.instance.language|default_if_none:""}}"/></div>');
                     $('.source-form form').fadeIn();
+
                 });
             })(grp.jQuery);
         </script>
