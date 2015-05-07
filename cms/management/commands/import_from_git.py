@@ -218,7 +218,6 @@ class Command(BaseCommand):
                 p = Post.objects.get(uuid=instance.uuid)
                 p.related_posts.add(*list(
                     Post.objects.filter(uuid__in=instance.linked_pages)))
-                p.save()
         self.emit('done.')
         self.reconnect_signals()
 
