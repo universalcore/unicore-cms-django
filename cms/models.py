@@ -461,6 +461,12 @@ def auto_save_related_posts_to_git(sender, instance, action, **kwargs):
 
 @receiver(post_save, sender=Post)
 def auto_save_post_to_git(sender, instance, created, **kwargs):
+    # When saving to git, we update the uuid of the instance to ensure
+    # we can find it again.
+    # We need to always retrieve the latest version of the instance to
+    # make sure we always have the uuid if it has been set.
+    instance = Post.objects.get(pk=instance.pk)
+
     data = {
         "title": instance.title,
         "subtitle": instance.subtitle,
