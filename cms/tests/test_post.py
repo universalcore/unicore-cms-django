@@ -547,7 +547,7 @@ class PostTestCase(BaseCmsTestCase):
             post1.save()
 
             m2m_commit = list(self.workspace.repo.iter_commits('master'))[0]
-            self.assertEqual(m2m_commit, "Page updated: sample title")
+            self.assertEqual(m2m_commit.message, "Page updated: sample title")
 
             add_commit = list(self.workspace.repo.iter_commits('master'))[0]
-            self.assertEqual(add_commit, "Page created: sample title")
+            self.assertEqual(add_commit.message, "Page created: sample title")
