@@ -534,3 +534,23 @@ class PostTestCase(BaseCmsTestCase):
             [git_post2] = self.workspace.S(
                 eg_models.Page).filter(uuid=post2.uuid)
             self.assertEqual(git_post2.linked_pages, [])
+
+    def test_post_saving_ensure_only_created_once(self):
+        with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
+                           ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
+            data = {
+                'title': 'sample title',
+                'description': 'description',
+                'subtitle': 'subtitle',
+                'content': 'sample content',
+                'localisation': Localisation._for('eng_UK')
+            }
+            related_post = Post.objects.create(**data)
+            post_with_related = Post(**data)
+            post_with_related.save()
+            post_with_related.related_posts.add(related_post)
+
+            m2m_commit, add_commit = list(
+                self.workspace.repo.iter_commits('master'))[:2]
+            self.assertEqual(m2m_commit.message, "Page updated: sample title")
+            self.assertEqual(add_commit.message, "Page created: sample title")
