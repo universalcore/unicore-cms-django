@@ -56,27 +56,20 @@
             (function($) {
                 $(document).ready(function() {
                     var LTR_radio = document.getElementById("lang_LTR");
+                    var content_fields =
+                        "#id_title,#id_slug,#id_subtitle,#id_description," +
+                        "#id_content,#id_author_tags";
                     LTR_radio.checked = true; //default is LTR
                     LTR_radio.onclick = function() {
-                        $("#id_title").attr("dir", "ltr");
-                        $("#id_slug").attr("dir", "ltr");
-                        $("#id_subtitle").attr("dir", "ltr");
-                        $("#id_description").attr("dir", "ltr");
-                        $("#id_content").attr("dir", "ltr");
-                        $("#id_author_tags").attr("dir", "ltr");
+                        $(content_fields).attr("dir", "ltr");
                     };
-                    $('#lang_RTL').click(function() {                    
-                        $("#id_title").attr("dir", "rtl");
-                        $("#id_slug").attr("dir", "rtl");
-                        $("#id_subtitle").attr("dir", "rtl");
-                        $("#id_description").attr("dir", "rtl");
-                        $("#id_content").attr("dir", "rtl");
-                        $("#id_author_tags").attr("dir", "rtl");
+                    $('#lang_RTL').click(function() {
+                        $(content_fields).attr("dir", "rtl");
                         //related-posts filter does not have an ID
                     });
-                    
+
                 });
-                
+
             })(grp.jQuery);
         </script>
                 {% for fieldset in adminform %}
