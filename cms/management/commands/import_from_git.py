@@ -36,6 +36,12 @@ class Command(BaseCommand):
             dest='quiet',
             default=False,
             help='imports the data using default arguments'),
+        make_option(
+            '--push',
+            action='store_true',
+            dest='push',
+            default=False,
+            help='pushes changes in Git repo')
     )
 
     input_func = input
@@ -136,6 +142,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.disconnect_signals()
         self.quiet = options.get('quiet')
+        self.push = options.get('push')
         workspace = EG.workspace(
             settings.GIT_REPO_PATH,
             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
@@ -267,10 +274,11 @@ class Command(BaseCommand):
         self.emit('done.')
         self.reconnect_signals()
 
-        tasks.push_to_git.delay(
-            repo_path=workspace.working_dir,
-            index_prefix=workspace.index_prefix,
-            es_host=workspace.es_settings['urls'][0])
+        if self.push:
+            tasks.push_to_git.delay(
+                repo_path=workspace.working_dir,
+                index_prefix=workspace.index_prefix,
+                es_host=workspace.es_settings['urls'][0])
 
     def get_input_data(self, message, default=None):
         raw_value = self.input_func(message)

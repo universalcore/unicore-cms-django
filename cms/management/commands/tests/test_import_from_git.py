@@ -95,7 +95,7 @@ class TestImportFromGit(BaseCmsTestCase):
             self.assertEquals(Category.objects.all().count(), 0)
             self.assertEquals(Post.objects.all().count(), 0)
 
-            call_command('import_from_git', quiet=True)
+            call_command('import_from_git', quiet=True, push=True)
 
             self.assertEquals(Category.objects.all().count(), 2)
             self.assertEquals(Post.objects.all().count(), 10)
