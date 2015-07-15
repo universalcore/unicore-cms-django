@@ -14,6 +14,7 @@ from django.utils.six.moves import input
 from django.db.models.signals import post_save, post_delete
 from django.conf import settings
 
+from cms import tasks
 from cms.models import (
     Post, Category, Localisation, auto_save_post_to_git,
     auto_save_category_to_git, auto_delete_post_to_git,
@@ -265,6 +266,11 @@ class Command(BaseCommand):
                     Post.objects.filter(uuid__in=instance.linked_pages)))
         self.emit('done.')
         self.reconnect_signals()
+
+        tasks.push_to_git.delay(
+            repo_path=workspace.working_dir,
+            index_prefix=workspace.index_prefix,
+            es_host=workspace.es_settings['urls'][0])
 
     def get_input_data(self, message, default=None):
         raw_value = self.input_func(message)

@@ -4,6 +4,7 @@ from StringIO import StringIO
 
 from django.core.management import call_command
 from django.core.files.base import ContentFile
+from django.conf import settings
 
 import mock
 import responses
@@ -48,9 +49,11 @@ class TestImportFromGit(BaseCmsTestCase):
         responses.add_callback(
             responses.POST, '%s/image' % host, callback=callback)
 
+    @mock.patch('cms.tasks.push_to_git.delay')
     @mock.patch.object(import_from_git.Command, 'set_image_field')
     @mock.patch.object(import_from_git.Command, 'commit_image_field')
-    def test_command(self, mock_set_image_field, mock_commit_image_field):
+    def test_command(self, mock_set_image_field, mock_commit_image_field,
+                     mock_push_to_git):
         mock_set_image_field.return_value = True
         with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
                            ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
@@ -116,6 +119,11 @@ class TestImportFromGit(BaseCmsTestCase):
                 language_code='fre', country_code='FR')
             self.assertEquals(lang2.logo_text, l.logo_text)
             self.assertEquals(lang2.logo_description, l.logo_description)
+
+            mock_push_to_git.assert_called_with(
+                repo_path=settings.GIT_REPO_PATH,
+                index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
+                es_host=settings.ELASTICSEARCH_HOST)
 
     def test_get_input_data(self):
 
