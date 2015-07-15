@@ -4,6 +4,7 @@ from StringIO import StringIO
 
 from django.core.management import call_command
 from django.core.files.base import ContentFile
+from django.conf import settings
 
 import mock
 import responses
@@ -33,7 +34,8 @@ class TestImportFromGit(BaseCmsTestCase):
                                             content_type='image/png'):
         responses.add(
             responses.GET,
-            re.compile(r'%s/image/\w{32}/locales/.+' % host),
+            re.compile(
+                r'%s/image/\w{32}/(locales|posts|categories)/.+' % host),
             body=body,
             status=status,
             content_type=content_type)
@@ -47,13 +49,17 @@ class TestImportFromGit(BaseCmsTestCase):
         responses.add_callback(
             responses.POST, '%s/image' % host, callback=callback)
 
+    @mock.patch('cms.tasks.push_to_git.delay')
     @mock.patch.object(import_from_git.Command, 'set_image_field')
-    def test_command(self, mock_set_image_field):
+    @mock.patch.object(import_from_git.Command, 'commit_image_field')
+    def test_command(self, mock_set_image_field, mock_commit_image_field,
+                     mock_push_to_git):
+        mock_set_image_field.return_value = True
         with self.settings(GIT_REPO_PATH=self.workspace.working_dir,
                            ELASTIC_GIT_INDEX_PREFIX=self.mk_index_prefix()):
             lang1 = eg_models.Localisation({'locale': 'spa_ES'})
             lang2 = eg_models.Localisation({
-                'locale': 'fra_FR',
+                'locale': 'fre_FR',
                 'image': uuid.uuid4().hex,
                 'image_host': 'http://localhost:8888',
                 'logo_image': uuid.uuid4().hex,
@@ -89,7 +95,7 @@ class TestImportFromGit(BaseCmsTestCase):
             self.assertEquals(Category.objects.all().count(), 0)
             self.assertEquals(Post.objects.all().count(), 0)
 
-            call_command('import_from_git', quiet=True)
+            call_command('import_from_git', quiet=True, push=True)
 
             self.assertEquals(Category.objects.all().count(), 2)
             self.assertEquals(Post.objects.all().count(), 10)
@@ -107,11 +113,17 @@ class TestImportFromGit(BaseCmsTestCase):
                 set(['foo', 'bar', 'baz']))
 
             self.assertEquals(Localisation.objects.all().count(), 3)
-            self.assertEquals(mock_set_image_field.call_count, 4)
+            self.assertEquals(mock_set_image_field.call_count, 16)
+            self.assertEquals(mock_commit_image_field.call_count, 16)
             l = Localisation.objects.get(
-                language_code='fra', country_code='FR')
+                language_code='fre', country_code='FR')
             self.assertEquals(lang2.logo_text, l.logo_text)
             self.assertEquals(lang2.logo_description, l.logo_description)
+
+            mock_push_to_git.assert_called_with(
+                repo_path=settings.GIT_REPO_PATH,
+                index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
+                es_host=settings.ELASTICSEARCH_HOST)
 
     def test_get_input_data(self):
 
@@ -212,15 +224,32 @@ class TestImportFromGit(BaseCmsTestCase):
         self.mock_create_image_response(host=host)
 
         eg_obj = eg_models.Localisation({
-            'locale': 'fra_FR',
+            'locale': 'fre_FR',
             'image': uuid.uuid4().hex,
             'image_host': host})
+        # set image dimensions to make sure we reassign them
         db_obj = Localisation.objects.create(
-            language_code='fra', country_code='FR')
+            language_code='fre', country_code='FR',
+            image_width=5, image_height=5)
 
-        command.set_image_field(eg_obj, db_obj, 'image')
+        # image exists and is on same server
+        with self.settings(THUMBOR_SERVER=host):
+            self.assertFalse(command.set_image_field(eg_obj, db_obj, 'image'))
         db_obj = Localisation.objects.get(
-            language_code='fra', country_code='FR')
+            language_code='fre', country_code='FR')
+        self.assertEqual(command.stdout.getvalue(), '')
+        self.assertTrue(
+            re.match(r'/image/\w{32}/locales/image.bmp', db_obj.image.name))
+        self.assertEqual(db_obj.image_width, 1)
+        self.assertEqual(db_obj.image_height, 1)
+
+        command.stdout = StringIO()
+        db_obj.image = None
+        db_obj.save()
+
+        # image exists but it's on another server
+        with self.settings(THUMBOR_SERVER='another-server.com'):
+            self.assertTrue(command.set_image_field(eg_obj, db_obj, 'image'))
         self.assertEqual(command.stdout.getvalue(), '')
         self.assertTrue(
             re.match(r'/image/\w{32}/locales/image.bmp', db_obj.image.name))
@@ -231,19 +260,51 @@ class TestImportFromGit(BaseCmsTestCase):
         self.mock_get_image_response(host=host, status=404)
         command.stdout = StringIO()
 
-        command.set_image_field(eg_obj, db_obj, 'image')
+        # image does not exist on server
+        self.assertFalse(command.set_image_field(eg_obj, db_obj, 'image'))
         self.assertTrue(command.stdout.getvalue().startswith('WARNING: image'))
 
+        # no image set in Git
         command.stdout = StringIO()
-        command.set_image_field(eg_obj, db_obj, 'logo_image')
+        self.assertFalse(command.set_image_field(eg_obj, db_obj, 'logo_image'))
         self.assertFalse(db_obj.logo_image)
 
         responses.reset()
         self.mock_get_image_response(host=host, content_type='.bmp')
 
-        with mock.patch.object(db_obj.image, 'save') as mock_save_image:
-            command.set_image_field(eg_obj, db_obj, 'image')
+        # check that mimetype/extension mixup gets handled
+        with  \
+                mock.patch.object(db_obj.image, 'save') as mock_save_image, \
+                self.settings(THUMBOR_SERVER='another-server.com'):
+            self.assertTrue(command.set_image_field(eg_obj, db_obj, 'image'))
             file_name = mock_save_image.call_args[0][0]
             self.assertTrue(file_name.endswith('.bmp'))
+
+        command.reconnect_signals()
+
+    def test_commit_image_field(self):
+        command = import_from_git.Command()
+        command.stdout = StringIO()
+        command.quiet = False
+        command.disconnect_signals()
+
+        eg_obj = self.create_localisation(
+            self.workspace,
+            locale='fre_FR',
+            image=uuid.uuid4().hex,
+            image_host='another-server.com')
+        new_uuid = uuid.uuid4().hex
+        db_obj = Localisation.objects.create(
+            language_code='fre', country_code='FR',
+            image_width=5, image_height=5,
+            image='/image/%s/locales/image.bmp' % (new_uuid,))
+
+        with self.settings(THUMBOR_SERVER='http://localhost:8888'):
+            command.commit_image_field(self.workspace, eg_obj, db_obj, 'image')
+        self.workspace.refresh_index()
+        [eg_obj] = self.workspace.S(
+            eg_models.Localisation).filter(uuid=eg_obj.uuid)
+        self.assertEqual(eg_obj.image, new_uuid)
+        self.assertEqual(eg_obj.image_host, 'http://localhost:8888')
 
         command.reconnect_signals()
