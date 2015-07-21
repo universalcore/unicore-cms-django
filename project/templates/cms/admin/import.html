@@ -98,6 +98,8 @@
           $('#import-btn').click(function(e){
             e.preventDefault();
 
+            $(this).hide().parent().append('Importing your content, please wait..');
+
             var selected_locales = [];
             $('#locales :checked').each(function() {
               selected_locales.push($(this).val());

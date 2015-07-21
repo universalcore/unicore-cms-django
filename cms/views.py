@@ -110,7 +110,7 @@ def import_locale_content(workspace, locale):
                 workspace, l, localisation, 'logo_image')
 
     workspace.refresh_index()
-    categories = workspace.S(Category).filter(language=locale)
+    categories = workspace.S(Category).filter(language=locale)[:1000]
 
     for instance in categories:
         instance = instance.to_object()
@@ -135,7 +135,7 @@ def import_locale_content(workspace, locale):
     # Manually refresh stuff because the command disables signals
     workspace.refresh_index()
 
-    pages = workspace.S(Page).filter(language=locale)
+    pages = workspace.S(Page).filter(language=locale)[:1000]
 
     for instance in pages:
         instance = instance.to_object()
