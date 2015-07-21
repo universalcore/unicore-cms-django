@@ -1,0 +1,103 @@
+{% extends "admin/base_site.html" %}
+ {% load i18n admin_urls admin_static admin_modify %}
+
+{% block extrahead %}
+{{ block.super }}
+<script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}" />
+<style type="text/css">
+  .step2 h1 {color: #aaa;}
+  .step2 form{display: none;}
+  .error {color: #e00;}
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<ul>
+<li><a href="{% url 'admin:index' %}">{% trans 'Home' %}</a></li>
+<li>Github Configuration</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="g-d-c">
+    <div class="g-d-12 g-d-f">
+    <h1>Step 1: Fetch content from Github</h1>
+    <form>
+    <fieldset class="module aligned ">
+        <div class="form-row">
+          <strong>Github URL (https)</strong>
+          <input type='text' name='repo_url' class="vTextField" id="repo_url"/>
+        </div>
+        <div class="form-row">
+          <input type="submit" value="Sumbit" id="submit-btn"/>
+        </div>
+        {% csrf_token %}
+    </fieldset>
+    </form>
+    </div>
+    <div class="g-d-12 g-d-l step2">
+    <h1>Step 2: Choose Localisation</h1>
+    <form>
+    <fieldset class="module aligned ">
+        <input type="hidden" id="index_prefix" />
+        <div class="form-row">
+          <strong>Available locales</strong>
+          <div id='locales'>
+          </div>
+        </div>
+        <div class="form-row">
+          <input type="submit" value="Import" id="import-btn"/>
+        </div>
+        {% csrf_token %}
+    </fieldset>
+    </form>
+    </div>
+  </div>
+<script type="text/javascript" charset="utf-8">
+  (function($) {
+      $(document).ready(function() {
+          $('#submit-btn').click(function(e){
+            e.preventDefault();
+            $(this).hide().parent().append('Please wait while we fetch your data..');
+            var repo_url = $('#repo_url').val();
+            $.get('/github/import/clone/', {'repo_url': repo_url})
+              .done(function(data){
+                if (data != null){
+                  var options = new Array();
+                  $.each(data.locales, function(){
+                    options.push(
+                      $('<div>')
+                        .append(
+                          $('<input>')
+                            .attr('type', 'checkbox')
+                            .val(this))
+                        .append(this));
+                  });
+                  $('#index_prefix').val(data.index_prefix);
+                  $('#locales').html(options).removeAttr('disabled');
+                  $('#import-btn').removeAttr('disabled');
+                  $('.step2 form').fadeIn().removeClass('step2');
+                }
+              })
+              .fail(function(data){
+                $('#submit-btn')
+                  .hide()
+                  .parent()
+                    .append(
+                      $('<div>').addClass('error').html('An error has occured.'))
+                    .append(
+                      $('<div>').addClass('error').html(data.responseText));
+              });
+          });
+
+      });
+
+  })(grp.jQuery);
+</script>
+{% endblock%}
+{% block sidebar %}{% endblock %}

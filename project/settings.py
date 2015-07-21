@@ -270,6 +270,7 @@ GRAPPELLI_ADMIN_TITLE = 'Universal Core'
 
 GIT_REPO_URL = None
 GIT_REPO_PATH = abspath('cmsrepo')
+IMPORT_CLONE_REPO_PATH = abspath('import_repos')
 DEFAULT_TARGET_NAME = 'Default Target'
 ELASTIC_GIT_INDEX_PREFIX = None
 ELASTICSEARCH_HOST = 'http://localhost:9200'
