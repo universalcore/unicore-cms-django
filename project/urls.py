@@ -12,6 +12,9 @@ urlpatterns = patterns(
     url(
         r'^github/import/clone/$',
         'cms.views.import_clone_repo', name='import_clone_repo'),
+    url(
+        r'^github/import/do/$',
+        'cms.views.import_repo', name='import_repo'),
     url(r'^admin/', RedirectView.as_view(url='/')),
     url(r'^login/$', 'django_cas_ng.views.login'),
     url(r'^logout/$', 'django_cas_ng.views.logout'),

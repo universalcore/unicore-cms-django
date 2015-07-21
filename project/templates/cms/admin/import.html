@@ -65,7 +65,7 @@
             e.preventDefault();
             $(this).hide().parent().append('Please wait while we fetch your data..');
             var repo_url = $('#repo_url').val();
-            $.get('/github/import/clone/', {'repo_url': repo_url})
+            $.post('/github/import/clone/', {'repo_url': repo_url})
               .done(function(data){
                 if (data != null){
                   var options = new Array();
@@ -92,6 +92,21 @@
                       $('<div>').addClass('error').html('An error has occured.'))
                     .append(
                       $('<div>').addClass('error').html(data.responseText));
+              });
+          });
+
+          $('#import-btn').click(function(e){
+            e.preventDefault();
+
+            var selected_locales = [];
+            $('#locales :checked').each(function() {
+              selected_locales.push($(this).val());
+            });
+            var index_prefix = $('#index_prefix').val();
+            $.post('/github/import/do/',
+                {'locales': selected_locales, 'index_prefix': index_prefix})
+              .done(function(data){
+                window.location = "{% url 'admin:index' %}";
               });
           });
 
