@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from django.contrib.auth.models import User
 from django.conf import settings
@@ -469,13 +470,16 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         instance = Post.objects.get(pk=instance.pk)
 
     data = {
+        "uuid": instance.uuid,
         "title": instance.title,
         "subtitle": instance.subtitle,
         "slug": instance.slug,
         "description": instance.description,
         "content": instance.content,
-        "created_at": instance.created_at.isoformat(),
-        "modified_at": instance.modified_at.isoformat(),
+        "created_at": instance.created_at.isoformat()
+        if isinstance(instance.created_at, datetime) else instance.created_at,
+        "modified_at": instance.modified_at.isoformat()
+        if isinstance(instance.created_at, datetime) else instance.created_at,
         # TODO: We should migrate this to localisation everywhere
         "language": (
             instance.localisation.get_code()
@@ -542,6 +546,7 @@ def auto_delete_post_to_git(sender, instance, **kwargs):
 def auto_save_category_to_git(sender, instance, created, **kwargs):
 
     data = {
+        "uuid": instance.uuid,
         "title": instance.title,
         "subtitle": instance.subtitle,
         "slug": instance.slug,
