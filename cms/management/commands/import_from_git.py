@@ -11,7 +11,7 @@ from django.core.files.images import ImageFile
 from django.core.management.base import BaseCommand
 from django.core.exceptions import ValidationError
 from django.utils.six.moves import input
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, m2m_changed
 from django.conf import settings
 
 from cms import tasks
@@ -19,7 +19,7 @@ from cms.models import (
     Post, Category, Localisation, auto_save_post_to_git,
     auto_save_category_to_git, auto_delete_post_to_git,
     auto_delete_category_to_git, auto_save_localisation_to_git,
-    auto_delete_localisation_to_git)
+    auto_delete_localisation_to_git, auto_save_related_posts_to_git)
 
 from elasticgit import EG
 
@@ -49,6 +49,8 @@ class Command(BaseCommand):
     def disconnect_signals(self):
         post_save.disconnect(auto_save_post_to_git, sender=Post)
         post_delete.disconnect(auto_delete_post_to_git, sender=Post)
+        m2m_changed.disconnect(
+            auto_save_related_posts_to_git, sender=Post.related_posts.through)
 
         post_save.disconnect(auto_save_category_to_git, sender=Category)
         post_delete.disconnect(auto_delete_category_to_git, sender=Category)
@@ -61,6 +63,8 @@ class Command(BaseCommand):
     def reconnect_signals(self):
         post_save.connect(auto_save_post_to_git, sender=Post)
         post_delete.connect(auto_delete_post_to_git, sender=Post)
+        m2m_changed.connect(
+            auto_save_related_posts_to_git, sender=Post.related_posts.through)
 
         post_save.connect(auto_save_category_to_git, sender=Category)
         post_delete.connect(auto_delete_category_to_git, sender=Category)
