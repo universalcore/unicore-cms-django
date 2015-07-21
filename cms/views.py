@@ -35,7 +35,7 @@ def parse_repo_name(repo_url):
 def setup_workspace(repo_path, index_prefix):
     workspace = EG.workspace(
         repo_path, index_prefix=index_prefix,
-        es={'urls': settings.ELASTICSEARCH_HOST})
+        es={'urls': [settings.ELASTICSEARCH_HOST]})
 
     branch = workspace.sm.repo.active_branch
     if workspace.im.index_exists(branch.name):
@@ -199,7 +199,7 @@ def import_repo(request, *args, **kwargs):
         repo_path = os.path.join(settings.IMPORT_CLONE_REPO_PATH, index_prefix)
         workspace = EG.workspace(
             repo_path, index_prefix=index_prefix,
-            es={'urls': settings.ELASTICSEARCH_HOST})
+            es={'urls': [settings.ELASTICSEARCH_HOST]})
 
         for locale in locales:
             import_locale_content(workspace, locale)

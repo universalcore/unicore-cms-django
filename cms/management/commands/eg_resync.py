@@ -16,7 +16,7 @@ class Command(BaseCommand):
         workspace = EG.workspace(
             settings.GIT_REPO_PATH,
             index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
-            es={'urls': settings.ELASTICSEARCH_HOST})
+            es={'urls': [settings.ELASTICSEARCH_HOST]})
 
         branch = workspace.sm.repo.active_branch
         if workspace.im.index_exists(branch.name):
