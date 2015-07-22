@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from git import Repo
 from elasticgit import EG
 
-from cms import mappings, models
+from cms import models, utils
 from cms.management.commands.import_from_git import Command
 
 from unicore.content.models import (
@@ -30,28 +30,6 @@ def parse_repo_name(repo_url):
         repo_name, _, _ = repo_name_dot_ext.partition('.')
         return repo_name
     return repo_name_dot_ext
-
-
-def setup_workspace(repo_path, index_prefix):
-    workspace = EG.workspace(
-        repo_path, index_prefix=index_prefix,
-        es={'urls': [settings.ELASTICSEARCH_HOST]})
-
-    branch = workspace.sm.repo.active_branch
-    if workspace.im.index_exists(branch.name):
-        workspace.im.destroy_index(branch.name)
-
-    workspace.setup('ubuntu', 'dev@praekeltfoundation.org')
-
-    while not workspace.index_ready():
-        pass
-
-    workspace.setup_custom_mapping(Category, mappings.CategoryMapping)
-    workspace.setup_custom_mapping(Page, mappings.PageMapping)
-    workspace.setup_custom_mapping(EGLocalisation,
-                                   mappings.LocalisationMapping)
-
-    return workspace
 
 
 def clone_repo(url, name):
@@ -73,7 +51,7 @@ def import_clone_repo(request, *args, **kwargs):
                 mimetype='application/json')
         repo_index = 'import-repo-prefix-%s' % parse_repo_name(url)
         repo = clone_repo(url, repo_index)
-        ws = setup_workspace(repo.working_dir, repo_index)
+        ws = utils.setup_workspace(repo.working_dir, repo_index)
         ws.sync(EGLocalisation)
         ws.sync(Category)
         ws.sync(Page)
