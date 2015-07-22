@@ -2,8 +2,6 @@ import json
 import os.path
 import shutil
 
-from urlparse import urlparse
-
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.shortcuts import redirect
@@ -19,17 +17,6 @@ from cms.management.commands.import_from_git import Command
 
 from unicore.content.models import (
     Category, Page, Localisation as EGLocalisation)
-
-
-def parse_repo_name(repo_url):
-    pr = urlparse(repo_url)
-    _, _, repo_name_dot_ext = pr.path.rpartition('/')
-    if any([
-            repo_name_dot_ext.endswith('.git'),
-            repo_name_dot_ext.endswith('.json')]):
-        repo_name, _, _ = repo_name_dot_ext.partition('.')
-        return repo_name
-    return repo_name_dot_ext
 
 
 def clone_repo(url, name):
@@ -49,7 +36,7 @@ def import_clone_repo(request, *args, **kwargs):
                 'Invalid repo_url',
                 status=400,
                 mimetype='application/json')
-        repo_index = 'import-repo-prefix-%s' % parse_repo_name(url)
+        repo_index = 'import-repo-prefix-%s' % utils.parse_repo_name(url)
         repo = clone_repo(url, repo_index)
         ws = utils.setup_workspace(repo.working_dir, repo_index)
         ws.sync(EGLocalisation)
