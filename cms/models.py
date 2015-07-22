@@ -470,7 +470,6 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         instance = Post.objects.get(pk=instance.pk)
 
     data = {
-        "uuid": instance.uuid,
         "title": instance.title,
         "subtitle": instance.subtitle,
         "slug": instance.slug,
@@ -501,6 +500,9 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         "image_host": settings.THUMBOR_SERVER,
         "author_tags": [tag.name for tag in instance.author_tags.all()],
     }
+
+    if instance.uuid:
+        data.update({'uuid': instance.uuid})
 
     # NOTE: If newly created always give it the highest ordering position
     if created:
@@ -546,7 +548,6 @@ def auto_delete_post_to_git(sender, instance, **kwargs):
 def auto_save_category_to_git(sender, instance, created, **kwargs):
 
     data = {
-        "uuid": instance.uuid,
         "title": instance.title,
         "subtitle": instance.subtitle,
         "slug": instance.slug,
@@ -561,6 +562,9 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         "image": instance.image_uuid(),
         "image_host": settings.THUMBOR_SERVER,
     }
+
+    if instance.uuid:
+        data.update({'uuid': instance.uuid})
 
     workspace = EG.workspace(settings.GIT_REPO_PATH,
                              index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
