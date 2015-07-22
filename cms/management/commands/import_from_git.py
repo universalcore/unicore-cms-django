@@ -1,10 +1,8 @@
-import os
 from optparse import make_option
 from urlparse import urljoin
 import mimetypes
 
 import requests
-from django_thumborstorage.storages import thumbor_image_url
 
 from django.core.files.base import ContentFile
 from django.core.files.images import ImageFile

@@ -100,7 +100,8 @@ class LocalisationTestCase(BaseCmsTestCase):
             l.image.url,
             'http://localhost:8888/'
             'J1ZrJaChK4mv90JF9fNutNcYJ1U=/oooooo32chars_random_idooooooooo')
-        self.assertEqual(l.logo_image_uuid(), 'oooooo32chars_random_idooooooooo')
+        self.assertEqual(
+            l.logo_image_uuid(), 'oooooo32chars_random_idooooooooo')
         self.assertEqual(
             l.logo_image.url,
             'http://localhost:8888/'
@@ -111,7 +112,8 @@ class LocalisationTestCase(BaseCmsTestCase):
         self.assertEquals(eg_locale.locale, 'spa_ES')
         self.assertEquals(eg_locale.image, 'oooooo32chars_random_idooooooooo')
         self.assertEquals(eg_locale.image_host, 'http://localhost:8888')
-        self.assertEquals(eg_locale.logo_image, 'oooooo32chars_random_idooooooooo')
+        self.assertEquals(
+            eg_locale.logo_image, 'oooooo32chars_random_idooooooooo')
         self.assertEquals(eg_locale.logo_image_host, 'http://localhost:8888')
 
         MockPostClass.assert_called_with(
