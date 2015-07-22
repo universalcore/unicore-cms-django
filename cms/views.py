@@ -80,12 +80,8 @@ def import_locale_content(workspace, locale):
         })
 
     if new:
-        if mngmnt_command.set_image_field(l, localisation, 'image'):
-            mngmnt_command.commit_image_field(
-                workspace, l, localisation, 'image')
-        if mngmnt_command.set_image_field(l, localisation, 'logo_image'):
-            mngmnt_command.commit_image_field(
-                workspace, l, localisation, 'logo_image')
+        mngmnt_command.set_image_field(l, localisation, 'image')
+        mngmnt_command.set_image_field(l, localisation, 'logo_image')
 
     workspace.refresh_index()
     categories = workspace.S(Category).filter(language=locale)[:1000]
@@ -105,9 +101,7 @@ def import_locale_content(workspace, locale):
             }
         )
 
-        if mngmnt_command.set_image_field(instance, category, 'image'):
-            mngmnt_command.commit_image_field(
-                workspace, instance, category, 'image')
+        mngmnt_command.set_image_field(instance, category, 'image')
         category.save()
 
     # Manually refresh stuff because the command disables signals
@@ -146,9 +140,7 @@ def import_locale_content(workspace, locale):
             # add the tags
             post.author_tags.add(*instance.author_tags)
 
-            if mngmnt_command.set_image_field(instance, post, 'image'):
-                mngmnt_command.commit_image_field(
-                    workspace, instance, post, 'image')
+            mngmnt_command.set_image_field(instance, post, 'image')
 
         except ValidationError:  # pragma: no cover
             print 'An error occured with: %s(%s)' % (
