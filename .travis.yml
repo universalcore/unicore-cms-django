@@ -10,7 +10,6 @@ install:
   - "pip install -e . --use-wheel"
   - "pip install -r requirements-dev.txt --use-wheel"
 script:
-  - flake8 cms --exclude migrations
   - curl -s download.elasticsearch.org/es2unix/es > $HOME/es
   - chmod +x $HOME/es
   - $HOME/es health -v
