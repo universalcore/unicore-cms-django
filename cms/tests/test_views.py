@@ -66,3 +66,6 @@ class TestCustomAdminViews(BaseCmsTestCase):
                 self.workspace.S(eg_models.Category).everything().count, 4)
             self.assertEquals(
                 self.workspace.S(eg_models.Page).everything().count, 4)
+
+            # ensure the workspace is destroyed after importing
+            self.assertFalse(self.remote_workspace.exists())
