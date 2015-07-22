@@ -161,6 +161,8 @@ def import_repo(request, *args, **kwargs):
         for locale in locales:
             import_locale_content(workspace, locale)
 
+        workspace.destroy()
+
         return HttpResponse(
             json.dumps({'success': True}),
             mimetype='application/json')
