@@ -3,11 +3,10 @@ import os
 from django.test import TestCase
 from django.conf import settings
 
-from elasticgit import EG
-
 from slugify import slugify
 
 from unicore.content.models import Page, Category, Localisation
+from cms import utils
 
 
 class BaseCmsTestCase(TestCase):
@@ -33,9 +32,11 @@ class BaseCmsTestCase(TestCase):
             settings.ELASTIC_GIT_INDEX_PREFIX or
             self.mk_index_prefix())
         auto_destroy = auto_destroy or self.destroy
-        workspace = EG.workspace(os.path.join(working_dir, name), es={
-            'urls': [url],
-        }, index_prefix=index_prefix)
+        workspace = utils.setup_workspace(
+            os.path.join(working_dir, name),
+            index_prefix=index_prefix,
+            es={'urls': [url]})
+
         if auto_destroy:
             self.addCleanup(workspace.destroy)
 
