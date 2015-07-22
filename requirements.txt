@@ -34,4 +34,4 @@ pycountry==1.10
 requests==2.5.3
 pytz==2015.2
 springboard==3.0.4
-
+Unidecode==0.04.16
