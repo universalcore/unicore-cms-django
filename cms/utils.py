@@ -31,9 +31,11 @@ def parse_repo_name(repo_url):
     return repo_name_dot_ext
 
 
-def setup_workspace(
-        repo_path, index_prefix, es={'urls': [settings.ELASTICSEARCH_HOST]}):
-    workspace = EG.workspace(repo_path, index_prefix=index_prefix, es=es)
+def setup_workspace(repo_path, index_prefix, es={}):
+    es_default = {'urls': [settings.ELASTICSEARCH_HOST]}
+    es_default.update(es)
+    workspace = EG.workspace(
+        repo_path, index_prefix=index_prefix, es=es_default)
 
     branch = workspace.sm.repo.active_branch
     if workspace.im.index_exists(branch.name):
