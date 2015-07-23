@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from django.contrib.auth.models import User
 from django.conf import settings
@@ -474,8 +475,10 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         "slug": instance.slug,
         "description": instance.description,
         "content": instance.content,
-        "created_at": instance.created_at.isoformat(),
-        "modified_at": instance.modified_at.isoformat(),
+        "created_at": instance.created_at.isoformat()
+        if isinstance(instance.created_at, datetime) else instance.created_at,
+        "modified_at": instance.modified_at.isoformat()
+        if isinstance(instance.created_at, datetime) else instance.created_at,
         # TODO: We should migrate this to localisation everywhere
         "language": (
             instance.localisation.get_code()
@@ -497,6 +500,9 @@ def auto_save_post_to_git(sender, instance, created, **kwargs):
         "image_host": settings.THUMBOR_SERVER,
         "author_tags": [tag.name for tag in instance.author_tags.all()],
     }
+
+    if instance.uuid:
+        data.update({'uuid': instance.uuid})
 
     # NOTE: If newly created always give it the highest ordering position
     if created:
@@ -556,6 +562,9 @@ def auto_save_category_to_git(sender, instance, created, **kwargs):
         "image": instance.image_uuid(),
         "image_host": settings.THUMBOR_SERVER,
     }
+
+    if instance.uuid:
+        data.update({'uuid': instance.uuid})
 
     workspace = EG.workspace(settings.GIT_REPO_PATH,
                              index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,

@@ -316,6 +316,11 @@ def push_to_github(request, *args, **kwargs):
     return redirect(reverse('admin:index'))
 
 
+@admin.site.register_view('github/import/choose/', 'Import')
+def import_from_github(request, *args, **kwargs):
+    return render(request, 'cms/admin/import.html', {})
+
+
 admin.site.register(Post, PostAdmin)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(ContentRepository, ContentRepositoryAdmin)

@@ -1,10 +1,10 @@
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from elasticgit import EG
 from elasticgit.utils import fqcn
 
 from unicore.content.models import Page, Category, Localisation
+from cms import utils
 
 
 class Command(BaseCommand):
@@ -12,10 +12,9 @@ class Command(BaseCommand):
     help = 'Resync an Elasticgit repository with its search index.'
 
     def handle(self, *args, **kwargs):
-        self.workspace = EG.workspace(
+        self.workspace = utils.setup_workspace(
             settings.GIT_REPO_PATH,
-            index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX,
-            es={'urls': [settings.ELASTICSEARCH_HOST]})
+            index_prefix=settings.ELASTIC_GIT_INDEX_PREFIX)
 
         for model_class in [Page, Category, Localisation]:
             self.sync_model(model_class)

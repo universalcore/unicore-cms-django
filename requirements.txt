@@ -11,18 +11,12 @@ django-celery
 psycopg2
 redis
 django-debug-toolbar
-pep8
-pyflakes
 fabric
 django-grappelli<2.6.1
 django-adminplus
 django-sortedm2m==0.8.1
 django-pagedown==0.1.0
 html2text==2014.9.25
-pytest
-pytest-django
-pytest-cov
-pytest-xdist
 unicore-cms==1.9.2
 python-slugify==0.1.0
 django-thumborstorage==0.91.6
@@ -40,4 +34,4 @@ pycountry==1.10
 requests==2.5.3
 pytz==2015.2
 springboard==3.0.4
-
+Unidecode==0.04.16

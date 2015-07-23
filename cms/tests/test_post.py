@@ -9,7 +9,6 @@ from cms.tests.base import BaseCmsTestCase
 
 from unicore.content import models as eg_models
 
-from django.core.urlresolvers import reverse
 from django.core.files.images import ImageFile
 from django.conf import settings
 
