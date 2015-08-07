@@ -116,6 +116,9 @@ class LocalisationTestCase(BaseCmsTestCase):
             eg_locale.logo_image, 'oooooo32chars_random_idooooooooo')
         self.assertEquals(eg_locale.logo_image_host, 'http://localhost:8888')
 
+        post_mock.stop()
+        get_mock.stop()
+
         MockPostClass.assert_called_with(
             "%s/image" % settings.THUMBOR_RW_SERVER,
             data=content.file.read(),
