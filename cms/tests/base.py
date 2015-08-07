@@ -1,7 +1,10 @@
 import os
+import uuid
 
 from django.test import TestCase
 from django.conf import settings
+
+import responses
 
 from slugify import slugify
 
@@ -110,3 +113,12 @@ class BaseCmsTestCase(TestCase):
         workspace.save(loc, u'Added localisation %s.' % (locale,))
         workspace.refresh_index()
         return loc
+
+    def mock_create_image_response(self, host, status=201):
+        def callback(request):
+            return (status, {
+                'Location': '/image/%s/%s' %
+                    (uuid.uuid4().hex, request.headers['Slug'])}, '')
+
+        responses.add_callback(
+            responses.POST, '%s/image' % host, callback=callback)

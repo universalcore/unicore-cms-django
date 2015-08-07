@@ -40,15 +40,6 @@ class TestImportFromGit(BaseCmsTestCase):
             status=status,
             content_type=content_type)
 
-    def mock_create_image_response(self, host, status=201):
-        def callback(request):
-            return (status, {
-                'Location': '/image/%s/%s' %
-                    (uuid.uuid4().hex, request.headers['Slug'])}, '')
-
-        responses.add_callback(
-            responses.POST, '%s/image' % host, callback=callback)
-
     @mock.patch('cms.tasks.push_to_git.delay')
     @mock.patch.object(import_from_git.Command, 'set_image_field')
     @mock.patch.object(import_from_git.Command, 'commit_image_field')

@@ -1,3 +1,4 @@
+# coding=utf-8
 import os
 
 from django import forms
@@ -5,6 +6,11 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.test.utils import override_settings
+from django.core.files.base import ContentFile
+
+from requests.exceptions import ConnectionError
+
+from django_thumborstorage.storages import ThumborStorage
 
 from cms.tests.base import BaseCmsTestCase
 from cms.models import (
@@ -32,6 +38,22 @@ class TestHelpers(BaseCmsTestCase):
         self.assertEqual(
             ('Foo Bar', 'foo@example.org'),
             get_author_info(user))
+
+    def test_image_storage_unicode_error(self):
+        storage = ThumborStorage()
+        name = u'Bake it ‘til you make it.png'
+        self.assertRaises(
+            UnicodeEncodeError, storage.save, name, ContentFile(''))
+
+    def test_image_storage_unicode_fix(self):
+        # TODO: fix the storage, ideally by resolving the 2 issues below
+        # https://github.com/Starou/django-thumborstorage/issues/11
+        # https://github.com/Starou/django-thumborstorage/issues/12
+        storage = ThumborStorage()
+        name = u'Bake it ‘til you make it.png'.encode('utf-8')
+        with self.settings(THUMBOR_SERVER='http://localhost:0'):
+            self.assertRaises(
+                ConnectionError, storage.save, name, ContentFile(''))
 
 
 @override_settings(GIT_REPO_URL='git@host.com/foo.git',
