@@ -44,7 +44,7 @@
     <h1>Step 2: Choose Localisation</h1>
     <form>
     <fieldset class="module aligned ">
-        <input type="hidden" id="index_prefix" />
+        <input type="hidden" id="repo_name" />
         <div class="form-row">
           <strong>Available locales</strong>
           <div id='locales'>
@@ -78,7 +78,7 @@
                             .val(this))
                         .append(this));
                   });
-                  $('#index_prefix').val(data.index_prefix);
+                  $('#repo_name').val(data.repo_name);
                   $('#locales').html(options).removeAttr('disabled');
                   $('#import-btn').removeAttr('disabled');
                   $('.step2 form').fadeIn().removeClass('step2');
@@ -104,9 +104,9 @@
             $('#locales :checked').each(function() {
               selected_locales.push($(this).val());
             });
-            var index_prefix = $('#index_prefix').val();
+            var repo_name = $('#repo_name').val();
             $.post('/github/import/do/',
-                {'locales': selected_locales, 'index_prefix': index_prefix})
+                {'locales': selected_locales, 'repo_name': repo_name})
               .done(function(data){
                 window.location = "{% url 'admin:index' %}";
               });
