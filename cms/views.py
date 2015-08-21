@@ -95,7 +95,7 @@ def import_locale_content(repo, locales):
         mngmnt_command.set_image_field(instance, category, 'image')
         category.save()
 
-    for instance in sm.iterate(Pages):
+    for instance in sm.iterate(Page):
         if instance.language not in locales:
             continue
         primary_category = None
@@ -132,7 +132,7 @@ def import_locale_content(repo, locales):
                 instance.title, instance.uuid)
 
     # second pass to add related fields
-    for instance in sm.iterate(Pages):
+    for instance in sm.iterate(Page):
         if instance.language not in locales:
             continue
         if instance.linked_pages:
