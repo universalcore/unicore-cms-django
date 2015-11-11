@@ -19,7 +19,7 @@ django-pagedown==0.1.0
 html2text==2014.9.25
 unicore-cms==1.9.2
 python-slugify==0.1.0
-django-thumborstorage==0.91.6
+django-thumborstorage==0.92.0
 thumbor==4.6.0
 libthumbor==1.0.1
 tornado==3.2.2
