@@ -1,6 +1,6 @@
 Django<1.7
 South
-django-cas-ng
+django-cas-ng<3.5.0
 gunicorn
 python-memcached
 raven==5.0.0
@@ -10,7 +10,7 @@ django-haystack
 django-celery
 psycopg2
 redis
-django-debug-toolbar
+django-debug-toolbar<1.4.0
 fabric
 django-grappelli<2.6.1
 django-adminplus
@@ -19,7 +19,7 @@ django-pagedown==0.1.0
 html2text==2014.9.25
 unicore-cms==1.9.2
 python-slugify==0.1.0
-django-thumborstorage==0.91.6
+django-thumborstorage==0.92.0
 thumbor==4.6.0
 libthumbor==1.0.1
 tornado==3.2.2
