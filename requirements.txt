@@ -10,7 +10,7 @@ django-haystack
 django-celery
 psycopg2
 redis
-django-debug-toolbar
+django-debug-toolbar<1.4.0
 fabric
 django-grappelli<2.6.1
 django-adminplus
