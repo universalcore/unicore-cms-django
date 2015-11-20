@@ -645,6 +645,7 @@ COUNTRIES = {
     "ES": "Spain",
     "LK": "Sri Lanka",
     "SD": "Sudan",
+    "SS": "South Sudan",
     "SR": "Suriname",
     "SJ": "Svalbard and Jan Mayen",
     "SZ": "Swaziland",
