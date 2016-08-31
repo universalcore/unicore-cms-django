@@ -1,9 +1,6 @@
 import os
 import mock
 
-from PIL import Image
-Image.init()
-
 from django.core.files.images import ImageFile
 from django.conf import settings
 
@@ -14,6 +11,10 @@ from cms.tests.base import BaseCmsTestCase
 from unicore.content import models as eg_models
 
 from pycountry import languages
+
+from PIL import Image
+Image.init()
+
 
 CURRENT_DIR = os.path.abspath(os.path.split(__file__)[0])
 IMAGE_DIR = os.path.join(CURRENT_DIR, "images")
