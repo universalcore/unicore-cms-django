@@ -15,7 +15,6 @@ from unicore.content import models as eg_models
 from pycountry import languages
 
 Image.init()
-
 CURRENT_DIR = os.path.abspath(os.path.split(__file__)[0])
 IMAGE_DIR = os.path.join(CURRENT_DIR, "images")
 
