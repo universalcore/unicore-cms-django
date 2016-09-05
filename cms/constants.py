@@ -497,7 +497,7 @@ COUNTRIES = {
     "CI": "Cote D'Ivoire",
     "HR": "Croatia",
     "CU": "Cuba",
-    "CW": "Curaçao",
+    "CW": "Curacao",
     "CY": "Cyprus",
     "CZ": "Czech Republic",
     "DK": "Denmark",
