@@ -31,7 +31,7 @@ unicore.distribute==0.0.6
 unicore.hub.client==0.2.0
 gitdb==0.6.4
 pycountry==1.10
-requests==2.5.3
+requests==2.20.0
 pytz==2015.2
 springboard==3.0.4
 Unidecode==0.04.16
